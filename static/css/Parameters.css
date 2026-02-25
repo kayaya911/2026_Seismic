@@ -1,0 +1,103 @@
+
+.Parameters {
+    display: flex;
+    flex-direction: column;
+
+    margin: 0.5rem;
+    padding: 1.0rem;
+    
+    max-width: 28rem; 
+    height: fit-content;
+    min-height: fit-content;
+
+    border-color: var(--parameters-container-border-color);    
+    border-style: solid;
+    border-radius: 1rem;
+    border-width: 0.1rem;
+
+    font-size: 1.0rem;
+    user-select: none;
+    background-color: var(--parameters-body-color);
+}
+
+#Parameters_Filter {
+    min-width: 20rem;
+    max-width: 20rem;
+}
+
+#Parameters_Integration {
+    min-width: 20rem;
+    max-width: 20rem;
+}
+
+#Parameters_SDOF {
+    min-width: 26rem;
+    max-width: 30rem;
+}
+
+#Parameters_ResSpec {
+    min-width: 24rem;
+    max-width: 24rem;
+}
+
+#Parameters_ResSpec2 {
+    min-width: 20rem;
+    max-width: 20rem;
+}
+
+.Parameters-Table {
+    border-style: hidden;
+    border-collapse: collapse; 
+}
+
+.Parameters-Table input {
+    width: 100%;
+    max-width: 12rem; 
+    box-sizing: border-box;
+    text-align: right;
+}
+
+.Parameters-Table td {
+    width: 40%; 
+    white-space: nowrap;
+}
+
+.Parameters-Table input[type="checkbox"] {
+    width: 1rem;
+}
+
+
+
+
+
+
+/* Hide the 3rd column on screens narrower than 768px (common mobile breakpoint) */
+@media (max-width: 767px) {
+    .Parameters {
+        font-size: 0.8rem;
+    }
+
+    #Parameters_ResSpec {
+        min-width: 20rem;
+        max-width: 20rem;
+    }
+    #Parameters_SDOF {
+        min-width: 20rem;
+        max-width: 20rem;
+    }
+
+    .Parameters input {
+        font-size: 0.8rem;
+    }
+}
+
+/* For very small screens */
+@media (max-width: 480px) {
+    .Parameters {
+        font-size: 0.8rem;
+    }
+
+    .Parameters input {
+        font-size: 0.8rem;
+    }
+}
