@@ -8,7 +8,7 @@ function TypeAndUnit(n, Opt) {
     //
     //  Parameters:
     //    n   : Measurment index (if Opt=true) or Unit number (if Opt=false)
-    //    Opt : Boolen - If true, n is TypeAndUnit index; if false, n is Unit number
+    //    Opt : Boolen - If true, n is Measurment-index; if false, n is Unit-number
     //
     //
     //  Retruns:
@@ -129,10 +129,10 @@ function IntegrationUnits(n) {
     //  2              ( Acceleration   )  (m/s²)           ( Velocity        )  (m/s)               ( Displacement     )  (m)
     //  3              ( Acceleration   )  (cm/s²)          ( Velocity        )  (cm/s)              ( Displacement     )  (cm)
     //  4              ( Acceleration   )  (mm/s²)          ( Velocity        )  (mm/s)              ( Displacement     )  (mm)
-    //  11             ( Velocity       )  (gs)             ( Displacement    )  (gs²)               (∫ Displacement    )  (gs³)
-    //  12             ( Velocity       )  (m/s)            ( Displacement    )  (m)                 (∫ Displacement    )  (m·s)
-    //  13             ( Velocity       )  (cm/s)           ( Displacement    )  (cm)                (∫ Displacement    )  (cm·s)
-    //  14             ( Velocity       )  (mm/s)           ( Displacement    )  (mm)                (∫ Displacement    )  (mm·s)
+    //  11             ( Velocity       )  (gs)             ( Displacement    )  (gs²)               (∫∫ Velocity       )  (gs³)
+    //  12             ( Velocity       )  (m/s)            ( Displacement    )  (m)                 (∫∫ Velocity       )  (m·s)
+    //  13             ( Velocity       )  (cm/s)           ( Displacement    )  (cm)                (∫∫ Velocity       )  (cm·s)
+    //  14             ( Velocity       )  (mm/s)           ( Displacement    )  (mm)                (∫∫ Velocity       )  (mm·s)
     //  21             ( Displacement   )  (gs²)            (∫ Displacement   )  (gs³)               (∫∫ Displacement   )  (gs⁴)
     //  22             ( Displacement   )  (m)              (∫ Displacement   )  (m·s)               (∫∫ Displacement   )  (m·s²)
     //  23             ( Displacement   )  (cm)             (∫ Displacement   )  (cm·s)              (∫∫ Displacement   )  (cm·s²)
@@ -157,10 +157,10 @@ function IntegrationUnits(n) {
     else if (n == 2)   { return { FirstIntegral: { 'Type_String': 'Velocity',          'Unit_String': 'm/s'        }, SecondIntegral: { 'Type_String': 'Displacement',       'Unit_String': 'm'           } } }
     else if (n == 3)   { return { FirstIntegral: { 'Type_String': 'Velocity',          'Unit_String': 'cm/s'       }, SecondIntegral: { 'Type_String': 'Displacement',       'Unit_String': 'cm'          } } }
     else if (n == 4)   { return { FirstIntegral: { 'Type_String': 'Velocity',          'Unit_String': 'mm/s'       }, SecondIntegral: { 'Type_String': 'Displacement',       'Unit_String': 'mm'          } } }
-    else if (n == 11)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'gs²'        }, SecondIntegral: { 'Type_String': '∫ Displacement',     'Unit_String': 'gs³'         } } }
-    else if (n == 12)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'm'          }, SecondIntegral: { 'Type_String': '∫ Displacement',     'Unit_String': 'm·s'         } } }
-    else if (n == 13)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'cm'         }, SecondIntegral: { 'Type_String': '∫ Displacement',     'Unit_String': 'cm·s'        } } }
-    else if (n == 14)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'mm'         }, SecondIntegral: { 'Type_String': '∫ Displacement',     'Unit_String': 'mm·s'        } } }
+    else if (n == 11)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'gs²'        }, SecondIntegral: { 'Type_String': '∫∫ Velocity',        'Unit_String': 'gs³'         } } }
+    else if (n == 12)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'm'          }, SecondIntegral: { 'Type_String': '∫∫ Velocity',        'Unit_String': 'm·s'         } } }
+    else if (n == 13)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'cm'         }, SecondIntegral: { 'Type_String': '∫∫ Velocity',        'Unit_String': 'cm·s'        } } }
+    else if (n == 14)  { return { FirstIntegral: { 'Type_String': 'Displacement',      'Unit_String': 'mm'         }, SecondIntegral: { 'Type_String': '∫∫ Velocity',        'Unit_String': 'mm·s'        } } }
     else if (n == 21)  { return { FirstIntegral: { 'Type_String': '∫ Displacement',    'Unit_String': 'gs³'        }, SecondIntegral: { 'Type_String': '∫∫ Displacement',    'Unit_String': 'gs⁴'         } } }
     else if (n == 22)  { return { FirstIntegral: { 'Type_String': '∫ Displacement',    'Unit_String': 'm·s'        }, SecondIntegral: { 'Type_String': '∫∫ Displacement',    'Unit_String': 'm·s²'        } } }
     else if (n == 23)  { return { FirstIntegral: { 'Type_String': '∫ Displacement',    'Unit_String': 'cm·s'       }, SecondIntegral: { 'Type_String': '∫∫ Displacement',    'Unit_String': 'cm·s²'       } } }
@@ -214,7 +214,7 @@ function List_Units(n, Opt) {
     //  Parameters:
     //    n   : Unit-Number (if Opt=true) or Type-Number (if Opt=false)
     //    Opt : Boolean (True)   n is unit-number
-    //          Boolean (False)  n is measurment-index
+    //          Boolean (False)  n is Type-index
     //
     //  Returns:
     //    Object with Units and UnitNum properties:
@@ -248,8 +248,8 @@ function List_Units(n, Opt) {
         return { Units: Unit, UnitNum: UnitNum }
 
     } else {
-        // Return a list of all Units of a specific Index
-        // n : Measurment Index
+        // Return a list of all Units of a specific Type-Index
+        // n : Type Index
 
         // Loop over unit numbers from 0 to 23
         for (i=0; i<N; i++) { 
@@ -449,9 +449,11 @@ function Convert_Units_Data(Data, In, Out, Opt) {
         if      (oU.Unit == 22) { Scale = 1.0;       Offset = 0;                                               }  // Degrees
         else if (oU.Unit == 23) { Scale = 1.0;       Offset = 0;                                               }  // Volts
     }
+
+    // return results
     return { 
         Data    : Add(Multiply(Data, Scale), Offset), 
-        Unit   : Unit 
+        Unit    : Unit 
     };
 
     // Helper functions
@@ -498,30 +500,33 @@ function Convert_Units_Data(Data, In, Out, Opt) {
 //-------------------------------------------------------------------------------------------------------------
 function Convert_Data_To_Graph_Unit(Data, ChNum) {
 
-    let Or_Data, LU, Ind, temp, Stats;
+    let Or_Data, LU, Ind, temp, temp_Stats, Stats;
     let Indx_Acc, Indx_Vel, Indx_Disp;
 
-    // Original data
-    Or_Data = TypeAndUnit(ChannelList[ChNum].TypeAndUnits);
+    // Original data using Measurment-unit
+    Or_Data = TypeAndUnit(ChannelList[ChNum].TypeAndUnits); 
 
-    // List of Units of the data using Type-Number
+    // List of Units of the original data using Type-Number
     LU = List_Units(ChannelList[ChNum].Type, false);
 
-    // User sepecified Unit on the Plotly Graph
+    // Indexnumber of User-sepecified Unit on the Plotly Graph
     Ind = document.getElementById("Unit_Plot_ID_" + ChannelList[ChNum].Unique_ID).selectedIndex;
 
     // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
-    temp = Convert_Units_Data(Data, Or_Data.Unit, LU.UnitNum[Ind], false);
+    temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
-    if (PageNo == 0) {
+    if        (PageNo == 0) {
         
-        Stats = Convert_Units_Data([ChannelList[ChNum].Peak, ChannelList[ChNum].Mean, ChannelList[ChNum].RMS], Or_Data.Unit, LU.UnitNum[Ind], false);
+        temp_Stats = [ChannelList[ChNum].Peak, ChannelList[ChNum].Mean, ChannelList[ChNum].RMS];
+
+        Stats = Convert_Units_Data(temp_Stats, Or_Data.Unit, LU.UnitNum[Ind], false);
     
     } else if (PageNo == 1) {
         if (ChannelList[ChNum].Results.Filter.IsAnalysisCompleted) {
-            Stats = Convert_Units_Data([ChannelList[ChNum].Results.Filter.Peak, ChannelList[ChNum].Results.Filter.Mean, ChannelList[ChNum].Results.Filter.RMS], Or_Data.Unit, LU.UnitNum[Ind], false);
+            temp_Stats = [ChannelList[ChNum].Results.Filter.Peak, ChannelList[ChNum].Results.Filter.Mean, ChannelList[ChNum].Results.Filter.RMS];
+            Stats = Convert_Units_Data(temp_Stats, Or_Data.Unit, LU.UnitNum[Ind], false);
         } else {
             Stats = { Data : ['','',''] };
         }
@@ -531,19 +536,22 @@ function Convert_Data_To_Graph_Unit(Data, ChNum) {
             Indx_Acc  = document.getElementById("Int_Acceleration").checked;
             Indx_Vel  = document.getElementById("Int_Velocity").checked;
             Indx_Disp = document.getElementById("Int_Displacement").checked;
-            
-            if      (Indx_Acc)  { Stats = Convert_Units_Data([ChannelList[ChNum].Peak,                       ChannelList[ChNum].Mean,                       ChannelList[ChNum].RMS],                       Or_Data.Unit, LU.UnitNum[Ind], false); }
-            else if (Indx_Vel)  { Stats = Convert_Units_Data([ChannelList[ChNum].Results.Integral.Peak_Vel,  ChannelList[ChNum].Results.Integral.Mean_Vel,  ChannelList[ChNum].Results.Integral.RMS_Vel],  Or_Data.Unit, LU.UnitNum[Ind], false); }
-            else if (Indx_Disp) { Stats = Convert_Units_Data([ChannelList[ChNum].Results.Integral.Peak_Disp, ChannelList[ChNum].Results.Integral.Mean_Disp, ChannelList[ChNum].Results.Integral.RMS_Disp], Or_Data.Unit, LU.UnitNum[Ind], false); }
-        
+
+            if      (Indx_Acc)  { temp_Stats = [ChannelList[ChNum].Peak,                       ChannelList[ChNum].Mean,                       ChannelList[ChNum].RMS];                       }
+            else if (Indx_Vel)  { temp_Stats = [ChannelList[ChNum].Results.Integral.Peak_Vel,  ChannelList[ChNum].Results.Integral.Mean_Vel,  ChannelList[ChNum].Results.Integral.RMS_Vel];  }
+            else if (Indx_Disp) { temp_Stats = [ChannelList[ChNum].Results.Integral.Peak_Disp, ChannelList[ChNum].Results.Integral.Mean_Disp, ChannelList[ChNum].Results.Integral.RMS_Disp]; }
+
+            Stats = Convert_Units_Data(temp_Stats, Or_Data.Unit, LU.UnitNum[Ind], false);
+
         } else {
             Stats = { Data : ['','',''] };
         }
     } else if (PageNo == 3) {
         if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted) {
-             Stats = { Data : [1,1,1] };
+
+            Stats = { Data : [1,1,1] };
         } else {
-             Stats = { Data : ['','',''] };
+            Stats = { Data : ['','',''] };
         }
     }
 
@@ -551,21 +559,24 @@ function Convert_Data_To_Graph_Unit(Data, ChNum) {
     //  temp.Unit
     temp.Vel_Units   = LU.Units.map( item => item + ' • s');
     temp.Disp_Units  = LU.Units.map( item => item + ' • s²');
+    
     temp.yTitle      = '<b>' + Or_Data.Type_String + ' [' + temp.Unit  + ']<b>';
     temp.yTitle_Vel  = '<b>' + Or_Data.IntegrationUnits.FirstIntegral.Type_String  + ' [' + temp.Vel_Units[Ind]   + ']<b>';
     temp.yTitle_Disp = '<b>' + Or_Data.IntegrationUnits.SecondIntegral.Type_String + ' [' + temp.Disp_Units[Ind]  + ']<b>';
     temp.yTitle_FFT  = '<b>Magnitude<b>';
     temp.y2Title     = '<b>Phase<b>';
+    
     temp.Or_Units    = Select_Element(LU.Units);
     temp.Vel_Select  = Select_Element(temp.Vel_Units);
     temp.Disp_Select = Select_Element(temp.Disp_Units);
+
     temp.Peak        = Stats.Data[0];
     temp.Mean        = Stats.Data[1];
     temp.RMS         = Stats.Data[2];
 
     return temp;
     
-    // Creates new Select-Element for Plotly Infor-table (Graph-Unit List)
+    // Creates new Select-Element for Plotly Info-table (Graph-Unit List)
     function Select_Element(Unit_List) {
         
         // Decleration of variables
@@ -591,4 +602,188 @@ function Convert_Data_To_Graph_Unit(Data, ChNum) {
     } 
 
 }
+//-------------------------------------------------------------------------------------------------------------
+function Convert_Data_To_Graph_Unit_SDOF(Data, ChNum) {
+    
+    let Or_Data, LU, Ind, Indx, temp, ss, arr;
 
+    // SDOF-data using Measurment-index
+    Or_Data = TypeAndUnit(ChannelList[ChNum].Results.SDOF.TypeAndUnits); 
+
+    // List of Units of the SDOF-data using Type-Number
+    LU = List_Units(Or_Data.Type, false);
+
+    // Indexnumber of User-sepecified Unit on the Plotly Graph
+    Ind = document.getElementById("Unit_Plot_ID_" + ChannelList[ChNum].Unique_ID).selectedIndex;
+
+    // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
+    temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+    
+    // Double convert the data if applicable 
+    arr = ["Ek", "Ed", "Es", "Ei"];
+    if (arr.includes(ChannelList[ChNum].Results.SDOF.DisplayData)) {
+        temp = Convert_Units_Data(temp.Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+
+        Indx      = document.getElementById('Unit_Plot_ID_'+ChannelList[ChNum].Unique_ID).selectedIndex;
+        temp.Unit = document.getElementById('Unit_Plot_ID_'+ChannelList[ChNum].Unique_ID)[Indx].innerHTML;
+
+        if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ek') { Or_Data.Type_String = 'Kinetic Energy';  temp.Unit = 'Mass • ' + temp.Unit; }
+        else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ed') { Or_Data.Type_String = 'Damping Energy';  temp.Unit = 'Mass • ' + temp.Unit; }
+        else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Es') { Or_Data.Type_String = 'Strain Energy';   temp.Unit = 'Mass • ' + temp.Unit; }
+        else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ei') { Or_Data.Type_String = 'Input Energy';    temp.Unit = 'Mass • ' + temp.Unit;  }
+    }
+
+    if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fs' ) { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fc' ) { Or_Data.Type_String = 'Damping Force';         temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fi' ) { Or_Data.Type_String = 'Inertia Force';         temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'acc') { Or_Data.Type_String = 'Relative Acceleration';                                    }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Acc') { Or_Data.Type_String = 'Total Acceleration';                                       }
+
+    // Original statistical values are already scaled by Scale Factor of the channel 
+    // Therefore, we just need to conver the units.
+    if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted) {
+        ss    = Statistics(temp.Data);
+    } else {
+        ss = { Peak:'', Mean:'', RMS:'' };
+    }
+
+    //  temp
+    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']<b>';
+    temp.yTitle_FFT  = '<b>Magnitude<b>';
+    temp.y2Title     = '<b>Phase<b>';
+
+    temp.Peak        = ss.Peak;
+    temp.Mean        = ss.Mean;
+    temp.RMS         = ss.RMS;
+
+    return temp;
+
+}
+//-------------------------------------------------------------------------------------------------------------
+function Update_Units_infoTable(i) {
+
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let AM, II, Units_SelectElement, Ind, Type, DisplayData;
+    let SDOF_Plot_ID, Unit_Cell_ID;
+
+    // SDOF_ID
+    SDOF_Plot_ID = "SDOF_Plot_ID_"  + ChannelList[i].Unique_ID;
+    Unit_Cell_ID = "Unit_Cell_ID_"  + ChannelList[i].Unique_ID;
+
+    AM   = document.getElementById('SDOF_Analysis').selectedIndex;   // Analysis Method (Newmark, piesewise, etc) from SDOF Parameetrs Window
+    II   = document.getElementById(SDOF_Plot_ID).selectedIndex;      // Index of the SDOF_ResultsDisplay in InfoTable
+    
+    if (II == -1) { return; }
+
+    if      (AM == 0) {  
+        // Free Vibration
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='ssDisp'; } // Steady-state Response (Displacement)
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='trDisp'; } // Transient Response (Displacement)
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 8) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Harm';   } // Harmonic Force
+    } 
+    else if (AM == 1) {  
+        // Forced Vibration
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 3) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+    } 
+    else if (AM == 2) {  
+        // Piece-Wise Exact
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative acceleration
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total acceleration
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+    }
+    else if (AM == 3) {  
+        // Central Difference Method 
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative acceleration
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total acceleration
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+    } 
+    else if (AM == 4) {  
+        // Newmark Linear 
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative acceleration
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total acceleration
+        if (II == 4) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fs';     } // Spring (restoring) force per unit mass
+        if (II == 5) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fc';     } // Damping force per unit mass
+        if (II == 6) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fi';     } // Inertia force per unit mass
+        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 8) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 9) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 10){  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+    } 
+    else if (AM == 5) {  
+        // Newmark non-Linear
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative acceleration
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total acceleration
+        if (II == 4) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fs';     } // Spring (restoring) force per unit mass
+        if (II == 5) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fc';     } // Damping force per unit mass
+        if (II == 6) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fi';     } // Inertia force per unit mass
+    } 
+
+    // Assign select-element to cell-element in table
+    document.getElementById(Unit_Cell_ID).innerHTML = "";
+    document.getElementById(Unit_Cell_ID).appendChild(Units_SelectElement);
+
+    // Index number of the Unit on the Data-Page (PageNo=0)
+    Ind = document.getElementById("Unit_ID_" + ChannelList[i].Unique_ID).selectedIndex;
+
+    // Measurment-Index of the user-selected Display-and-Unit on InfoTable
+    ChannelList[i].Results.SDOF.TypeAndUnits = TypeAndUnit(List_Units(Type, false).UnitNum[Ind], false).TypeAndUnit;
+    ChannelList[i].Results.SDOF.DisplayData  = DisplayData;
+
+    // Update Graph
+    Plotly_Graph_Update(i);
+
+    // Creates new Select-Element for Plotly Info-table (Graph-Unit List)
+    function Select_Element(Unit_List) {
+        
+        // Decleration of variables
+        let j, opt, select, ID;
+
+        ID = 'Unit_Plot_ID_' + ChannelList[i].Unique_ID;
+
+        // Create select element and populate it 
+        select = document.createElement('select');
+        select.setAttribute('id', ID);
+        select.setAttribute('class', 'form-select form-select-sm');
+        select.setAttribute('onchange', 'Plotly_Graph_Update(' + ChannelList_UniqueID(ChannelList[i].Unique_ID) + ')');
+        
+        // Options for the select element 
+        for (j = 0; j < Unit_List.length; j++) {
+            opt = document.createElement("option");
+            opt.value = Unit_List[j];
+            opt.text = Unit_List[j];
+            select.add(opt, null);
+        }
+        select.selectedIndex = document.getElementById(ID).selectedIndex;
+        return select;
+    }
+
+}
+//-------------------------------------------------------------------------------------------------------------

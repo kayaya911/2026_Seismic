@@ -102,22 +102,24 @@ async function AnalysisMenu_Selection(a) {
     if (a.id == "MainMenu_LoadData") {
         document.getElementById('Run_Button_Div').style.display = 'none';
         document.getElementById("Table_Channel_Div").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Data";
         PageNo = 0;
     }
     else if (a.id == "MainMenu_Filter") {
         document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Filter";
         PageNo = 1;
     }
     else if (a.id == "MainMenu_Integral") {
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_Integration").style.display = "flex";
-
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Integral";
         PageNo = 2;
     }
     else if (a.id == "MainMenu_SDOF") {
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_SDOF").style.display   = "flex";
-
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  SDOF";
         // Get the index number of the SDOF_Analysis
         let Indx = document.getElementById('SDOF_Analysis').selectedIndex;
         if (Indx == 0 || Indx == 1) { document.getElementById("Parameters_Filter").style.display = "none"; } // Disable Filter Window 
@@ -129,6 +131,7 @@ async function AnalysisMenu_Selection(a) {
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_ResSpec").style.display = "flex";
         document.getElementById("Parameters_ResSpec2").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Response Spec";
         PageNo = 4;
     }
     else if ((a.id == "MainMenu_Settings") || (a.id == "Header_Settings")) {
@@ -628,7 +631,6 @@ function ChannelType_Update(el, Opt) {
         document.getElementById(Unit_ID).innerText = null;
         for (j = 0; j < TempList.length; j++) {
             opt = document.createElement("option");
-            opt.value = TempList[j];
             opt.text = TempList[j];
             document.getElementById(Unit_ID).options[j] = opt;
         }
@@ -708,7 +710,6 @@ function ChannelType_Update(el, Opt) {
         // All options for the select element 
         for (j = 0; j < Unit_List.length; j++) {
             opt = document.createElement("option");
-            opt.value = Unit_List[j];
             opt.text = Unit_List[j];
             select.add(opt, null);
         }
@@ -1029,3 +1030,6 @@ function ProgressBar_Update(msg, msg_color) {
     document.getElementById("ProgressBar_Label").style.color = msg_color;
 
 }
+//-----------------------------------------------------------------------------------------------
+
+

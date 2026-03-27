@@ -407,13 +407,15 @@ function SDOF_Parameters() {
         dtT                         : dtT,
         tol                         : tol,
         tol_ductility               : tol_ductility,
+        TypeAndUnits                : undefined,
+        DisplayData                 : undefined,
     }
 
 }
 function SDOF_AnalysisType() {
 
     // Declaration of variables
-    let SDOF_Table, Indx;
+    let SDOF_Table, Indx, i, sel_el, OptionsList, opt;
 
     // Get the table that contains SDOF Analysis Parameters 
     SDOF_Table = document.getElementById('SDOF_Parameters_Table');
@@ -427,20 +429,22 @@ function SDOF_AnalysisType() {
     // Disable the FilterTable rows if no filtering is selected 
     if (Indx === 0) {
         // Free Vibration 
-        SDOF_Table.rows[0].style.display  = "table-row";
         SDOF_Table.rows[1].style.display  = "table-row";
         SDOF_Table.rows[2].style.display  = "table-row";
         SDOF_Table.rows[3].style.display  = "table-row";
         SDOF_Table.rows[4].style.display  = "table-row";
         SDOF_Table.rows[5].style.display  = "table-row";
-        SDOF_Table.rows[6].style.display  = "none";
+        SDOF_Table.rows[6].style.display  = "table-row";
         SDOF_Table.rows[7].style.display  = "none";
         SDOF_Table.rows[8].style.display  = "none";
         SDOF_Table.rows[9].style.display  = "none";
         SDOF_Table.rows[10].style.display = "none";
+        SDOF_Table.rows[11].style.display = "none";
+
+        OptionsList    = ['Displacement', 'Velocity', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+
     } else if (Indx == 1) {
         // Forced Vibration 
-        SDOF_Table.rows[0].style.display  = "table-row";
         SDOF_Table.rows[1].style.display  = "table-row";
         SDOF_Table.rows[2].style.display  = "table-row";
         SDOF_Table.rows[3].style.display  = "table-row";
@@ -448,37 +452,116 @@ function SDOF_AnalysisType() {
         SDOF_Table.rows[5].style.display  = "table-row";
         SDOF_Table.rows[6].style.display  = "table-row";
         SDOF_Table.rows[7].style.display  = "table-row";
-        SDOF_Table.rows[8].style.display  = "none";
+        SDOF_Table.rows[8].style.display  = "table-row";
         SDOF_Table.rows[9].style.display  = "none";
         SDOF_Table.rows[10].style.display = "none";
-    } else if ((Indx == 2) || (Indx == 3) || (Indx == 4)) {
+        SDOF_Table.rows[11].style.display = "none";
+
+        OptionsList    = ['Displacement', 'Velocity', 'Steady-state Response', 'Transient Response', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy', 'Harmonic Force'];
+
+    } else if (Indx == 2) {
         // Piece-Wise Exact
-        // Central Difference
-        // Newmark Linear
-        SDOF_Table.rows[0].style.display  = "table-row";
         SDOF_Table.rows[1].style.display  = "table-row";
-        SDOF_Table.rows[2].style.display  = "none";
+        SDOF_Table.rows[2].style.display  = "table-row";
         SDOF_Table.rows[3].style.display  = "none";
-        SDOF_Table.rows[4].style.display  = "table-row";
+        SDOF_Table.rows[4].style.display  = "none";
         SDOF_Table.rows[5].style.display  = "table-row";
-        SDOF_Table.rows[6].style.display  = "none";
+        SDOF_Table.rows[6].style.display  = "table-row";
         SDOF_Table.rows[7].style.display  = "none";
         SDOF_Table.rows[8].style.display  = "none";
         SDOF_Table.rows[9].style.display  = "none";
         SDOF_Table.rows[10].style.display = "none";
+        SDOF_Table.rows[11].style.display = "none";
+
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+    
+    } else if (Indx == 3) {
+        // Central Difference
+        SDOF_Table.rows[1].style.display  = "table-row";
+        SDOF_Table.rows[2].style.display  = "table-row";
+        SDOF_Table.rows[3].style.display  = "none";
+        SDOF_Table.rows[4].style.display  = "none";
+        SDOF_Table.rows[5].style.display  = "table-row";
+        SDOF_Table.rows[6].style.display  = "table-row";
+        SDOF_Table.rows[7].style.display  = "none";
+        SDOF_Table.rows[8].style.display  = "none";
+        SDOF_Table.rows[9].style.display  = "none";
+        SDOF_Table.rows[10].style.display = "none";
+        SDOF_Table.rows[11].style.display = "none";
+
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+
+    } else if (Indx == 4) {
+        // Newmark Linear
+        SDOF_Table.rows[1].style.display  = "table-row";
+        SDOF_Table.rows[2].style.display  = "table-row";
+        SDOF_Table.rows[3].style.display  = "none";
+        SDOF_Table.rows[4].style.display  = "none";
+        SDOF_Table.rows[5].style.display  = "table-row";
+        SDOF_Table.rows[6].style.display  = "table-row";
+        SDOF_Table.rows[7].style.display  = "none";
+        SDOF_Table.rows[8].style.display  = "none";
+        SDOF_Table.rows[9].style.display  = "none";
+        SDOF_Table.rows[10].style.display = "none";
+        SDOF_Table.rows[11].style.display = "none";
+
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+
     } else if (Indx == 5) {
         // Newmark non-Linear
-        SDOF_Table.rows[0].style.display  = "table-row";
         SDOF_Table.rows[1].style.display  = "table-row";
-        SDOF_Table.rows[2].style.display  = "none";
+        SDOF_Table.rows[2].style.display  = "table-row";
         SDOF_Table.rows[3].style.display  = "none";
-        SDOF_Table.rows[4].style.display  = "table-row";
+        SDOF_Table.rows[4].style.display  = "none";
         SDOF_Table.rows[5].style.display  = "table-row";
-        SDOF_Table.rows[6].style.display  = "none";
+        SDOF_Table.rows[6].style.display  = "table-row";
         SDOF_Table.rows[7].style.display  = "none";
-        SDOF_Table.rows[8].style.display  = "table-row";
+        SDOF_Table.rows[8].style.display  = "none";
         SDOF_Table.rows[9].style.display  = "table-row";
         SDOF_Table.rows[10].style.display = "table-row";
+        SDOF_Table.rows[11].style.display = "table-row";
+
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force'];
+    }
+
+    // Get the selectToDisplay and update its content 
+    sel_el = document.getElementById('SDOF_SelectToDisplay');
+    sel_el.innerHTML = '';
+
+    // Add empty entry to the begining of the list
+    OptionsList.unshift('');
+
+    for (i=0; i<OptionsList.length; i++) {
+        opt = document.createElement("option");
+        opt.value = OptionsList[i];
+        opt.text = OptionsList[i];
+        sel_el.add(opt, null);
+    }
+
+    // Select the fist item in the list, which is None
+    sel_el.selectedIndex = 0;
+
+}
+function SDOF_SelectToDisplay() {
+
+    let i, Indx, SDOF_Plot_ID;
+
+    for (i=0; i<ChannelList.length; i++) {
+        
+        // skip if this channel is not selected for dislay
+        if (!ChannelList[i].PlotGraph) { continue; }
+
+        // Get the selected index number
+        Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
+
+        if (Indx == 0) { continue; }
+
+        // Change the index number for this channel 
+        SDOF_Plot_ID  = "SDOF_Plot_ID_" + ChannelList[i].Unique_ID;
+        document.getElementById(SDOF_Plot_ID).selectedIndex = Indx-1;
+
+        Update_Units_infoTable(i);
+
     }
 }
 //-----------------------------------------------------------------------------------------------

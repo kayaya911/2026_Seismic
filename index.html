@@ -73,7 +73,7 @@
                         <path d="M6155 8583 c-47 -24 -76 -55 -95 -98 -9 -22 -170 -725 -356 -1562 -186 -837 -342 -1519 -346 -1515 -3 4 -95 248 -203 542 -108 294 -203 545 -211 558 -24 37 -87 72 -141 78 -90 11 -179 -49 -203 -138 -5 -18 -84 -604 -175 -1303 -91 -698 -167 -1270 -168 -1272 -2 -1 -119 953 -261 2120 -141 1167 -264 2145 -272 2173 -10 37 -25 62 -54 88 -50 45 -77 56 -136 56 -92 0 -166 -64 -185 -161 -6 -30 -122 -702 -258 -1494 l-247 -1440 -460 -5 c-515 -6 -497 -3 -554 -81 -54 -76 -49 -165 13 -236 57 -65 40 -63 652 -63 477 0 561 2 592 15 48 20 71 41 93 85 12 23 72 349 171 934 86 503 157 889 160 879 4 -10 130 -1017 279 -2238 149 -1221 276 -2235 282 -2253 12 -41 61 -98 99 -118 37 -19 123 -18 165 2 43 21 88 74 102 122 6 20 106 773 222 1672 116 899 212 1639 213 1644 2 5 81 -202 177 -460 95 -258 181 -486 192 -506 29 -60 80 -92 153 -96 102 -7 170 40 199 137 7 25 127 559 267 1186 243 1091 254 1137 261 1080 5 -33 60 -1041 124 -2240 63 -1199 120 -2196 125 -2216 5 -20 19 -51 32 -69 71 -106 247 -98 312 15 16 28 108 399 306 1233 l283 1192 495 0 c485 0 496 0 539 21 122 60 138 240 29 323 -58 45 -97 47 -703 44 -633 -3 -598 0 -662 -72 -37 -43 -21 18 -183 -676 -72 -311 -134 -568 -138 -572 -3 -4 -60 986 -125 2200 -65 1214 -121 2246 -126 2294 -9 104 -36 156 -100 188 -48 24 -132 26 -175 3z"/>
                     </g>
                 </svg>
-                <span class="Header_Logo_Span">Seismic Data Analysis</span>
+                <span class="Header_Logo_Span" id="Logo_Text">Seismic Data Analysis  -  Data</span>
             </div>
 
             <div class="Header_Buttons">
@@ -143,7 +143,6 @@
                 </div>
             </div>
             
-
             <div id="resizeHandleHorizontal" class="resize-handle-horizontal">
                 <div class="resize-handle-bar"></div>
             </div>
@@ -176,7 +175,7 @@
                         <!-- Filtering Parameters -->
                         <div class="Parameters" id="Parameters_Filter">
                             <label id=""><b>Baseline Correction</b></label>
-                            <select class="form-select" id="BaselineCorrection" onchange="Filter_Baseline_Change()">
+                            <select class="form-custom" id="BaselineCorrection" onchange="Filter_Baseline_Change()">
                                 <option value="None" >None</option>
                                 <option value="Remove Mean" selected>Remove Mean</option>
                                 <option value="Linear">Linear</option>
@@ -187,13 +186,13 @@
                             <br />
                             
                             <label><b>Filter Type</b></label>
-                            <select class="form-select" id="FilterName" onchange="Filter_Name_Change()">
+                            <select class="form-custom" id="FilterName" onchange="Filter_Name_Change()">
                                 <option value="None">None</option>
                                 <option value="Butterworth" selected>Butterworth</option>
                                 <option value="Chebyshev">Chebyshev</option>
                                 <option value="Bessel">Bessel</option>
                             </select>
-                            <select class="form-select" id="FilterType" onchange="Filter_Type_Change()" style="margin-top: 0.2rem;">
+                            <select class="form-custom" id="FilterType" onchange="Filter_Type_Change()" style="margin-top: 0.2rem;">
                                 <option value="Low-pass">Low-Pass</option>
                                 <option value="High-pass" selected>High-Pass</option>
                                 <option value="Band-pass">Band-Pass</option>
@@ -261,7 +260,7 @@
                         <!-- SDOF Parameters -->
                         <div class="Parameters" id="Parameters_SDOF">
                             <label><b>SDOF Analysis Type</b></label>
-                            <select class="form-select" id="SDOF_Analysis" onchange="SDOF_AnalysisType()">
+                            <select class="form-custom" id="SDOF_Analysis" onchange="SDOF_AnalysisType()">
                                 <option value="Free Vibration">Free Vibration</option>
                                 <option value="Forced Vibration">Forced Vibration</option>
                                 <option value="Piece-Wise Exact">Piece-Wise Exact</option>
@@ -269,9 +268,17 @@
                                 <option value="Newmark Linear" selected>Newmark Linear</option>
                                 <option value="Newmark Non-Linear">Newmark Non-Linear</option>
                             </select>
-
                             <table class="table-sm Parameters-Table" id="SDOF_Parameters_Table">
                             <tbody class="table-group-divider overflow-y-scroll">
+                                <tr>
+                                    <td>
+                                        Select to display
+                                    </td>
+                                    <td>
+                                        <select class="form-custom" id="SDOF_SelectToDisplay" onchange="SDOF_SelectToDisplay()">
+                                        </select>
+                                    </td>
+                                </tr>
                                 <tr>
                                     <td>Frequency [Hz]</td>
                                     <td> <input title="Natural Frequency of the SDOF" id="SDOF_Frequency" type="number" onfocus="this.oldValue = this.value;" onchange="" value="1" step="0.1"/></td>
@@ -289,11 +296,11 @@
                                     <td><input title="Output Record Duration" id="SDOF_Duration" type="number" onfocus="this.oldValue = this.value;" onchange="" value="5" step="0.01"/></td>
                                 </tr>
                                 <tr>
-                                    <td>Initial Displacement [cm]</td> 
+                                    <td>Initial Displacement</td> 
                                     <td><input title="Initial Displacement of SDOF" id="SDOF_InDisp" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.0" step="0.01"/> </td>
                                 </tr>
                                 <tr>
-                                    <td>Initial Velocity [cm/s]</td>
+                                    <td>Initial Velocity</td>
                                     <td> <input title="Initial Velocity of SDOF" id="SDOF_InVel" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.0" step="0.01"/> </td>
                                 </tr>
                                 <tr>
@@ -323,7 +330,7 @@
                         <!-- Reponse Spectrum Parameters -->
                         <div class="Parameters" id="Parameters_ResSpec">
                             <label><b>Response Spectrum Type</b></label>
-                            <select class="form-select" id="ResSpec_Analysis" onchange="ResSpec_AnalysisType()">
+                            <select class="form-custom" id="ResSpec_Analysis" onchange="ResSpec_AnalysisType()">
                                 <option value="Free Vibration" selected>Elastic Spectra</option>
                                 <option value="Forced Vibration">Constant-Ductility Inelastic Spectra</option>
                             </select><br/>

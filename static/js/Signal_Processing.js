@@ -850,7 +850,7 @@ async function Channel_Filter() {
     await sleep(5);
 
     // Declaration of variables 
-    let i, FiltPar, Temp
+    let i, FiltPar, Temp, perc;
 
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) {
@@ -889,7 +889,12 @@ async function Channel_Filter() {
         await Plotly_Graph_Update(i);
 
         // STEP 10: Update Progress Indicator - Display completion status in UI progress bar
-        ProgressBar_Update('Filter -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+        if (perc != 100) {
+            ProgressBar_Update( 'Filter -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'Filter -- ' + (perc).toString() + '% completed!', 'black');
+        }
 
         // STEP 11: Brief delay for UI update visibility (5ms)
         await sleep(5);
@@ -935,7 +940,7 @@ async function Channel_Integral() {
     await sleep(5);
 
     // Declaration of variables 
-    let i, FiltPar, Temp;
+    let i, FiltPar, Temp, perc;
 
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) {
@@ -988,7 +993,12 @@ async function Channel_Integral() {
         await Plotly_Graph_Update(i);
 
         // STEP 12: Update Progress Indicator - Display completion status in UI progress bar
-        ProgressBar_Update('Integration -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+        if (perc != 100) {
+            ProgressBar_Update( 'Integral -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'Integral -- ' + (perc).toString() + '% completed!', 'black');
+        }
 
         // STEp 13: Brief delay for UI update visibility (5ms)
         await sleep(5);
@@ -1033,37 +1043,59 @@ async function Channel_SDOF() {
     document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
     await sleep(5);
 
-
     // Declaration of variables 
-    let Indx, i, FiltPar, Ug, SDOF_Par, Temp;
+    let Indx, i, FiltPar, Ug, SDOF_Par, Temp, perc;
     let Time, Uc, Up, Disp, Vel, acc, Acc, Fs, Fc, Fi, Ek, Ed, Es, Ei, Final;
-    let HarForce, Te, Rd
+    let HarForce, Te, Rd, AnalysisMethod;
 
     // Get the Analysis Method
     Indx = document.getElementById('SDOF_Analysis').selectedIndex;
     
+    if      (Indx == 0) { AnalysisMethod = 'Free Vibration';       } // Free Vibration
+    else if (Indx == 1) { AnalysisMethod = 'Forced Vibration';     } // Forced Vibration
+    else if (Indx == 2) { AnalysisMethod = 'Piecewise Exact';      } // Piece-Wise Exact method
+    else if (Indx == 3) { AnalysisMethod = 'Central Difference';   } // Central Difference method 
+    else if (Indx == 4) { AnalysisMethod = 'Newmark Linear';       } // Newmark method 
+    else if (Indx == 5) { AnalysisMethod = 'Newmark Non-Linear';   } // // Newmark-NonLinear method 
+
+
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) {
         
         // STEP 1: Skip this Channel if it is not selected for analysis
-        if (!ChannelList[i].Selected) {  continue;  }
+        if (!ChannelList[i].Selected) {
 
-        // STEP 2: Get filter parameters
+            await Plotly_Graph_Update(i);
+            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            await sleep(5);
+            continue; 
+        }
+
+        // STEP 2: Skip if not an acceleration channel
+        if (ChannelList[i].Type != 0) { 
+
+            await Plotly_Graph_Update(i);
+            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            await sleep(5);
+            continue; 
+        }
+
+        // STEP 3: Get filter parameters
         FiltPar      = Filter_Parameters();
 
-        // STEP 3: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
         FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
 
         // Skip this Channel if filter is unstable
         if (FiltPar.ErrorMessage != undefined) { continue; }
 
-        // STEP 4: Get the rawdata
+        // STEP 5: Get the rawdata
         Ug = Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor);
 
-        // STEP 5: Apply Baseline correction and filtering 
+        // STEP 6: Apply Baseline correction and filtering 
         Ug = BaselineAndFilter(Ug, FiltPar);
 
-        // STEP 6: Get SDOF Parameters
+        // STEP 7: Get SDOF Parameters
         SDOF_Par = SDOF_Parameters();
 
         if      (Indx == 0) {
@@ -1078,10 +1110,6 @@ async function Channel_SDOF() {
             Temp = Statistics(Ed);    FiltPar.Peak_Ed   = Temp.Peak;   FiltPar.Mean_Ed   = Temp.Mean;   FiltPar.RMS_Ed   = Temp.RMS;
             Temp = Statistics(Es);    FiltPar.Peak_Es   = Temp.Peak;   FiltPar.Mean_Es   = Temp.Mean;   FiltPar.RMS_Es   = Temp.RMS;
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
-
-            // Options object
-            FiltPar.OptionsList    = ['Displacement', 'Velocity', 'Ek', 'Ed', 'Es', 'Ei'];
-            FiltPar.AnalysisMethod = 'Free Vibration';
 
         }
         else if (Indx == 1) {
@@ -1101,11 +1129,6 @@ async function Channel_SDOF() {
             Temp = Statistics(Es);       FiltPar.Peak_Es     = Temp.Peak;   FiltPar.Mean_Es     = Temp.Mean;   FiltPar.RMS_Es     = Temp.RMS;
             Temp = Statistics(Ei);       FiltPar.Peak_Ei     = Temp.Peak;   FiltPar.Mean_Ei     = Temp.Mean;   FiltPar.RMS_Ei     = Temp.RMS;
             Temp = Statistics(HarForce); FiltPar.Peak_HarFor = Temp.Peak;   FiltPar.Mean_HarFor = Temp.Mean;   FiltPar.RMS_HarFor = Temp.RMS;
-
-            // Options object
-            FiltPar.OptionsList    = ['Displacement', 'Velocity', 'Steady-state Displacement', 'Transient Displacement', 'Ek', 'Ed', 'Es', 'Ei', 'Harmonic Force'];
-            FiltPar.AnalysisMethod = 'Forced Vibration';
-
 
         }
         else if (Indx == 2) {
@@ -1132,11 +1155,6 @@ async function Channel_SDOF() {
             Temp = Statistics(Es);    FiltPar.Peak_Es   = Temp.Peak;   FiltPar.Mean_Es   = Temp.Mean;   FiltPar.RMS_Es   = Temp.RMS;
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
 
-            // Options object
-            SDOF_Par.OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Ek', 'Ed', 'Es', 'Ei'];
-            SDOF_Par.AnalysisMethod = 'Piecewise Exact';
-            SDOF_Par.FiltPar        = FiltPar;
-
         }
         else if (Indx == 3) {
             // Central Difference method 
@@ -1161,11 +1179,6 @@ async function Channel_SDOF() {
             Temp = Statistics(Ed);    FiltPar.Peak_Ed   = Temp.Peak;   FiltPar.Mean_Ed   = Temp.Mean;   FiltPar.RMS_Ed   = Temp.RMS;
             Temp = Statistics(Es);    FiltPar.Peak_Es   = Temp.Peak;   FiltPar.Mean_Es   = Temp.Mean;   FiltPar.RMS_Es   = Temp.RMS;
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
-
-            // Options object
-            SDOF_Par.OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Ek', 'Ed', 'Es', 'Ei'];
-            SDOF_Par.AnalysisMethod = 'Central Difference';
-            SDOF_Par.FiltPar        = FiltPar;
 
         }
         else if (Indx == 4) {
@@ -1198,19 +1211,13 @@ async function Channel_SDOF() {
             Temp = Statistics(Es);    FiltPar.Peak_Es   = Temp.Peak;   FiltPar.Mean_Es   = Temp.Mean;   FiltPar.RMS_Es   = Temp.RMS;
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
 
-            // Options object
-            SDOF_Par.OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Fs', 'Fc', 'Fi', 'Ek', 'Ed', 'Es', 'Ei'];
-            SDOF_Par.AnalysisMethod = 'Newmark Linear';
-            SDOF_Par.FiltPar        = FiltPar;
-
         }
         else if (Indx == 5) {
             // Newmark-NonLinear method 
-
-            let Freq = 1 / SDOF_Par.T;
+            let Per     = 1 / SDOF_Par.f;
             let Initials = [SDOF_Par.InDisp, SDOF_Par.InVel];
 
-            [Disp, Vel, acc, Acc, Final, Fs, Fc, Fi] = SDOF_NewmarkNonLin(Ug, SDOF_Par.YieldForce, SDOF_Par.delt, SDOF_Par.ksi, Freq, Initials, SDOF_Par.Alfa, SDOF_Par.Beta, SDOF_Par.del, SDOF_Par.tol, SDOF_Par.dtT);
+            [Disp, Vel, acc, Acc, Final, Fs, Fc, Fi] = SDOF_NewmarkNonLin(Ug, SDOF_Par.YieldForce, SDOF_Par.delt, SDOF_Par.ksi, Per, Initials, SDOF_Par.Alfa, SDOF_Par.Beta, SDOF_Par.del, SDOF_Par.tol, SDOF_Par.dtT);
 
             SDOF_Par.Disp = Disp;
             SDOF_Par.Vel  = Vel;
@@ -1229,27 +1236,36 @@ async function Channel_SDOF() {
             Temp = Statistics(Fc);    FiltPar.Peak_Fc   = Temp.Peak;   FiltPar.Mean_Fc   = Temp.Mean;   FiltPar.RMS_Fc   = Temp.RMS;
             Temp = Statistics(Fi);    FiltPar.Peak_Fi   = Temp.Peak;   FiltPar.Mean_Fi   = Temp.Mean;   FiltPar.RMS_Fi   = Temp.RMS;
             
-            // Options object
-            SDOF_Par.OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Fs', 'Fc', 'Fi'];
-            SDOF_Par.AnalysisMethod = 'Newmark Non-Linear';
-            SDOF_Par.FiltPar        = FiltPar;
-
         }
         else { break; }
 
-        // STEP 7: Flag Successfully Completion
+        // STEP 8: Store Filter Parameters
+        SDOF_Par.FiltPar = FiltPar;
+
+        // STEP 9: Flag Successfully Completion
         SDOF_Par.IsAnalysisCompleted = true;
 
-        // STEP 8: Store Results 
+        // STEP 10: Store Results 
         ChannelList[i].Results.SDOF = SDOF_Par;
 
-        // STEP 9: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        // STEP 11: Update Select-element of Display in InfoTable
+        SDOF_ResultsDisplay(i);
+
+        // STEP 12: Update Select-element of Unit in InfoTable
+        Update_Units_infoTable(i);
+
+        // STEP 13: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 10: Update Progress Indicator - Display completion status in UI progress bar
-        ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+        // STEP 14: Update Progress Indicator - Display completion status in UI progress bar
+        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+        if (perc != 100) {
+            ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'black');
+        }
 
-        // STEp 11: Brief delay for UI update visibility (5ms)
+        // STEP 15: Brief delay for UI update visibility (5ms)
         await sleep(5);
 
     }
@@ -1258,7 +1274,8 @@ async function Channel_SDOF() {
     document.getElementById("Run_Button").disabled = false;
     document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
 
-    // Helper function to apply baseline correction and filtering 
+    // Helper functions
+    // Baseline correction and filtering 
     function BaselineAndFilter(FilteredData, FiltPar) {
         // Apply baseline Correction and Filtering 
 
@@ -1277,6 +1294,33 @@ async function Channel_SDOF() {
         }
         // Return Filtered data 
         return FilteredData;
+
+    }
+
+    // Update select-element in InfoTable
+    function SDOF_ResultsDisplay(i) {
+
+        // retrun if no graph to plot
+        if (!ChannelList[i].PlotGraph) { return; }
+
+        // Declaration of varibalers 
+        let select, opt, OptionsList, Indx;
+        
+        OptionsList = Array.from(document.getElementById('SDOF_SelectToDisplay').options).map(opt => opt.text);
+        OptionsList.shift(); // removes the fist entry from the list
+
+        select      = document.getElementById("SDOF_Plot_ID_"  + ChannelList[i].Unique_ID);
+        select.innerText = '';
+        for (let j = 0; j < OptionsList.length; j++) {
+            opt = document.createElement("option");
+            opt.text = OptionsList[j];
+            select.add(opt, null);
+        }
+        select.setAttribute('onchange', 'Update_Units_infoTable('+ i.toString() +')');
+
+        // Readjust the Index
+        Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
+        if (Indx != 0) { select.selectedIndex = Indx-1; }
 
     }
 

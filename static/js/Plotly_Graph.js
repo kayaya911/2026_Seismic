@@ -12,7 +12,7 @@ async function Plotly_Graph_Update(ChNum) {
     // Decleration of variables 
     let traces, layout_update, res, res_RawData, res_FilteredData, FilterInfo;
     let Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
-    let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected;
+    let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
 
     let Div_ID              = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
     let Statictics_Peak_ID  = "Statictics_Peak_ID_" + ChannelList[ChNum].Unique_ID;
@@ -71,6 +71,15 @@ async function Plotly_Graph_Update(ChNum) {
         traces[2].line          = {color: 'grey', width: 1.00, dash: 'solid' };
         traces[2].name          = '';                // legend title
         traces[2].showlegend    = false;             // Don't show legend
+
+        // Empty - trace[3] not used 
+        traces[3].x             = [];
+        traces[3].y             = [];
+        traces[3].visible       = false;
+        traces[3].opacity       = 0.35;
+        traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+        traces[3].name          = '';                // legend title
+        traces[3].showlegend    = false;             // Don't show legend
 
         // Update y-axis of Plotly Graph
         layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
@@ -142,6 +151,15 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].name        = '';                     // legend title
                 traces[2].showlegend  = false;                  // don't show legend 
 
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
+
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
@@ -173,6 +191,15 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
                 traces[2].name        = '<b>Phase<b>';          // legend title
                 traces[2].showlegend  = true;                   // Show legend 
+
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT;   
                 layout_update.yaxis2.showticklabels = true; 
@@ -217,6 +244,15 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
                 traces[2].name        = '';                         // legend title
                 traces[2].showlegend  = false;                      // don't show legend 
+
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
@@ -266,6 +302,15 @@ async function Plotly_Graph_Update(ChNum) {
             traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
             traces[2].name        = '';                 // legend title
             traces[2].showlegend  = false;              // don't show legend 
+
+            // Empty - trace[3] not used 
+            traces[3].x             = [];
+            traces[3].y             = [];
+            traces[3].visible       = false;
+            traces[3].opacity       = 0.35;
+            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[3].name          = '';                // legend title
+            traces[3].showlegend    = false;             // Don't show legend
 
             layout_update.yaxis.title.text      = res_RawData.yTitle;   // This is the unit that user wants to see on the graph.
             layout_update.yaxis2.showticklabels = false;
@@ -347,6 +392,15 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].name        = '';         // legend title
                 traces[2].showlegend  = false;      // Don't show legend
 
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
+
                 layout_update.yaxis.title.text      = yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
@@ -378,6 +432,15 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
                 traces[2].name        = '<b>Phase<b>';          // legend title 
                 traces[2].showlegend  = true;                   // Show legend
+
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT;
                 layout_update.yaxis2.showticklabels = true;
@@ -418,6 +481,15 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
                 traces[2].name        = '';                     // legend title
                 traces[2].showlegend  = false;                  // Show legend
+
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT;
                 layout_update.yaxis2.showticklabels = false;
@@ -474,6 +546,15 @@ async function Plotly_Graph_Update(ChNum) {
             traces[2].name        = '';         // legend title
             traces[2].showlegend  = false;      // Don't show legend 
 
+            // Empty - trace[3] not used 
+            traces[3].x             = [];
+            traces[3].y             = [];
+            traces[3].visible       = false;
+            traces[3].opacity       = 0.35;
+            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[3].name          = '';                // legend title
+            traces[3].showlegend    = false;             // Don't show legend
+
             layout_update.yaxis.title.text      = yTitle;
             layout_update.yaxis2.showticklabels = false;
             layout_update.yaxis2.title.text     = "";
@@ -517,11 +598,26 @@ async function Plotly_Graph_Update(ChNum) {
     else if (PageNo == 3) {
         // SDOF Page
 
-        // Scale the Rawdata to the user-specified unit in Plotly Graph (info table)
-        //res = Convert_Data_To_Graph_Unit(ChannelList[ChNum].data, ChNum);
-
         // Make sure that the filter analysis is successfully completed
         if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted) {
+
+            // Scale the data to the user-specified unit in Plotly Graph (info table)
+            DisplayData = ChannelList[ChNum].Results.SDOF.DisplayData;
+
+            if      (DisplayData == "Disp"    ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
+            else if (DisplayData == "Vel"     ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Vel,  ChNum );  }
+            else if (DisplayData == "acc"     ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.acc,  ChNum );  }
+            else if (DisplayData == "Acc"     ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Acc,  ChNum );  }
+            else if (DisplayData == "Fs"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,   ChNum );  }
+            else if (DisplayData == "Fc"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fc,   ChNum );  }
+            else if (DisplayData == "Fi"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fi,   ChNum );  }
+            else if (DisplayData == "Ek"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,   ChNum );  }
+            else if (DisplayData == "Ed"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,   ChNum );  }
+            else if (DisplayData == "Es"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,   ChNum );  }
+            else if (DisplayData == "Ei"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,   ChNum );  }
+            else if (DisplayData == "Harm"    ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
+            else if (DisplayData == "ssDisp"  ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
+            else if (DisplayData == "trDisp"  ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
 
             // Get the status of two checkboxes in the Infor table on Plotly Graph
             IsFilter_CheckBox_Selected = document.getElementById(FilterResp_ID).checked;
@@ -530,22 +626,22 @@ async function Plotly_Graph_Update(ChNum) {
             if (!IsFilter_CheckBox_Selected && !IsFFT_CheckBox_Selected) {
                 
                 // Plot Raw data in trace[0]
-                traces[0].x           = [];
-                traces[0].y           = [];
+                traces[0].x           = ChannelList[ChNum].time;
+                traces[0].y           = res.Data;
                 traces[0].visible     = true;
-                traces[0].opacity     = 0.35;
-                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[0].name        = '<b>Raw Data<b>';   // legend title
-                traces[0].showlegend  = true;               // Show legend
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = ' ';                // legend title
+                traces[0].showlegend  = false;              // Show legend
                 
                 // Plot the Filtered data in tarace[1]
                 traces[1].x           = [];
                 traces[1].y           = [];
                 traces[1].visible     = true;
-                traces[1].opacity     = 1.00;
-                traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[1].name        = '<b>Filtered Data<b>';  // legend title
-                traces[1].showlegend  = true;                   // Show legend 
+                traces[1].opacity     = 0.35;
+                traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+                traces[1].name        = '';                      // legend title
+                traces[1].showlegend  = false;                   // Show legend 
 
                 // Empty - trace[2] not used 
                 traces[2].x           = [],
@@ -556,9 +652,18 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].name        = '';                     // legend title
                 traces[2].showlegend  = false;                  // don't show legend 
 
-                //layout_update.yaxis.title.text      = res_FilteredData.yTitle;   // This is the unit that user wants to see on the graph.
-                //layout_update.yaxis2.showticklabels = false;
-                //layout_update.yaxis2.title.text     = "";
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
+
+                layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
+                layout_update.yaxis2.showticklabels = false;
+                layout_update.yaxis2.title.text     = "";
             } 
             else if (IsFilter_CheckBox_Selected) {
                 // Empty trace[0] - Not used 
@@ -588,9 +693,18 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].name        = '<b>Phase<b>';          // legend title
                 traces[2].showlegend  = true;                   // Show legend 
 
-                // layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT;   
-                // layout_update.yaxis2.showticklabels = true; 
-                // layout_update.yaxis2.title.text     = res_FilteredData.y2Title;
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
+
+                layout_update.yaxis.title.text      = '<b>Magnitude<b>';
+                layout_update.yaxis2.showticklabels = true; 
+                layout_update.yaxis2.title.text     = res.y2Title;
                 
             }
             else if (IsFFT_CheckBox_Selected) {
@@ -599,29 +713,26 @@ async function Plotly_Graph_Update(ChNum) {
                 // Declaration of variables 
                 let Mag_FD=[], Angle_FD=[], Mag_RD=[], Angle_RD=[], f=[];
                 
-                // FFT of Filtered data
-                [Mag_FD, Angle_FD, f] = FourierSpec(res_FilteredData.Data,  ChannelList[ChNum].FSamp);
+                // FFT of SDOF-data
+                [Mag_FD, Angle_FD, f] = FourierSpec(res.Data,  ChannelList[ChNum].FSamp);
                 
-                // FFT of Raw data
-                [Mag_RD, Angle_RD, f] = FourierSpec(Detrend(Multiply(res_RawData.Data, ChannelList[ChNum].ScaleFactor), 0),   ChannelList[ChNum].FSamp);
-
                 // Plot FFT Magnitude Response of Raw data
                 traces[0].x           = f;
-                traces[0].y           = Mag_RD;
+                traces[0].y           = Mag_FD;
                 traces[0].visible     = true;
-                traces[0].opacity     = 0.35;
-                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[0].name        = '<b>Raw Data<b>';       // legend title
-                traces[0].showlegend  = true;                   // Show legend 
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = '';                      // legend title
+                traces[0].showlegend  = false;                   // Show legend 
 
                 // Plot FFT Magnitude Response of Filtered data
-                traces[1].x           = f;
-                traces[1].y           = Mag_FD;
-                traces[1].visible     = true;
-                traces[1].opacity     = 1.00;
-                traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[1].name        = '<b>Filtered Data<b>';      // legend title
-                traces[1].showlegend  = true;                       // Show legend 
+                traces[1].x           = [];
+                traces[1].y           = [];
+                traces[1].visible     = false;
+                traces[1].opacity     = 0.35;
+                traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+                traces[1].name        = '';                      // legend title
+                traces[1].showlegend  = true;                    // Show legend 
 
                 // Empty trace[2] - Not used 
                 traces[2].x           = [];
@@ -632,19 +743,25 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].name        = '';                         // legend title
                 traces[2].showlegend  = false;                      // don't show legend 
 
-                layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT; 
+                // Empty - trace[3] not used 
+                traces[3].x             = [];
+                traces[3].y             = [];
+                traces[3].visible       = false;
+                traces[3].opacity       = 0.35;
+                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[3].name          = '';                // legend title
+                traces[3].showlegend    = false;             // Don't show legend
+
+                layout_update.yaxis.title.text      = res.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
 
             }
-            
-            // Update Amalysis Method and SDOF-select Options in Table 
-            UpdateSDOF_Table(ChNum,   SDOF_Plot_ID, SDOF_Method_ID);
 
             // Update the Statistics of (RawData, Velocity, Displacement) in table - scaled to user-specified unit
-            // document.getElementById( Statictics_Peak_ID ).innerHTML = res.Peak.toPrecision(4);
-            // document.getElementById( Statictics_Mean_ID ).innerHTML = res.Mean.toPrecision(4);
-            // document.getElementById( Statictics_RMS_ID  ).innerHTML = res.RMS.toPrecision(4);
+            document.getElementById( Statictics_Peak_ID ).innerHTML = res.Peak.toPrecision(4);
+            document.getElementById( Statictics_Mean_ID ).innerHTML = res.Mean.toPrecision(4);
+            document.getElementById( Statictics_RMS_ID  ).innerHTML = res.RMS.toPrecision(4);
 
             // Show Baseline-Row in InforBar
             document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.SDOF.FiltPar.BaselineCorrection_String;
@@ -656,8 +773,51 @@ async function Plotly_Graph_Update(ChNum) {
             FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.SDOF.FiltPar.ZeroPhase;
             document.getElementById(FilterType_ID).innerHTML = FilterInfo;
 
+            // Assign the analysis method
+            document.getElementById(SDOF_Method_ID).innerHTML = ChannelList[ChNum].Results.SDOF.AnalysisMethod_string;
+
         }
         else {
+
+            // Plot Raw data in trace[0]
+            traces[0].x           = [];
+            traces[0].y           = [];
+            traces[0].visible     = true;
+            traces[0].opacity     = 0.35;
+            traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+            traces[0].name        = '<b>Raw Data<b>';   // legend title
+            traces[0].showlegend  = false;              // Show legend
+            
+            // Plot the Filtered data in tarace[1]
+            traces[1].x           = [];
+            traces[1].y           = [];
+            traces[1].visible     = true;
+            traces[1].opacity     = 1.00;
+            traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+            traces[1].name        = '<b>Filtered Data<b>';  // legend title
+            traces[1].showlegend  = true;                   // Show legend 
+
+            // Empty - trace[2] not used 
+            traces[2].x           = [],
+            traces[2].y           = [];
+            traces[2].visible     = false;
+            traces[2].opacity     = 0.35;
+            traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
+            traces[2].name        = '';                     // legend title
+            traces[2].showlegend  = false;                  // don't show legend 
+
+            // Empty - trace[3] not used 
+            traces[3].x             = [];
+            traces[3].y             = [];
+            traces[3].visible       = false;
+            traces[3].opacity       = 0.35;
+            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[3].name          = '';                // legend title
+            traces[3].showlegend    = false;             // Don't show legend
+
+            layout_update.yaxis.title.text      = '';   // This is the unit that user wants to see on the graph.
+            layout_update.yaxis2.showticklabels = false;
+            layout_update.yaxis2.title.text     = "";
 
             // Empty the Statistics
             document.getElementById( Statictics_Peak_ID ).innerHTML = '';
@@ -680,6 +840,8 @@ async function Plotly_Graph_Update(ChNum) {
         // Show SDOF row in InforBar
         document.getElementById(SDOF_Row_ID).style.display        = "table-row";
         document.getElementById(SDOF_Method_Row_ID).style.display = "table-row";
+
+        
         
     }
 
@@ -687,22 +849,7 @@ async function Plotly_Graph_Update(ChNum) {
     Plotly.update(Div_ID, traces, layout_update);
 
 
-    // Update Select Options for SDOF 
-    function UpdateSDOF_Table(ChNum, SDOF_Plot_ID, SDOF_Method_ID) {
-        let select, opt, OptionsList, Method;
-        OptionsList = ChannelList[ChNum].Results.SDOF.OptionsList;
-        Method      = ChannelList[ChNum].Results.SDOF.AnalysisMethod;
-        select      = document.getElementById(SDOF_Plot_ID);
-        select.innerText = '';
-        for (let j = 0; j < OptionsList.length; j++) {
-            opt = document.createElement("option");
-            opt.value = OptionsList[j];
-            opt.text = OptionsList[j];
-            select.add(opt, null);
-        }
-        select.selectedIndex = 0;
-        document.getElementById(SDOF_Method_ID).innerHTML = Method;
-    }
+    
 
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -770,7 +917,7 @@ async function Plotly_NewGraph(Div_ID, Channel) {
     // Other two traces are left emty for use in other pages such as to plot filtered-data or itegrated-data (velocity, displacment)
 
     // Declaration of variables
-    let traces=[], trace1, trace2, trace3, layout, config;
+    let traces=[], trace1, trace2, trace3, trace4, layout, config;
     let GraphTitle = '<b>' + Channel.FileName +' (Ch-' + Channel.ChNum + ') (' + Channel.Orientation  + ') (' + Number(Channel.FSamp).toFixed(3).toString() + ' Hz) <b>';
     let yLabel  = "<b>" + Channel.TypeString + "   [" + Channel.UnitString + "] <b>";
     let y2Label = "<b><b>";
@@ -813,9 +960,22 @@ async function Plotly_NewGraph(Div_ID, Channel) {
         line          : {color: 'green', width: 1.00, dash: 'solid' },
         showlegend    : false,
     };
+    trace4 = {
+        x             : [],
+        y             : [],
+        mode          : 'lines',
+        type          : 'scatter',
+        yaxis         : "y2",
+        name          :  '',                                            // Legend name
+        opacity       : 1.0,
+        visible       : false,                                          // Hide this trace
+        line          : {color: 'green', width: 1.00, dash: 'solid' },
+        showlegend    : false,
+    };
     traces.push(trace1);
     traces.push(trace2);
     traces.push(trace3);
+    traces.push(trace4);
 
     // Define Layout
     layout = {
@@ -890,7 +1050,8 @@ async function Plotly_Info_Table(Channel) {
     
     // Create a table and tabelBody
     Tabel = document.createElement('table');
-    Tabel.setAttribute('class', 'Plotly_Stat_Table')
+    Tabel.setAttribute('class', 'Plotly_Stat_Table');
+    Tabel.style.tableLayout = 'fixed';
     Table_Body = document.createElement('tbody');
     Table_Body.setAttribute('class', '')
     Tabel.appendChild(Table_Body);
@@ -900,6 +1061,9 @@ async function Plotly_Info_Table(Channel) {
     row.setAttribute('class', '');
     cell = row.insertCell(0);
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
+    
+    cell.style.width = '5.5rem';
+
     cell.innerHTML = "Peak";
     cell = row.insertCell(1);
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
@@ -928,32 +1092,7 @@ async function Plotly_Info_Table(Channel) {
     cell.innerHTML = Channel.RMS.toPrecision(4);
     cell.setAttribute('id', Statictics_RMS_ID);
 
-    // Create a new row for Graph-Unit
-    row = Tabel.insertRow(-1);
-    row.setAttribute('class', '');
-    row.setAttribute('id', GraphUnitRow_ID);
-    cell = row.insertCell(0);
-    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
-    cell.innerHTML = "Graph Unit";
     
-    Unit_List  = List_Units(TypeAndUnit(Channel.TypeAndUnits).Unit);
-    select     = document.createElement('select');
-    select.setAttribute("id", Unit_Plot_ID);
-    select.setAttribute('class', 'form-select form-select-sm');
-    for (j = 0; j < Unit_List.Units.length; j++) {
-        opt = document.createElement("option");
-        opt.value = Unit_List.Units[j];
-        opt.text = Unit_List.Units[j];
-        select.add(opt, null);
-    }
-    select.setAttribute('onchange', 'Plotly_Graph_Update('+ ChannelList_UniqueID(Channel.Unique_ID) + ')' );
-    select.selectedIndex = Unit_List.UnitNum.indexOf(Channel.Unit) ;
-    cell = row.insertCell(1);
-    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
-    cell.setAttribute('id', Unit_Cell_ID);
-    cell.appendChild(select);
-
-
     // Create a new row for SDOF Analysis Method
     row = Tabel.insertRow(-1);
     row.setAttribute('class', '');
@@ -967,6 +1106,8 @@ async function Plotly_Info_Table(Channel) {
     cell.innerHTML = '';
     cell.id        = SDOF_Method_ID;
 
+
+
     // Create a new row for SDOF list
     row = Tabel.insertRow(-1);
     row.setAttribute('class', '');
@@ -975,11 +1116,11 @@ async function Plotly_Info_Table(Channel) {
 
     cell = row.insertCell(0);
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
-    cell.innerHTML = "SDOF";
+    cell.innerHTML = "Display";
 
     select = document.createElement('select');
     select.setAttribute("id", SDOF_Plot_ID);
-    select.setAttribute('class', 'form-select form-select-sm');
+    select.setAttribute('class', 'form-custom');
     select.setAttribute('onchange', '');
     select.selectedIndex = 0;
 
@@ -988,9 +1129,31 @@ async function Plotly_Info_Table(Channel) {
     cell.setAttribute('id', SDOF_Cell_ID);
     cell.appendChild(select);
 
+    // Create a new row for Graph-Unit
+    row = Tabel.insertRow(-1);
+    row.setAttribute('class', '');
+    row.setAttribute('id', GraphUnitRow_ID);
+    cell = row.insertCell(0);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
+    cell.innerHTML = "Unit";
     
+    Unit_List  = List_Units(TypeAndUnit(Channel.TypeAndUnits).Unit);
+    select     = document.createElement('select');
+    select.setAttribute("id", Unit_Plot_ID);
+    select.setAttribute('class', 'form-custom');
+    for (j = 0; j < Unit_List.Units.length; j++) {
+        opt = document.createElement("option");
+        opt.text = Unit_List.Units[j];
+        select.add(opt, null);
+    }
+    select.setAttribute('onchange', 'Plotly_Graph_Update('+ ChannelList_UniqueID(Channel.Unique_ID) + ')' );
+    select.selectedIndex = Unit_List.UnitNum.indexOf(Channel.Unit) ;
+    cell = row.insertCell(1);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
+    cell.setAttribute('id', Unit_Cell_ID);
+    cell.appendChild(select);
 
-
+    
     // Create a new row for Baseline
     row = Tabel.insertRow(-1);
     row.setAttribute('class', '');

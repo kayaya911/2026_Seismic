@@ -457,7 +457,6 @@ async function Add_To_Table(Channel) {
     select.setAttribute('class', 'form-select form-select-sm Channels_Table_Select');
     for (j = 0; j < Unit_List.length; j++) {
         opt = document.createElement("option");
-        opt.value = Unit_List[j];
         opt.text = Unit_List[j];
         select.add(opt, null);
     }
