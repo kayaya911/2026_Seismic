@@ -40,8 +40,6 @@ async function Plotly_Graph_Update(ChNum) {
     layout_update.xaxis.autorange = true;
     layout_update.yaxis.autorange = true;
 
-
-
     // Update Graph for this channel
     if (PageNo == 0) {
         // Rawdata page

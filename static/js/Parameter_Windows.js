@@ -568,6 +568,31 @@ function SDOF_SelectToDisplay() {
 
     }
 }
+function SDOF_ResultsDisplay(i) {
+
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let select, opt, OptionsList, Indx;
+    
+    OptionsList = Array.from(document.getElementById('SDOF_SelectToDisplay').options).map(opt => opt.text);
+    OptionsList.shift(); // removes the fist entry from the list
+
+    select      = document.getElementById("SDOF_Plot_ID_"  + ChannelList[i].Unique_ID);
+    select.innerText = '';
+    for (let j = 0; j < OptionsList.length; j++) {
+        opt = document.createElement("option");
+        opt.text = OptionsList[j];
+        select.add(opt, null);
+    }
+    select.setAttribute('onchange', 'Update_Units_infoTable('+ i.toString() +')');
+
+    // Readjust the Index
+    Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
+    if (Indx != 0) { select.selectedIndex = Indx-1; }
+
+}
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
 // Response Spectrum Window Parameters ----------------------------------------------------------

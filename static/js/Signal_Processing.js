@@ -1267,6 +1267,8 @@ async function Channel_SDOF() {
         // STEP 10: Store Results 
         ChannelList[i].Results.SDOF = SDOF_Par;
 
+        SDOF_ResultsDisplay(i);
+
         // STEP 11: Update InfoTable
         Update_Units_infoTable(i);
 

@@ -775,15 +775,13 @@ async function Toggle_Sidebar_Checkbox_For_PlotGraph(chb) {
     }
     
     // Update infoTable if PageNo==3
-    if (PageNo == 3 ) { Update_Units_infoTable(ChNum); }
+    if (PageNo == 3 ) { SDOF_ResultsDisplay(ChNum); Update_Units_infoTable(ChNum); }
 
     // Update Graph
     Plotly_Graph_Update(ChNum);
 
     // Order Plotly Graphs
     Order_Plotly_Graphs();
-
-
 }
 //-----------------------------------------------------------------------------------------------
 function Toggle_Sidebar_SelectAllChannels_For_Analysis() {
