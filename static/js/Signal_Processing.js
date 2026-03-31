@@ -1098,6 +1098,9 @@ async function Channel_SDOF() {
         // STEP 7: Get SDOF Parameters
         SDOF_Par = SDOF_Parameters();
 
+        // Analysis method
+        SDOF_Par.AnalysisMethod = Indx;
+
         if      (Indx == 0) {
             // Free Vibration
             

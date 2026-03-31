@@ -11,7 +11,7 @@ async function Plotly_Graph_Update(ChNum) {
     
     // Decleration of variables 
     let traces, layout_update, res, res1, res_RawData, timeData, res_FilteredData, FilterInfo;
-    let Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
+    let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
     let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
 
     let Div_ID              = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
@@ -602,8 +602,11 @@ async function Plotly_Graph_Update(ChNum) {
     else if (PageNo == 3) {
         // SDOF Page
 
+        // Get the index number of the SDOF_Analysis Method
+        Indx = document.getElementById('SDOF_Analysis').selectedIndex;
+
         // Make sure that the filter analysis is successfully completed
-        if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted) {
+        if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted && (ChannelList[ChNum].Results.SDOF.AnalysisMethod == Indx)) {
 
             // Scale the data to the user-specified unit in Plotly Graph (info table)
             DisplayData = ChannelList[ChNum].Results.SDOF.DisplayData;

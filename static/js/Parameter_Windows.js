@@ -413,7 +413,7 @@ function SDOF_Parameters() {
     }
 
 }
-function SDOF_AnalysisType() {
+async function SDOF_AnalysisType() {
 
     // Declaration of variables
     let SDOF_Table, Indx, i, sel_el, OptionsList, opt;
@@ -428,7 +428,7 @@ function SDOF_AnalysisType() {
     else                        { document.getElementById("Parameters_Filter").style.display = "flex"; } // Enable Filter Window 
 
     // Disable the FilterTable rows if no filtering is selected 
-    if (Indx === 0) {
+    if        (Indx == 0) {
         // Free Vibration 
         SDOF_Table.rows[1].style.display  = "table-row";
         SDOF_Table.rows[2].style.display  = "table-row";
@@ -520,7 +520,7 @@ function SDOF_AnalysisType() {
         SDOF_Table.rows[8].style.display  = "none";
         SDOF_Table.rows[9].style.display  = "table-row";
         SDOF_Table.rows[10].style.display = "table-row";
-        SDOF_Table.rows[11].style.display = "table-row";
+        SDOF_Table.rows[11].style.display = "none";
 
         OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force', 'Hysteresis'];
     }
@@ -541,6 +541,9 @@ function SDOF_AnalysisType() {
 
     // Select the fist item in the list, which is None
     sel_el.selectedIndex = 0;
+
+    // Update UI (Screen)
+    for (let i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i); }
 
 }
 function SDOF_SelectToDisplay() {
