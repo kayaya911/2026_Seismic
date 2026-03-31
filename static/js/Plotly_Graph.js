@@ -726,6 +726,8 @@ async function Plotly_Graph_Update(ChNum) {
                 layout_update.yaxis.title.text      = '<b>Magnitude<b>';
                 layout_update.yaxis2.showticklabels = true; 
                 layout_update.yaxis2.title.text     = res.y2Title;
+                layout_update.xaxis.autorange = true;
+                layout_update.yaxis.autorange = true;
                 
             }
             else if (IsFFT_CheckBox_Selected) {
@@ -776,6 +778,8 @@ async function Plotly_Graph_Update(ChNum) {
                 layout_update.yaxis.title.text      = res.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
+                layout_update.xaxis.autorange = true;
+                layout_update.yaxis.autorange = true;
 
             }
 
