@@ -10,7 +10,7 @@ async function Plotly_Graph_Update(ChNum) {
     if (!ChannelList[ChNum].PlotGraph) { return; }
     
     // Decleration of variables 
-    let traces, layout_update, res, res_RawData, res_FilteredData, FilterInfo;
+    let traces, layout_update, res, res1, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
     let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
 
@@ -37,6 +37,10 @@ async function Plotly_Graph_Update(ChNum) {
 
     // Get the existing layout in the Div_ID
     layout_update = document.getElementById(Div_ID).layout;
+    layout_update.xaxis.autorange = true;
+    layout_update.yaxis.autorange = true;
+
+
 
     // Update Graph for this channel
     if (PageNo == 0) {
@@ -603,21 +607,36 @@ async function Plotly_Graph_Update(ChNum) {
 
             // Scale the data to the user-specified unit in Plotly Graph (info table)
             DisplayData = ChannelList[ChNum].Results.SDOF.DisplayData;
+            timeData    = ChannelList[ChNum].time;
 
-            if      (DisplayData == "Disp"    ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
-            else if (DisplayData == "Vel"     ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Vel,  ChNum );  }
-            else if (DisplayData == "acc"     ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.acc,  ChNum );  }
-            else if (DisplayData == "Acc"     ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Acc,  ChNum );  }
-            else if (DisplayData == "Fs"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,   ChNum );  }
-            else if (DisplayData == "Fc"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fc,   ChNum );  }
-            else if (DisplayData == "Fi"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fi,   ChNum );  }
-            else if (DisplayData == "Ek"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,   ChNum );  }
-            else if (DisplayData == "Ed"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,   ChNum );  }
-            else if (DisplayData == "Es"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,   ChNum );  }
-            else if (DisplayData == "Ei"      ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,   ChNum );  }
-            else if (DisplayData == "Harm"    ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
-            else if (DisplayData == "ssDisp"  ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
-            else if (DisplayData == "trDisp"  ) { res = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
+            if      (DisplayData == "Disp"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
+            else if (DisplayData == "Vel"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Vel,  ChNum );  }
+            else if (DisplayData == "acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.acc,  ChNum );  }
+            else if (DisplayData == "Acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Acc,  ChNum );  }
+            else if (DisplayData == "Fs"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,   ChNum );  }
+            else if (DisplayData == "Fc"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fc,   ChNum );  }
+            else if (DisplayData == "Fi"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fi,   ChNum );  }
+            else if (DisplayData == "Ek"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,   ChNum );  }
+            else if (DisplayData == "Ed"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,   ChNum );  }
+            else if (DisplayData == "Es"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,   ChNum );  }
+            else if (DisplayData == "Ei"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,   ChNum );  }
+            else if (DisplayData == "Harm"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
+            else if (DisplayData == "ssDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Up,   ChNum );  }
+            else if (DisplayData == "trDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Uc,   ChNum );  }
+            else if (DisplayData == "Hyst"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,   ChNum );
+                                                  res1 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );
+                                                  timeData = res1.Data;
+
+                                                  let xMin = Min(res1.Data).val;
+                                                  let xMax = Max(res1.Data).val;
+                                                  let yMin = Min(res.Data).val;
+                                                  let yMax = Max(res.Data).val;
+                                                  let cc   = 0.1;
+                                                  layout_update.xaxis.autorange = false;
+                                                  layout_update.yaxis.autorange = false;
+                                                  layout_update.xaxis.range     = [xMin*(1+cc), xMax*(1+cc)];
+                                                  layout_update.yaxis.range     = [yMin*(1+cc), yMax*(1+cc)];
+                                                }
 
             // Get the status of two checkboxes in the Infor table on Plotly Graph
             IsFilter_CheckBox_Selected = document.getElementById(FilterResp_ID).checked;
@@ -626,7 +645,7 @@ async function Plotly_Graph_Update(ChNum) {
             if (!IsFilter_CheckBox_Selected && !IsFFT_CheckBox_Selected) {
                 
                 // Plot Raw data in trace[0]
-                traces[0].x           = ChannelList[ChNum].time;
+                traces[0].x           = timeData;
                 traces[0].y           = res.Data;
                 traces[0].visible     = true;
                 traces[0].opacity     = 1.00;
@@ -664,6 +683,7 @@ async function Plotly_Graph_Update(ChNum) {
                 layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
+
             } 
             else if (IsFilter_CheckBox_Selected) {
                 // Empty trace[0] - Not used 
@@ -847,9 +867,6 @@ async function Plotly_Graph_Update(ChNum) {
 
     // Update the graph
     Plotly.update(Div_ID, traces, layout_update);
-
-
-    
 
 }
 //-------------------------------------------------------------------------------------------------------------

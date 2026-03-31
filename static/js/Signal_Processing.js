@@ -1056,7 +1056,7 @@ async function Channel_SDOF() {
     else if (Indx == 2) { AnalysisMethod = 'Piecewise Exact';      } // Piece-Wise Exact method
     else if (Indx == 3) { AnalysisMethod = 'Central Difference';   } // Central Difference method 
     else if (Indx == 4) { AnalysisMethod = 'Newmark Linear';       } // Newmark method 
-    else if (Indx == 5) { AnalysisMethod = 'Newmark Non-Linear';   } // // Newmark-NonLinear method 
+    else if (Indx == 5) { AnalysisMethod = 'Newmark Non-Linear';   } // Newmark-NonLinear method 
 
 
     // Loop over each channel
@@ -1118,6 +1118,22 @@ async function Channel_SDOF() {
             let beta    = null;
 
             [Time, Uc, Up, Disp, Vel, Ek, Ed, Es, Ei, HarForce, Te, Rd, beta] = SDOF_HarmonicVib(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, SDOF_Par.Duration, SDOF_Par.HarAmp, SDOF_Par.HarFreq, damping, beta);
+
+            SDOF_Par.Disp = Disp;
+            SDOF_Par.Uc   = Uc;
+            SDOF_Par.Up   = Up;
+            SDOF_Par.Vel  = Vel;
+            SDOF_Par.Ek   = Ek;
+            SDOF_Par.Ed   = Ed;
+            SDOF_Par.Es   = Es;
+            SDOF_Par.Ei   = Ei;
+
+            SDOF_Par.HarForce = HarForce;
+            SDOF_Par.Te       = Te;
+            SDOF_Par.Rd       = Rd;
+            SDOF_Par.beta     = beta;
+
+            console.log(SDOF_Par)
 
             // Statistics
             Temp = Statistics(Vel);      FiltPar.Peak_Vel    = Temp.Peak;   FiltPar.Mean_Vel    = Temp.Mean;   FiltPar.RMS_Vel    = Temp.RMS;
@@ -1248,16 +1264,13 @@ async function Channel_SDOF() {
         // STEP 10: Store Results 
         ChannelList[i].Results.SDOF = SDOF_Par;
 
-        // STEP 11: Update Select-element of Display in InfoTable
-        SDOF_ResultsDisplay(i);
-
-        // STEP 12: Update Select-element of Unit in InfoTable
+        // STEP 11: Update InfoTable
         Update_Units_infoTable(i);
 
-        // STEP 13: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        // STEP 12: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 14: Update Progress Indicator - Display completion status in UI progress bar
+        // STEP 13: Update Progress Indicator - Display completion status in UI progress bar
         perc = ((i+1)/ChannelList.length*100).toFixed(0); 
         if (perc != 100) {
             ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'red');
@@ -1265,7 +1278,7 @@ async function Channel_SDOF() {
             ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'black');
         }
 
-        // STEP 15: Brief delay for UI update visibility (5ms)
+        // STEP 14: Brief delay for UI update visibility (5ms)
         await sleep(5);
 
     }
@@ -1296,34 +1309,6 @@ async function Channel_SDOF() {
         return FilteredData;
 
     }
-
-    // Update select-element in InfoTable
-    function SDOF_ResultsDisplay(i) {
-
-        // retrun if no graph to plot
-        if (!ChannelList[i].PlotGraph) { return; }
-
-        // Declaration of varibalers 
-        let select, opt, OptionsList, Indx;
-        
-        OptionsList = Array.from(document.getElementById('SDOF_SelectToDisplay').options).map(opt => opt.text);
-        OptionsList.shift(); // removes the fist entry from the list
-
-        select      = document.getElementById("SDOF_Plot_ID_"  + ChannelList[i].Unique_ID);
-        select.innerText = '';
-        for (let j = 0; j < OptionsList.length; j++) {
-            opt = document.createElement("option");
-            opt.text = OptionsList[j];
-            select.add(opt, null);
-        }
-        select.setAttribute('onchange', 'Update_Units_infoTable('+ i.toString() +')');
-
-        // Readjust the Index
-        Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
-        if (Indx != 0) { select.selectedIndex = Indx-1; }
-
-    }
-
 }
 //-----------------------------------------------------------------------------------------------
 async function Channel_ResponseSpectrum() {

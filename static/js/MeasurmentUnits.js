@@ -633,11 +633,12 @@ function Convert_Data_To_Graph_Unit_SDOF(Data, ChNum) {
         else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ei') { Or_Data.Type_String = 'Input Energy';    temp.Unit = 'Mass • ' + temp.Unit;  }
     }
 
-    if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fs' ) { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fc' ) { Or_Data.Type_String = 'Damping Force';         temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fi' ) { Or_Data.Type_String = 'Inertia Force';         temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'acc') { Or_Data.Type_String = 'Relative Acceleration';                                    }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Acc') { Or_Data.Type_String = 'Total Acceleration';                                       }
+    if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fs'  ) { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fc'  ) { Or_Data.Type_String = 'Damping Force';         temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fi'  ) { Or_Data.Type_String = 'Inertia Force';         temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'acc' ) { Or_Data.Type_String = 'Relative Acceleration';                                    }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Acc' ) { Or_Data.Type_String = 'Total Acceleration';                                       }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Hyst') { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
@@ -665,9 +666,17 @@ function Update_Units_infoTable(i) {
     // retrun if no graph to plot
     if (!ChannelList[i].PlotGraph) { return; }
 
+    // Update Select-element of Display in InfoTable
+    SDOF_ResultsDisplay(i)
+
     // Declaration of varibalers 
     let AM, II, Units_SelectElement, Ind, Type, DisplayData;
     let SDOF_Plot_ID, Unit_Cell_ID;
+
+    // Defaults
+    Units_SelectElement = Select_Element(List_Units(8).Units);                    
+    Type                = 2;  
+    DisplayData         = 'Disp';
 
     // SDOF_ID
     SDOF_Plot_ID = "SDOF_Plot_ID_"  + ChannelList[i].Unique_ID;
@@ -694,10 +703,12 @@ function Update_Units_infoTable(i) {
         // Forced Vibration
         if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
-        if (II == 3) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=1;  DisplayData='ssDisp'; } // Steady-State Response
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=1;  DisplayData='trDisp'; } // Transient Response
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
     } 
     else if (AM == 2) {  
         // Piece-Wise Exact
@@ -744,6 +755,7 @@ function Update_Units_infoTable(i) {
         if (II == 4) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fs';     } // Spring (restoring) force per unit mass
         if (II == 5) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fc';     } // Damping force per unit mass
         if (II == 6) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fi';     } // Inertia force per unit mass
+        if (II == 7) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Hyst';   } // Fs-Disp  Inertia force per unit mass versus Displacement
     } 
 
     // Assign select-element to cell-element in table
@@ -783,6 +795,33 @@ function Update_Units_infoTable(i) {
         }
         select.selectedIndex = document.getElementById(ID).selectedIndex;
         return select;
+    }
+
+    // Update select-element in InfoTable
+    function SDOF_ResultsDisplay(i) {
+
+        // retrun if no graph to plot
+        if (!ChannelList[i].PlotGraph) { return; }
+
+        // Declaration of varibalers 
+        let select, opt, OptionsList, Indx;
+        
+        OptionsList = Array.from(document.getElementById('SDOF_SelectToDisplay').options).map(opt => opt.text);
+        OptionsList.shift(); // removes the fist entry from the list
+
+        select      = document.getElementById("SDOF_Plot_ID_"  + ChannelList[i].Unique_ID);
+        select.innerText = '';
+        for (let j = 0; j < OptionsList.length; j++) {
+            opt = document.createElement("option");
+            opt.text = OptionsList[j];
+            select.add(opt, null);
+        }
+        select.setAttribute('onchange', 'Update_Units_infoTable('+ i.toString() +')');
+
+        // Readjust the Index
+        Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
+        if (Indx != 0) { select.selectedIndex = Indx-1; }
+
     }
 
 }

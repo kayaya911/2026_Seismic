@@ -401,6 +401,7 @@ function SDOF_Parameters() {
         HarAmp                      : HarAmp,
         HarF                        : HarF,
         YieldForce                  : YieldForce,
+        del                         : del,
         Gamma                       : Gamma,
         Alfa                        : Alfa,
         Beta                        : Beta,
@@ -521,7 +522,7 @@ function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "table-row";
         SDOF_Table.rows[11].style.display = "table-row";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force'];
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force', 'Hysteresis'];
     }
 
     // Get the selectToDisplay and update its content 
