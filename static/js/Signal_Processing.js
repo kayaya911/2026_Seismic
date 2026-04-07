@@ -1036,7 +1036,6 @@ async function Channel_Integral() {
 //-----------------------------------------------------------------------------------------------
 async function Channel_SDOF() {
     
-
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous filter operations
     document.getElementById("Run_Button").disabled = true;
@@ -1044,7 +1043,7 @@ async function Channel_SDOF() {
     await sleep(5);
 
     // Declaration of variables 
-    let Indx, i, FiltPar, Ug, SDOF_Par, Temp, perc;
+    let Indx, i, FiltPar, Ug, SDOF_Par, Temp, perc, Div_ID;
     let Time, Uc, Up, Disp, Vel, acc, Acc, Fs, Fc, Fi, Ek, Ed, Es, Ei, Final;
     let HarForce, Te, Rd, AnalysisMethod;
 
@@ -1080,31 +1079,49 @@ async function Channel_SDOF() {
             continue; 
         }
 
-        // STEP 3: Get filter parameters
+        // STEP 3: Skip if it is Free Vibration or Forced Vibration 
+        if ((i>0) && ((Indx==0) || (Indx==1))) {
+            if (ChannelList[i].PlotGraph) { 
+                Div_ID = "Div_ID_" + ChannelList[i].Unique_ID;
+                document.getElementById(Div_ID).style.display = 'none';
+                ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+                await sleep(5);
+                continue;
+            }
+        }
+
+        // STEP 4: Get filter parameters
         FiltPar      = Filter_Parameters();
 
-        // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        // STEP 5: Check filter stability - Verify filter poles are inside unit circle (stable filter)
         FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
 
         // Skip this Channel if filter is unstable
         if (FiltPar.ErrorMessage != undefined) { continue; }
 
-        // STEP 5: Get the rawdata
+        // STEP 6: Get the rawdata
         Ug = Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor);
 
-        // STEP 6: Apply Baseline correction and filtering 
+        // STEP 7: Apply Baseline correction and filtering 
         Ug = BaselineAndFilter(Ug, FiltPar);
 
-        // STEP 7: Get SDOF Parameters
+        // STEP 8: Get SDOF Parameters
         SDOF_Par = SDOF_Parameters();
 
-        // Analysis method
+        // STEP 9: Analysis 
         SDOF_Par.AnalysisMethod = Indx;
 
         if      (Indx == 0) {
             // Free Vibration
             
             [Time, Disp, Vel, Ek, Ed, Es, Ei] = SDOF_FreeVib(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, SDOF_Par.Duration);
+
+            SDOF_Par.Disp = Disp;
+            SDOF_Par.Vel  = Vel;
+            SDOF_Par.Ek   = Ek;
+            SDOF_Par.Ed   = Ed;
+            SDOF_Par.Es   = Es;
+            SDOF_Par.Ei   = Ei;
 
             // Statistics
             Temp = Statistics(Vel);   FiltPar.Peak_Vel  = Temp.Peak;   FiltPar.Mean_Vel  = Temp.Mean;   FiltPar.RMS_Vel  = Temp.RMS;
@@ -1120,7 +1137,7 @@ async function Channel_SDOF() {
             let damping = null;
             let beta    = null;
 
-            [Time, Uc, Up, Disp, Vel, Ek, Ed, Es, Ei, HarForce, Te, Rd, beta] = SDOF_HarmonicVib(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, SDOF_Par.Duration, SDOF_Par.HarAmp, SDOF_Par.HarFreq, damping, beta);
+            [Time, Uc, Up, Disp, Vel, Ek, Ed, Es, Ei, HarForce, Te, Rd, beta] = SDOF_HarmonicVib(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, SDOF_Par.Duration, SDOF_Par.HarAmp, SDOF_Par.HarF, damping, beta);
 
             SDOF_Par.Disp = Disp;
             SDOF_Par.Uc   = Uc;
@@ -1135,8 +1152,6 @@ async function Channel_SDOF() {
             SDOF_Par.Te       = Te;
             SDOF_Par.Rd       = Rd;
             SDOF_Par.beta     = beta;
-
-            console.log(SDOF_Par)
 
             // Statistics
             Temp = Statistics(Vel);      FiltPar.Peak_Vel    = Temp.Peak;   FiltPar.Mean_Vel    = Temp.Mean;   FiltPar.RMS_Vel    = Temp.RMS;
@@ -1258,24 +1273,25 @@ async function Channel_SDOF() {
         }
         else { break; }
 
-        // STEP 8: Store Filter Parameters
+        // STEP 10: Store Filter Parameters
         SDOF_Par.FiltPar = FiltPar;
 
-        // STEP 9: Flag Successfully Completion
+        // STEP 11: Flag Successfully Completion
         SDOF_Par.IsAnalysisCompleted = true;
 
-        // STEP 10: Store Results 
+        // STEP 12: Store Results 
         ChannelList[i].Results.SDOF = SDOF_Par;
 
+        // STEP 13: Update select element in InfoTable
         SDOF_ResultsDisplay(i);
 
-        // STEP 11: Update InfoTable
+        // STEP 14: Update InfoTable
         Update_Units_infoTable(i);
 
-        // STEP 12: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 13: Update Progress Indicator - Display completion status in UI progress bar
+        // STEP 16: Update Progress Indicator - Display completion status in UI progress bar
         perc = ((i+1)/ChannelList.length*100).toFixed(0); 
         if (perc != 100) {
             ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'red');
@@ -1283,7 +1299,7 @@ async function Channel_SDOF() {
             ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'black');
         }
 
-        // STEP 14: Brief delay for UI update visibility (5ms)
+        // STEP 17: Brief delay for UI update visibility (5ms)
         await sleep(5);
 
     }

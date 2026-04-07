@@ -2413,7 +2413,7 @@ async function DonwloadExcel_LoadDataPage() {
     document.getElementById("Header_Download").disabled = true;
 
     // Update the ProgressBar
-    ProgressBar_Update('Please wait -- Downloading DSA_Results.xlsx File', 'black');
+    ProgressBar_Update('Please wait -- Downloading SDA_Results.xlsx File', 'black');
     await sleep(50);
     
     // Start new workbook
@@ -2648,6 +2648,9 @@ async function DonwloadExcel_LoadDataPage() {
             range = XLSX.utils.decode_range(WorkSheet['!ref']);
             ColumnStyle(WorkSheet, range, columnConfig);
         
+        }
+        else if (PageNo == 3) {
+            
         }
       
       // Add the workSheet to WorkBook

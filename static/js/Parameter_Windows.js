@@ -543,7 +543,15 @@ async function SDOF_AnalysisType() {
     sel_el.selectedIndex = 0;
 
     // Update UI (Screen)
-    for (let i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i); }
+    for (i=0; i<ChannelList.length; i++) { 
+        
+        // Update the graph
+        await Plotly_Graph_Update(i); 
+    
+        // Show the first graph on the screen and the turn off the rest of the graphs 
+        if ((Indx==0 || Indx==1) && (i!=0)) { document.getElementById("Div_ID_"+ChannelList[i].Unique_ID).style.display = 'none';  }
+        
+    }
 
 }
 function SDOF_SelectToDisplay() {

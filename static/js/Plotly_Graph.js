@@ -7,14 +7,15 @@
 async function Plotly_Graph_Update(ChNum) {
     
     // Return if no graph is created for this channel
-    if (!ChannelList[ChNum].PlotGraph) { return; }
+    if (!ChannelList[ChNum].PlotGraph) { return; } 
+    else { document.getElementById("Div_ID_"+ChannelList[ChNum].Unique_ID).style.display = 'flex'; }
     
     // Decleration of variables 
     let traces, layout_update, res, res1, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
     let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
 
-    let Div_ID              = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
+    let PlotArea_ID         = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
     let Statictics_Peak_ID  = "Statictics_Peak_ID_" + ChannelList[ChNum].Unique_ID;
     let Statictics_Mean_ID  = "Statictics_Mean_ID_" + ChannelList[ChNum].Unique_ID;
     let Statictics_RMS_ID   = "Statictics_RMS_ID_"  + ChannelList[ChNum].Unique_ID;
@@ -32,11 +33,11 @@ async function Plotly_Graph_Update(ChNum) {
     let FilterFFT_ID        = "FilterFFT_ID_"       + ChannelList[ChNum].Unique_ID;
     let Unit_Plot_ID        = "Unit_Plot_ID_"       + ChannelList[ChNum].Unique_ID;
 
-    // Get the existing traces in the Div_ID
-    traces = document.getElementById(Div_ID).data;
+    // Get the existing traces in the PlotArea_ID
+    traces = document.getElementById(PlotArea_ID).data;
 
-    // Get the existing layout in the Div_ID
-    layout_update = document.getElementById(Div_ID).layout;
+    // Get the existing layout in the PlotArea_ID
+    layout_update = document.getElementById(PlotArea_ID).layout;
     layout_update.xaxis.autorange = true;
     layout_update.yaxis.autorange = true;
 
@@ -610,22 +611,22 @@ async function Plotly_Graph_Update(ChNum) {
             DisplayData = ChannelList[ChNum].Results.SDOF.DisplayData;
             timeData    = ChannelList[ChNum].time;
 
-            if      (DisplayData == "Disp"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
-            else if (DisplayData == "Vel"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Vel,  ChNum );  }
-            else if (DisplayData == "acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.acc,  ChNum );  }
-            else if (DisplayData == "Acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Acc,  ChNum );  }
-            else if (DisplayData == "Fs"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,   ChNum );  }
-            else if (DisplayData == "Fc"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fc,   ChNum );  }
-            else if (DisplayData == "Fi"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fi,   ChNum );  }
-            else if (DisplayData == "Ek"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,   ChNum );  }
-            else if (DisplayData == "Ed"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,   ChNum );  }
-            else if (DisplayData == "Es"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,   ChNum );  }
-            else if (DisplayData == "Ei"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,   ChNum );  }
-            else if (DisplayData == "Harm"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );  }
-            else if (DisplayData == "ssDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Up,   ChNum );  }
-            else if (DisplayData == "trDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Uc,   ChNum );  }
-            else if (DisplayData == "Hyst"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,   ChNum );
-                                                  res1 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp, ChNum );
+            if      (DisplayData == "Disp"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp,     ChNum );  }
+            else if (DisplayData == "Vel"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Vel,      ChNum );  }
+            else if (DisplayData == "acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.acc,      ChNum );  }
+            else if (DisplayData == "Acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Acc,      ChNum );  }
+            else if (DisplayData == "Fs"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,       ChNum );  }
+            else if (DisplayData == "Fc"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fc,       ChNum );  }
+            else if (DisplayData == "Fi"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fi,       ChNum );  }
+            else if (DisplayData == "Ek"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,       ChNum );  }
+            else if (DisplayData == "Ed"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,       ChNum );  }
+            else if (DisplayData == "Es"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,       ChNum );  }
+            else if (DisplayData == "Ei"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,       ChNum );  }
+            else if (DisplayData == "HarFor"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.HarForce, ChNum );  }
+            else if (DisplayData == "ssDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Up,       ChNum );  }
+            else if (DisplayData == "trDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Uc,       ChNum );  }
+            else if (DisplayData == "Hyst"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,       ChNum );
+                                                  res1 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp,     ChNum );
                                                   timeData = res1.Data;
 
                                                   let xMin = Min(res1.Data).val;
@@ -871,7 +872,7 @@ async function Plotly_Graph_Update(ChNum) {
     }
 
     // Update the graph
-    Plotly.update(Div_ID, traces, layout_update);
+    Plotly.update(PlotArea_ID, traces, layout_update);
 
 }
 //-------------------------------------------------------------------------------------------------------------

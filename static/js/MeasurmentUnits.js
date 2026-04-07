@@ -633,12 +633,13 @@ function Convert_Data_To_Graph_Unit_SDOF(Data, ChNum) {
         else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ei') { Or_Data.Type_String = 'Input Energy';    temp.Unit = 'Mass • ' + temp.Unit;  }
     }
 
-    if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fs'  ) { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fc'  ) { Or_Data.Type_String = 'Damping Force';         temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fi'  ) { Or_Data.Type_String = 'Inertia Force';         temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'acc' ) { Or_Data.Type_String = 'Relative Acceleration';                                    }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Acc' ) { Or_Data.Type_String = 'Total Acceleration';                                       }
-    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Hyst') { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
+    if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fs'  )   { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fc'  )   { Or_Data.Type_String = 'Damping Force';         temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fi'  )   { Or_Data.Type_String = 'Inertia Force';         temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'acc' )   { Or_Data.Type_String = 'Relative Acceleration';                                    }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Acc' )   { Or_Data.Type_String = 'Total Acceleration';                                       }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Hyst')   { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'HarFor') { Or_Data.Type_String = 'Harmonic Force';        temp.Unit = 'Mass • ' + temp.Unit; }
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
@@ -688,24 +689,22 @@ function Update_Units_infoTable(i) {
         // Free Vibration
         if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
-        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='ssDisp'; } // Steady-state Response (Displacement)
-        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='trDisp'; } // Transient Response (Displacement)
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
-        if (II == 8) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Harm';   } // Harmonic Force
+        if (II == 2) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 3) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
+        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
     } 
     else if (AM == 1) {  
         // Forced Vibration
         if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
-        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=1;  DisplayData='ssDisp'; } // Steady-State Response
-        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=1;  DisplayData='trDisp'; } // Transient Response
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='ssDisp'; } // Steady-State Response
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='trDisp'; } // Transient Response
         if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
         if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
         if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
         if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 8) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='HarFor'; } // Harmonic Force
     } 
     else if (AM == 2) {  
         // Piece-Wise Exact
