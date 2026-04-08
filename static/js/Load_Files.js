@@ -2556,7 +2556,7 @@ async function DonwloadExcel_LoadDataPage() {
             columnConfig = [
                 { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 0: Time (s)
                 { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 1: Raw Data 
-                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2: Filtered Data
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2: Filtered Data
                 { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3: Frequency (Hz)
                 { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 4: Magnitude
                 { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 5: Phase (rad)
@@ -2577,12 +2577,13 @@ async function DonwloadExcel_LoadDataPage() {
 
             // Populate Time, Rawdata, Velocity and Diplacement 
             header = ["Time (s)", "Raw Data (" + ChannelList[i].UnitString + ")", "Velocity (" + temp.IntegrationUnits.FirstIntegral.Unit_String + ")", "Displacement (" + temp.IntegrationUnits.SecondIntegral.Unit_String + ")"];
-            data = Transpose([ ChannelList[i].time, 
-                               Multiply(ChannelList[i].data,          ChannelList[i].ScaleFactor ),
-                               ChannelList[i].Results.Integral.Vel,
-                               ChannelList[i].Results.Integral.Disp,
-                            ]);
-            AddDataToWorkSheet(WorkSheet, [header], "A1", data, "A2");
+            data   = [ChannelList[i].time, Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor)];
+
+            if (ChannelList[i].Results.Integral.IsAnalysisCompleted) {
+                data.push( ChannelList[i].Results.Integral.Vel  );
+                data.push( ChannelList[i].Results.Integral.Disp );
+            }
+            AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
 
             // Populate Filter Response to WorkSheet
             if (ChannelList[i].Results.Integral.IsAnalysisCompleted) {
@@ -2650,7 +2651,182 @@ async function DonwloadExcel_LoadDataPage() {
         
         }
         else if (PageNo == 3) {
-            
+            // Get the Analysis Method
+            let Indx = document.getElementById('SDOF_Analysis').selectedIndex;
+
+            if      (Indx == 0) { }
+            else if (Indx == 1) { }
+            else if (Indx == 2) { }
+            else if (Indx == 3) { }
+            else if (Indx == 4) { 
+
+                // Integral Units
+                temp = TypeAndUnit(ChannelList[i].TypeAndUnits);
+
+                if (ChannelList[i].Results.SDOF.IsAnalysisCompleted) {
+
+                    // Populate Time, Rawdata, Relative Acc, totoal Acc, Velocity, Displacement, Forces and Energy
+                    header = [  "Time (s)", 
+                                "Raw Data ("              + ChannelList[i].UnitString + ")", 
+                                "Relative Acceleration (" + ChannelList[i].UnitString + ")",
+                                "Total Acceleration ("    + ChannelList[i].UnitString + ")",
+                                "Velocity ("              + temp.IntegrationUnits.FirstIntegral.Unit_String + ")",
+                                "Displacement ("          + temp.IntegrationUnits.SecondIntegral.Unit_String + ")", 
+                                "Spring Force ("          + 'Mass • ' + ChannelList[i].UnitString + ")", 
+                                "Damping Force ("         + 'Mass • ' + ChannelList[i].UnitString + ")", 
+                                "Inertia Force ("         + 'Mass • ' + ChannelList[i].UnitString + ")", 
+                                "Kinetic Energy ("        + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )", 
+                                "Damping Energy ("        + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )", 
+                                "Strain Energy ("         + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )", 
+                                "Input Energy ("          + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )", 
+                            ];
+
+                    data   = [  ChannelList[i].time, 
+                                Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor),
+                                ChannelList[i].Results.SDOF.acc,
+                                ChannelList[i].Results.SDOF.Acc,
+                                ChannelList[i].Results.SDOF.Vel,
+                                ChannelList[i].Results.SDOF.Disp,
+                                ChannelList[i].Results.SDOF.Fs,
+                                ChannelList[i].Results.SDOF.Fc,
+                                ChannelList[i].Results.SDOF.Fi,
+                                ChannelList[i].Results.SDOF.Ek,
+                                ChannelList[i].Results.SDOF.Ed,
+                                ChannelList[i].Results.SDOF.Es,
+                                ChannelList[i].Results.SDOF.Ei
+                            ];
+                    AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
+
+                    // Filter Response 
+                    header = [["Freq (Hz)", "Magnitude", "Phase (rad)"]];
+                    data = Transpose([ ChannelList[i].Results.SDOF.FiltPar.f, 
+                                       ChannelList[i].Results.SDOF.FiltPar.Mag, 
+                                       ChannelList[i].Results.SDOF.FiltPar.Angle,
+                                     ]);
+                    AddDataToWorkSheet(WorkSheet, header, "O1", data, "O2");
+
+                    // Populate FileName, ChannelNumber, Duration (s), Data Type, Data Unit, Scale Factor, Orientation and Sampling Frequency
+                    header = [["File Name"],             ["Channel Number"],     ["Duration (s)"],          ["Scale Factor"],             ["Orientation"],              ["Sampling Frequency (Hz)"]];   
+                    data   = [[ChannelList[i].FileName], [ChannelList[i].ChNum], [ChannelList[i].Duration], [ChannelList[i].ScaleFactor], [ChannelList[i].Orientation], [ChannelList[i].FSamp]];
+                    AddDataToWorkSheet(WorkSheet, header, "S1", data, "T1");
+                    
+                    // Populate Peak, Mean, RMS
+                    AddDataToWorkSheet(WorkSheet, 
+                        [["Peak"  ]],   "T8",
+                        [["Mean"  ]],   "U8", 
+                        [["RMS"   ]],   "V8"
+                    );
+
+                    header = [  ["Raw Data ("              + ChannelList[i].UnitString + ")"], 
+                                ["Relative Acceleration (" + ChannelList[i].UnitString + ")"],
+                                ["Total Acceleration ("    + ChannelList[i].UnitString + ")"],
+                                ["Velocity ("              + temp.IntegrationUnits.FirstIntegral.Unit_String + ")"],
+                                ["Displacement ("          + temp.IntegrationUnits.SecondIntegral.Unit_String + ")"], 
+                                ["Spring Force ("          + 'Mass • ' + ChannelList[i].UnitString + ")"], 
+                                ["Damping Force ("         + 'Mass • ' + ChannelList[i].UnitString + ")"], 
+                                ["Inertia Force ("         + 'Mass • ' + ChannelList[i].UnitString + ")"], 
+                                ["Kinetic Energy ("        + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )"], 
+                                ["Damping Energy ("        + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )"], 
+                                ["Strain Energy ("         + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )"], 
+                                ["Input Energy ("          + 'Mass • (' + temp.IntegrationUnits.FirstIntegral.Unit_String + ")² )"], 
+                            ];
+
+                    data  = [[ChannelList[i].Peak], 
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_acc], 
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Acc],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Disp],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Vel],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Fs],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Fc],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Fi],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Ek],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Ed],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Es],
+                             [ChannelList[i].Results.SDOF.FiltPar.Peak_Ei],
+                            ];
+                    data2 = [[ChannelList[i].Mean], 
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_acc], 
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Acc],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Disp],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Vel],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Fs],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Fc],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Fi],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Ek],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Ed],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Es],
+                             [ChannelList[i].Results.SDOF.FiltPar.Mean_Ei],
+                            ];
+                    data3 = [[ChannelList[i].RMS], 
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_acc], 
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Acc],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Disp],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Vel],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Fs],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Fc],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Fi],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Ek],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Ed],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Es],
+                             [ChannelList[i].Results.SDOF.FiltPar.RMS_Ei],
+                            ];
+                    AddDataToWorkSheet(WorkSheet, header, "S9", data, "T9", data2, "U9", data3, "V9");
+
+                    // Populate Filter Settings to WorkSheet
+                    header = [["Filter Settings"]];
+                    data = "";
+                    AddDataToWorkSheet(WorkSheet, header, "S22", data, "T22");
+
+                    header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
+                    data = [[ChannelList[i].Results.SDOF.FiltPar.BaselineCorrection_String],
+                            [ChannelList[i].Results.SDOF.FiltPar.FilterName_String],
+                            [ChannelList[i].Results.SDOF.FiltPar.FilterType_String],
+                            [ChannelList[i].Results.SDOF.FiltPar.FilterOrder],
+                            [ChannelList[i].Results.SDOF.FiltPar.FilterBand],
+                            [ChannelList[i].Results.SDOF.FiltPar.ZeroPhase],
+                            [ChannelList[i].Results.SDOF.FiltPar.IsStable],
+                        ];
+                    AddDataToWorkSheet(WorkSheet, header, "S23", data, "T23");
+
+                    // Populate Filter Coefficients to WorkSheet
+                    header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
+                    data = [ChannelList[i].Results.SDOF.FiltPar.a, ChannelList[i].Results.SDOF.FiltPar.b];
+                    AddDataToWorkSheet(WorkSheet, header, "S31", data, "T31");
+
+                    // All column formatting
+                    columnConfig = [
+                        { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 0:  Time (s)
+                        { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 1:  Raw Data 
+                        { width: 35, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2:  Relative Acceleration
+                        { width: 35, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  Total Acceleration
+                        { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 4:  Velocity
+                        { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 5:  Displacement
+                        { width: 35, align: { horizontal: 'right',  vertical: 'center' } },  // Col 6:  Spring Force
+                        { width: 35, align: { horizontal: 'right',  vertical: 'center' } },  // Col 7:  Damping Force
+                        { width: 35, align: { horizontal: 'right',  vertical: 'center' } },  // Col 8:  Inertia Force
+                        { width: 40, align: { horizontal: 'right',  vertical: 'center' } },  // Col 9:  Kinetic Energy
+                        { width: 40, align: { horizontal: 'right',  vertical: 'center' } },  // Col 10: Damping Energy
+                        { width: 40, align: { horizontal: 'right',  vertical: 'center' } },  // Col 11: Strain Energy
+                        { width: 40, align: { horizontal: 'right',  vertical: 'center' } },  // Col 12: Input Energy
+                        { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 13: Empty
+                        { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 14: Frequency
+                        { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 15: Magnitude
+                        { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 16: Phase
+                        { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 17: Empty
+                        { width: 30, align: { horizontal: 'left',   vertical: 'center' } },  // Col 10: Value
+                        { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Col 11: Value
+                        { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 12: Value
+                        { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 12: Value
+                    ];
+                    range = XLSX.utils.decode_range(WorkSheet['!ref']);
+                    ColumnStyle(WorkSheet, range, columnConfig);
+
+                }
+            }
+            else if (Indx == 5) { }
+
+
+
         }
       
       // Add the workSheet to WorkBook
