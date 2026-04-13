@@ -847,6 +847,7 @@ async function Channel_Filter() {
     
     document.getElementById("Run_Button").disabled = true;
     document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    ProgressBar_Update( 'Computing filtering...', 'red');
     await sleep(5);
 
     // Declaration of variables 
@@ -937,6 +938,7 @@ async function Channel_Integral() {
     // Prevents user from triggering multiple simultaneous Integral operations
     document.getElementById("Run_Button").disabled = true;
     document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    ProgressBar_Update( 'Computing integration...', 'red');
     await sleep(5);
 
     // Declaration of variables 
@@ -1037,26 +1039,16 @@ async function Channel_Integral() {
 async function Channel_SDOF() {
     
     // Disable CALCULATE Button during processing (if applicable)
-    // Prevents user from triggering multiple simultaneous filter operations
+    // Prevents user from triggering multiple simultaneous SDOF operations
     document.getElementById("Run_Button").disabled = true;
     document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    ProgressBar_Update( 'Computing SDOF response...', 'red');
     await sleep(5);
 
     // Declaration of variables 
-    let Indx, i, FiltPar, Ug, SDOF_Par, Temp, perc, Div_ID;
+    let i, FiltPar, Ug, SDOF_Par, Temp, perc, Div_ID;
     let Time, Uc, Up, Disp, Vel, acc, Acc, Fs, Fc, Fi, Ek, Ed, Es, Ei, Final;
     let HarForce, Te, Rd, AnalysisMethod;
-
-    // Get the Analysis Method
-    Indx = document.getElementById('SDOF_Analysis').selectedIndex;
-    
-    if      (Indx == 0) { AnalysisMethod = 'Free Vibration';       } // Free Vibration
-    else if (Indx == 1) { AnalysisMethod = 'Forced Vibration';     } // Forced Vibration
-    else if (Indx == 2) { AnalysisMethod = 'Piecewise Exact';      } // Piece-Wise Exact method
-    else if (Indx == 3) { AnalysisMethod = 'Central Difference';   } // Central Difference method 
-    else if (Indx == 4) { AnalysisMethod = 'Newmark Linear';       } // Newmark method 
-    else if (Indx == 5) { AnalysisMethod = 'Newmark Non-Linear';   } // Newmark-NonLinear method 
-
 
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) {
@@ -1079,8 +1071,12 @@ async function Channel_SDOF() {
             continue; 
         }
 
-        // STEP 3: Skip if it is Free Vibration or Forced Vibration 
-        if ((i>0) && ((Indx==0) || (Indx==1))) {
+        // STEP 3: Get Filter-Parameters and SDOF-Parameters
+        FiltPar  = Filter_Parameters();
+        SDOF_Par = SDOF_Parameters();
+
+        // STEP 4: Skip if it is Free Vibration or Forced Vibration 
+        if ((i>0) && ((SDOF_Par.AnalysisMethod==0) || (SDOF_Par.AnalysisMethod==1))) {
             if (ChannelList[i].PlotGraph) { 
                 Div_ID = "Div_ID_" + ChannelList[i].Unique_ID;
                 document.getElementById(Div_ID).style.display = 'none';
@@ -1090,32 +1086,25 @@ async function Channel_SDOF() {
             }
         }
 
-        // STEP 4: Get filter parameters
-        FiltPar      = Filter_Parameters();
-
         // STEP 5: Check filter stability - Verify filter poles are inside unit circle (stable filter)
         FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
 
-        // Skip this Channel if filter is unstable
+        // STEP 6: Skip this Channel if filter is unstable
         if (FiltPar.ErrorMessage != undefined) { continue; }
 
-        // STEP 6: Get the rawdata
+        // STEP 7: Get the rawdata
         Ug = Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor);
 
-        // STEP 7: Apply Baseline correction and filtering 
+        // STEP 8: Apply Baseline correction and filtering 
         Ug = BaselineAndFilter(Ug, FiltPar);
 
-        // STEP 8: Get SDOF Parameters
-        SDOF_Par = SDOF_Parameters();
-
         // STEP 9: Analysis 
-        SDOF_Par.AnalysisMethod = Indx;
-
-        if      (Indx == 0) {
+        if      (SDOF_Par.AnalysisMethod == 0) {
             // Free Vibration
             
             [Time, Disp, Vel, Ek, Ed, Es, Ei] = SDOF_FreeVib(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, SDOF_Par.Duration);
 
+            // Store results
             SDOF_Par.Disp = Disp;
             SDOF_Par.Vel  = Vel;
             SDOF_Par.Ek   = Ek;
@@ -1132,13 +1121,14 @@ async function Channel_SDOF() {
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
 
         }
-        else if (Indx == 1) {
+        else if (SDOF_Par.AnalysisMethod == 1) {
             // Forced Vibration
             let damping = null;
             let beta    = null;
 
             [Time, Uc, Up, Disp, Vel, Ek, Ed, Es, Ei, HarForce, Te, Rd, beta] = SDOF_HarmonicVib(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, SDOF_Par.Duration, SDOF_Par.HarAmp, SDOF_Par.HarF, damping, beta);
 
+            // Store results
             SDOF_Par.Disp = Disp;
             SDOF_Par.Uc   = Uc;
             SDOF_Par.Up   = Up;
@@ -1165,11 +1155,12 @@ async function Channel_SDOF() {
             Temp = Statistics(HarForce); FiltPar.Peak_HarFor = Temp.Peak;   FiltPar.Mean_HarFor = Temp.Mean;   FiltPar.RMS_HarFor = Temp.RMS;
 
         }
-        else if (Indx == 2) {
+        else if (SDOF_Par.AnalysisMethod == 2) {
             // Piece-Wise Exact method
 
             [Time, Disp, Vel, acc, Acc, Ek, Ed, Es, Ei, Final] = SDOF_PieceWiseLin(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, Ug);
 
+            // Store results
             SDOF_Par.Disp = Disp;
             SDOF_Par.Vel  = Vel;
             SDOF_Par.acc  = acc;
@@ -1190,11 +1181,12 @@ async function Channel_SDOF() {
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
 
         }
-        else if (Indx == 3) {
+        else if (SDOF_Par.AnalysisMethod == 3) {
             // Central Difference method 
 
             [Time, Disp, Vel, acc, Acc, Ek, Ed, Es, Ei, Final] = SDOF_CentralDifferenceLin(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, Ug);
 
+            // Store results
             SDOF_Par.Disp = Disp;
             SDOF_Par.Vel  = Vel;
             SDOF_Par.acc  = acc;
@@ -1215,11 +1207,12 @@ async function Channel_SDOF() {
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
 
         }
-        else if (Indx == 4) {
+        else if (SDOF_Par.AnalysisMethod == 4) {
             // Newmark method 
 
             [Time, Disp, Vel, acc, Acc, Fs, Fc, Fi, Ek, Ed, Es, Ei, Final] = SDOF_NewmarkLin(SDOF_Par.f, SDOF_Par.ksi, SDOF_Par.delt, SDOF_Par.InDisp, SDOF_Par.InVel, Ug, SDOF_Par.Alfa, SDOF_Par.Beta);
 
+            // Store results
             SDOF_Par.Disp = Disp;
             SDOF_Par.Vel  = Vel;
             SDOF_Par.acc  = acc;
@@ -1246,13 +1239,14 @@ async function Channel_SDOF() {
             Temp = Statistics(Ei);    FiltPar.Peak_Ei   = Temp.Peak;   FiltPar.Mean_Ei   = Temp.Mean;   FiltPar.RMS_Ei   = Temp.RMS;
 
         }
-        else if (Indx == 5) {
+        else if (SDOF_Par.AnalysisMethod == 5) {
             // Newmark-NonLinear method 
             let Per     = 1 / SDOF_Par.f;
             let Initials = [SDOF_Par.InDisp, SDOF_Par.InVel];
 
             [Disp, Vel, acc, Acc, Final, Fs, Fc, Fi] = SDOF_NewmarkNonLin(Ug, SDOF_Par.YieldForce, SDOF_Par.delt, SDOF_Par.ksi, Per, Initials, SDOF_Par.Alfa, SDOF_Par.Beta, SDOF_Par.del, SDOF_Par.tol, SDOF_Par.dtT);
 
+            // Store results
             SDOF_Par.Disp = Disp;
             SDOF_Par.Vel  = Vel;
             SDOF_Par.acc  = acc;
@@ -1294,9 +1288,9 @@ async function Channel_SDOF() {
         // STEP 16: Update Progress Indicator - Display completion status in UI progress bar
         perc = ((i+1)/ChannelList.length*100).toFixed(0); 
         if (perc != 100) {
-            ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'red');
+            ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
         } else {
-            ProgressBar_Update( AnalysisMethod + ' -- ' + (perc).toString() + '% completed!', 'black');
+            ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
         }
 
         // STEP 17: Brief delay for UI update visibility (5ms)
@@ -1330,6 +1324,179 @@ async function Channel_SDOF() {
         return FilteredData;
 
     }
+}
+//-----------------------------------------------------------------------------------------------
+async function Channel_ResSpec() {
+    // Disable CALCULATE Button during processing (if applicable)
+    // Prevents user from triggering multiple simultaneous Response Spectrum operations
+    document.getElementById("Run_Button").disabled = true;
+    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    ProgressBar_Update( 'Computing response spectrum...', 'red');
+    await sleep(5);
+
+    // Declaration of variables 
+    let i, j, n, FiltPar, ResSpec_Par, Ug, T, ksi, SD, SV, SA, Sa, Temp, perc;
+    let delt, Alfa, Beta, PostYieldHard, mu, Option, Stiff_Deg, tol_R, tol_D, dtT
+
+
+    // Loop over each channel
+    for (i=0; i<ChannelList.length; i++) { 
+    
+        // STEP 1: Skip this Channel if it is not selected for analysis
+        if (!ChannelList[i].Selected) {
+
+            await Plotly_Graph_Update(i);
+            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            await sleep(5);
+            continue; 
+        }
+
+        // STEP 2: Skip if not an acceleration channel
+        if (ChannelList[i].Type != 0) { 
+
+            await Plotly_Graph_Update(i);
+            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            await sleep(5);
+            continue; 
+        }
+
+        // STEP 3: Get Filter-Parameters and ResSpectrum-Parameters
+        FiltPar     = Filter_Parameters();
+        ResSpec_Par = ResSpec_Parameters();
+        
+        // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
+
+        // STEP 5: Skip this Channel if filter is unstable
+        if (FiltPar.ErrorMessage != undefined) { continue; }
+
+        // STEP 6: Get the rawdata
+        Ug = Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor);
+
+        // STEP 7: Apply Baseline correction and filtering 
+        Ug = BaselineAndFilter(Ug, FiltPar);
+
+        // STEP 8: Array of SDOF-periods
+        T = LinStep(ResSpec_Par.T_Min, ResSpec_Par.T_Max, ResSpec_Par.T_Step);
+
+        // STEP 9: Analysis
+        if      (ResSpec_Par.AnalysisMethod == 0) {
+            // Elactic Spectra
+
+            n = ResSpec_Par.DampingRatioCount;
+
+            // Pre-allocation
+            ResSpec_Par.SD = new Array(n).fill(0);
+            ResSpec_Par.SV = new Array(n).fill(0);
+            ResSpec_Par.SA = new Array(n).fill(0);
+            ResSpec_Par.Sa = new Array(n).fill(0);
+
+            for (let j=0; j<n; j++) {
+
+                delt             = ChannelList[i].delt;
+                ksi              = ResSpec_Par['ksi_'+(j+1).toString()]; 
+                [SD, SV, SA, Sa] = SDOF_ResponseSpectrum(Ug, delt, ksi, T);
+
+                // Store results 
+                ResSpec_Par.SD[j] = SD;
+                ResSpec_Par.SV[j] = SV;
+                ResSpec_Par.SA[j] = SA;
+                ResSpec_Par.Sa[j] = Sa;
+
+            }
+            
+
+        }
+        else if ((ResSpec_Par.AnalysisMethod == 1) || (ResSpec_Par.AnalysisMethod == 2)){
+            // Constant Ductility Inelastic Response Spectra
+
+            n = ResSpec_Par.DuctilityCount;
+            if      (ResSpec_Par.AnalysisMethod == 1) { Option = 1; }  // Bilinear Hysteretic Model
+            else if (ResSpec_Par.AnalysisMethod == 2) { Option = 2; }  // Clough Bilinear with Stiffness Degradation
+
+            // Pre-allocation
+            ResSpec_Par.SD = new Array(n).fill(0);
+            ResSpec_Par.SV = new Array(n).fill(0);
+            ResSpec_Par.SA = new Array(n).fill(0);
+            ResSpec_Par.Sa = new Array(n).fill(0);
+
+            for (j=0; j<n; j++) {
+
+                delt             = ChannelList[i].delt;
+                ksi              = ResSpec_Par.ksi_1;
+                Alfa             = ResSpec_Par.Alfa;
+                Beta             = ResSpec_Par.Beta;
+                PostYieldHard    = ResSpec_Par.PostYieldHard;             // Post-yield stiffness ratio kn/k1
+                mu               = ResSpec_Par['mu_'+(j+1).toString()]; 
+                Stiff_Deg        = ResSpec_Par.Stiff_Deg;                 // Unloading stiffness degradation exponent for Clough bilinear with stiffness degradation only
+                tol_R            = ResSpec_Par.tol;
+                tol_D            = ResSpec_Par.tol_ductility;
+                dtT              = ResSpec_Par.dtT;
+                
+                [SD, SV, SA, Sa] = SDOF_ResSpectrum_Constant_Ductility(Ug, delt, ksi, T, Alfa, Beta, PostYieldHard, mu, Option, Stiff_Deg, tol_R, tol_D, dtT)
+
+                // Store results 
+                ResSpec_Par.SD[j] = SD;
+                ResSpec_Par.SV[j] = SV;
+                ResSpec_Par.SA[j] = SA;
+                ResSpec_Par.Sa[j] = Sa;
+
+            }
+
+
+        }
+        else { break; }
+
+        // STEP 9: Store Filter Parameters
+        ResSpec_Par.FiltPar = FiltPar;
+
+        // STEP 11: Flag Successfully Completion
+        ResSpec_Par.IsAnalysisCompleted = true;
+
+        // STEP 12: Store Results 
+        ChannelList[i].Results.SDOF = ResSpec_Par;
+
+
+        // STEP XXXX: Update Progress Indicator - Display completion status in UI progress bar
+        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+        if (perc != 100) {
+            ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
+        }
+
+        // STEP XXXX: Brief delay for UI update visibility (5ms)
+        await sleep(5);
+
+    }
+
+    // Enable CALCULATE Button
+    document.getElementById("Run_Button").disabled = false;
+    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+
+    // Helper functions
+    // Baseline correction and filtering 
+    function BaselineAndFilter(FilteredData, FiltPar) {
+        // Apply baseline Correction and Filtering 
+
+        // Apply Detrend if applicable
+        if (FiltPar.BaselineCorrection != 0) { 
+            if      (FiltPar.BaselineCorrection == 1) { FilteredData = Detrend(FilteredData, 0); } // Remove mean
+            else if (FiltPar.BaselineCorrection == 2) { FilteredData = Detrend(FilteredData, 1); } // Remove linear trend
+            else if (FiltPar.BaselineCorrection == 3) { FilteredData = Detrend(FilteredData, 2); } // Remove quadratic trend
+            else if (FiltPar.BaselineCorrection == 4) { FilteredData = Detrend(FilteredData, 3); } // Remove cubic trend
+        }
+
+        // Apply filter
+        if (FiltPar.FilterName !=0) {
+            if (FiltPar.ZeroPhase) { FilteredData = FiltFilt(FiltPar.b,   FiltPar.a,   FilteredData).y; } // Zero-phase filtering (Forward and backward)
+            else                   { FilteredData = Filter(  FiltPar.b,   FiltPar.a,   FilteredData).y; } // Single-pass filtering
+        }
+        // Return Filtered data 
+        return FilteredData;
+
+    }
+
 }
 //-----------------------------------------------------------------------------------------------
 async function Channel_ResponseSpectrum() {
@@ -5666,13 +5833,15 @@ function SDOF_NewmarkNonLin(Ug, Fy, delt, ksi, T, Initials, alfa, beta, del, tol
     //   tol      : Convergence tolerance for bisection algorithms (default 1e-6)
     //              Used as a relative force tolerance in BisectionZoneOne and as a
     //              velocity-scaled tolerance in BisectionZoneTwo
-    //   dtT      : Sampling accuracy threshold — maximum allowable ratio of delt/T (default 1e-6)
+    //   dtT      : Sampling accuracy threshold — maximum allowable ratio of delt/T (default 0.02)
     //              If delt/T exceeds this value, the input record Ug is automatically resampled
     //              by linear interpolation to satisfy delt/T ≤ dtT before integration, then
     //              output arrays are decimated back to the original time grid before returning.
     //              Smaller values force finer resampling and improve accuracy at the cost of
-    //              computation time. The default 1e-6 effectively always triggers resampling;
-    //              a typical practical value is 0.02 (1/50th of the natural period).
+    //              computation time. A typical practical value is 0.02 (1/50th of the natural period).
+    //              Note: when called repeatedly (e.g. from SDOF_ResSpectrum_Constant_Ductility),
+    //              resampling is performed on every call. Tightening dtT significantly increases
+    //              total computation time across all calls.
     //
     // Returns: [disp, vel, acc, Acc, Final, Fs, Fc, Fi]
     //   disp  : Relative displacement u(t) (array)
@@ -5719,12 +5888,12 @@ function SDOF_NewmarkNonLin(Ug, Fy, delt, ksi, T, Initials, alfa, beta, del, tol
     if (T        == null ) { T        = 1.0;       };
     if (ksi      == null ) { ksi      = 0.05;      };
     if (delt     == null ) { delt     = 1.0;       };
-    if (Fy       == null ) { Fy       = Max(Abs(Ug)) * 0.05; };
+    if (Fy       == null ) { Fy       = Max(Abs(Ug)).val * 0.05; };
 
     // Check if the input arguments are correct; otherwise, throw an error.
     if (!Array.isArray(Ug)) {throw new Error("Input Excitation Ug[] must be an array.");};
-    if ((delt <= 0) || (ksi < 0) || (ksi >= 1) || (T <= 0) || (Fy <= 0) || (del < 0) || (del >= 1) || (tol <= 0)) {
-        {throw new Error("[(delt <= 0) || (ksi < 0) || (ksi >= 1) || (T <= 0) || (Fy <= 0) || (del < 0) || (del >= 1) || (tol <= 0)] ::: Input arguments are inconsistent.");}
+    if ((delt <= 0) || (ksi < 0) || (ksi >= 1) || (T <= 0) || (Fy <= 0) || (del < 0) || (del >= 1) || (tol <= 0) || (dtT <= 0) || (dtT > 1)) {
+        throw new Error("[(delt <= 0) || (ksi < 0) || (ksi >= 1) || (T <= 0) || (Fy <= 0) || (del < 0) || (del >= 1) || (tol <= 0) || (dtT <= 0) || (dtT > 1)] ::: Input arguments are inconsistent.");
     }
 
     let Ind, N, Flag;
@@ -6262,6 +6431,272 @@ function SDOF_NewmarkNonLin(Ug, Fy, delt, ksi, T, Initials, alfa, beta, del, tol
         return [c, Ind];
     }
 
+}
+//-----------------------------------------------------------------------------------------------
+function SDOF_ResponseSpectrum(Ug, delt, ksi, T) {
+
+    // Computes the elastic response spectrum of a SDOF system subjected to a base
+    // acceleration record Ug using the Piecewise Linear Exact integration method
+    // (Nigam & Jennings, 1969). The spectrum is obtained by solving for the peak
+    // response of a series of SDOF oscillators with varying natural periods, each
+    // sharing the same base excitation.
+    //
+    // The equation of motion at each period T is solved via SDOF_PieceWiseLin,
+    // which is unconditionally stable for any time step and introduces no numerical
+    // damping or period elongation. Zero initial conditions are assumed: u(0) = 0,
+    // u̇(0) = 0.
+    //
+    // Parameters:
+    //   Ug   : Base acceleration time history (array, length ≥ 1)
+    //          Units must be consistent with the desired spectral output units
+    //   delt : Sampling interval of Ug in seconds (must be > 0)
+    //          Recommend delt ≤ 1 / (10·f_max) where f_max = 1/min(T) for accuracy
+    //          at short periods. The integration method is unconditionally stable
+    //          for any delt, but accuracy degrades for delt > T/10.
+    //   ksi  : Damping ratio (0 ≤ ksi < 1, underdamped only)
+    //          ksi = 0.05 → 5% damping (typical structural default)
+    //   T    : Array of natural periods (seconds) at which to evaluate the spectrum
+    //          All values must be > 0.
+    //          Default: [0.05, 0.10, 0.15, 0.20, 0.25, 0.40, 0.50, 1.0, 1.50,
+    //                    2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0]
+    //
+    // Returns: [SD, SV, SA, Sa]
+    //   SD : Spectral displacement  — peak |u(t)|        for each period in T (array)
+    //   SV : Spectral velocity      — peak |u̇(t)|       for each period in T (array)
+    //   SA : Spectral acceleration  — peak |Acc(t)|      for each period in T (array)
+    //        Total (absolute) acceleration = ü(t) + Ug(t)
+    //   Sa : Spectral acceleration  — peak |acc(t)|      for each period in T (array)
+    //        Relative acceleration ü(t) only (without Ug contribution)
+    //
+    // Note:
+    //   Energy arrays (Ek, Ed, Es, Ei) computed internally by SDOF_PieceWiseLin
+    //   are not returned; only peak response values are retained.
+    //
+    // Restriction:
+    //   Only valid for underdamped systems (ksi < 1). ksi ≥ 1 will throw an error.
+    //   All entries of T must be strictly positive.
+    //
+    // Reference:
+    //   Nigam, N.C. & Jennings, P.C. (1969). Calculation of response spectra from
+    //   strong-motion earthquake records. Bull. Seismol. Soc. Am., 59(2), 909–922.
+    //
+    // Author   : Dr. Yavuz Kaya
+    // Created  : 06.Dec.2006
+    // Modified : 29.Jan.2026
+
+    let i, Disp, Vel, acc, Acc, len, InDisp, InVel;
+    let SD, SV, SA, Sa;
+
+    // Check default values of input arguments
+    if (Ug   == null) { Ug =  Rand(1000); };
+    if (delt == null) { delt = 0.01; };
+    if (ksi  == null) { ksi = 0.05; };
+    if (T    == null) { T = [0.05, 0.1, 0.15, 0.2, 0.25, 0.40, 0.50, 1.0, 1.50, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10]; };
+
+    // INPUT VALIDATION
+    if (!Array.isArray(Ug))  { throw new Error("Input excitation Ug must be an array.");                      };
+    if (!Array.isArray(T))   { throw new Error("Natural periods of SDOF (T) must be an array.");              };
+    if (delt <= 0)           { throw new Error("delt (time interval) cannot be equal to or less than zero."); };
+    if (ksi  <  0)           { throw new Error("ksi (damping ratio) cannot be less than zero.");              };
+    if (ksi  >= 1)           { throw new Error("ksi must be less than 1 (underdamped systems only).");        };
+    T.forEach((v, idx) => {
+        if (v <= 0) { throw new Error(`T[${idx}] = ${v}: all natural periods must be greater than zero.`); }
+    });
+
+    // Total number of elements in Ug[] array
+    len = T.length;
+
+    // Pre-allocation of variables
+    SD = new Array(len).fill(0);
+    SV = new Array(len).fill(0);
+    SA = new Array(len).fill(0);
+    Sa = new Array(len).fill(0);
+
+    // Initial Conditions
+    InDisp = 0.0;
+    InVel  = 0.0;
+
+    for (i=0; i < len; i++) {
+        // Solution for each natural period of SDOF
+
+        [, Disp, Vel, acc, Acc] = SDOF_PieceWiseLin((1 / T[i]), ksi, delt, InDisp, InVel, Ug);
+
+        // Store results
+        SD[i] = Max(Abs(Disp)).val;
+        SV[i] = Max(Abs(Vel)).val;
+        SA[i] = Max(Abs(Acc)).val;
+        Sa[i] = Max(Abs(acc)).val;
+    }
+    // Return results
+    return [SD, SV, SA, Sa];
+}
+//-----------------------------------------------------------------------------------------------
+function SDOF_ResSpectrum_Constant_Ductility(Ug, delt, ksi, T, alfa, beta, del, mu, Option, gamma, tol_R, tol_D, dtT) {
+
+    // Computes the constant-ductility inelastic response spectrum of a SDOF system
+    // subjected to a base acceleration record Ug, using the Newmark implicit direct
+    // time integration method with a bilinear hysteresis model (Option 1). For each
+    // natural period in T, the yield strength Fy is found iteratively by bisection
+    // so that the peak ductility demand dc = max|u(t)| / Xy equals the target mu,
+    // where Xy = Fy / ω² is the yield displacement.
+    //
+    // The equation of motion at each period is:
+    //   ü(t) + 2·ξ·ω·u̇(t) + kn·u(t) = −Ug(t)
+    //
+    //   kn = ω²        elastic stiffness
+    //   kn = del·ω²    post-yield stiffness
+    //
+    // Parameters:
+    //   Ug     : Base acceleration time history (array, length ≥ 2)
+    //            Units must be consistent with the desired spectral output units
+    //   delt   : Sampling interval of Ug in seconds (must be > 0)
+    //   ksi    : Damping ratio (0 ≤ ksi < 1, underdamped only)
+    //            ksi = 0.05 → 5% damping (typical structural default)
+    //   T      : Array of natural periods (seconds) at which to evaluate the spectrum
+    //            All values must be > 0.
+    //            Default: [0.05, 0.10, 0.15, 0.20, 0.25, 0.40, 0.50, 1.0, 1.50,
+    //                      2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0]
+    //   alfa   : Newmark parameter α — controls numerical damping (default 0.5)
+    //   beta   : Newmark parameter β — controls acceleration interpolation (default 0.25)
+    //            β = 1/4 → average acceleration (unconditionally stable)
+    //   del    : Post-yield stiffness ratio kn/k1 (0 ≤ del < 1, default 0.0)
+    //            del = 0 → perfectly plastic; del > 0 → kinematic hardening
+    //   mu     : Target ductility demand — ratio of peak displacement to yield
+    //            displacement (must be > 0, default 1.0 = elastic limit)
+    //   Option : Hysteresis model (default 1)
+    //            1 → Bilinear hysteretic model
+    //            2 → Clough bilinear with stiffness degradation (reserved)
+    //   gamma  : Unloading stiffness degradation exponent (0 ≤ gamma ≤ 0.5, default 0.0)
+    //            Kr = Ko · (Xy / Xm)^gamma
+    //            gamma = 0 → no degradation (standard bilinear)
+    //   tol_R  : Force convergence tolerance for SDOF_NewmarkNonLin (default 1e-6)
+    //   tol_D  : Ductility convergence tolerance — iteration stops when
+    //            |dc − mu| / mu ≤ tol_D (default 1e-2)
+    //   dtT    : Sampling accuracy threshold — maximum allowable ratio of delt/T (default 0.02)
+    //            If delt/T exceeds this value, the input record Ug is automatically resampled
+    //            by linear interpolation to satisfy delt/T ≤ dtT before integration, then
+    //            output arrays are decimated back to the original time grid before returning.
+    //            Smaller values force finer resampling and improve accuracy at the cost of
+    //            computation time. A typical practical value is 0.02 (1/50th of the natural period).
+    //
+    // Returns: [SD, SV, SA, Sa]
+    //   SD : Spectral displacement  — peak |u(t)|   for each period in T (array)
+    //   SV : Spectral velocity      — peak |u̇(t)|  for each period in T (array)
+    //   SA : Spectral acceleration  — peak |Acc(t)| for each period in T (array)
+    //        Total (absolute) acceleration = ü(t) + Ug(t)
+    //   Sa : Spectral acceleration  — peak |acc(t)| for each period in T (array)
+    //        Relative acceleration ü(t) only (without Ug contribution)
+    //
+    // Restriction:
+    //   Only valid for underdamped systems (ksi < 1). ksi ≥ 1 will throw an error.
+    //   All entries of T must be strictly positive.
+    //   del must satisfy 0 ≤ del < 1.
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Created  : 23.Dec.2020
+    // Modified : 12.Apr.2026
+
+    // Check default values of input arguments
+    if (dtT    == null) { dtT    = 0.02;  };
+    if (tol_D  == null) { tol_D  = 1e-2;  };
+    if (tol_R  == null) { tol_R  = 1e-6;  };
+    if (gamma  == null) { gamma  = 0.0;   };
+    if (Option == null) { Option = 1;     };
+    if (mu     == null) { mu     = 1.0;   };
+    if (del    == null) { del    = 0.0;   };
+    if (beta   == null) { beta   = 0.25;  };
+    if (alfa   == null) { alfa   = 0.50;  };
+    if (T      == null) { T      = [0.05, 0.1, 0.15, 0.2, 0.25, 0.40, 0.50, 1.0, 1.50, 2.0, 2.5, 3.0, 4.0, 5.0, 6.0, 8.0, 10]; };
+    if (ksi    == null) { ksi    = 0.05;  };
+    if (delt   == null) { delt   = 1.0;   };
+    if (Ug     == null) { Ug =  Rand(1000); };
+
+    // INPUT VALIDATION
+    if (!Array.isArray(Ug))  { throw new Error("Input excitation Ug must be an array.");                       };
+    if (!Array.isArray(T))   { throw new Error("Natural periods T must be an array.");                         };
+    if (delt   <= 0)         { throw new Error("delt (time interval) cannot be equal to or less than zero.");  };
+    if (ksi    <  0)         { throw new Error("ksi (damping ratio) cannot be less than zero.");               };
+    if (ksi    >= 1)         { throw new Error("ksi must be less than 1 (underdamped systems only).");         };
+    if (del    <  0)         { throw new Error("del (post-yield ratio) cannot be less than zero.");            };
+    if (del    >= 1)         { throw new Error("del (post-yield ratio) must be less than 1.");                 };
+    if (mu     <= 0)         { throw new Error("mu (target ductility) must be greater than zero.");            };
+    if (gamma  <  0)         { throw new Error("gamma cannot be less than zero.");                             };
+    if (gamma  >  0.5)       { throw new Error("gamma cannot be greater than 0.5.");                           };
+    if (tol_D  <= 0)         { throw new Error("tol_D must be greater than zero.");                            };
+    if (tol_R  <= 0)         { throw new Error("tol_R must be greater than zero.");                            };
+    if (dtT    <= 0)         { throw new Error("dtT must be greater than zero.");                              };
+    if (dtT    >  1)         { throw new Error("dtT must be less than or equal to 1.");                        };
+    T.forEach((v, idx) => {
+        if (v <= 0) { throw new Error(`T[${idx}] = ${v}: all natural periods must be greater than zero.`); }
+    });
+
+    // These variables only exist within this block {...}. Does not exist out of this function.
+    let n, SD, SV, SA, Sa, i, w, w2, Fy, F1, F2, Iter, InCond, Disp, Vel, acc, Acc, Xy, Md, dc;
+
+    // pre-allocation of variables
+    n = T.length;
+    SD = new Array(n).fill(0);
+    SV = new Array(n).fill(0);
+    SA = new Array(n).fill(0);
+    Sa = new Array(n).fill(0);
+    
+    // Initial Conditions - InDisp and InVel
+    InCond = [0.0, 0.0];
+
+    // Calculate the In-Elastic response spectrum for each period
+    for (i = 0; i < n; i++) {
+
+        // Start with a yield force that is equal to the 1-standard deviation of the input acceleration.
+        // Then find the yield force that corresponds to the desired ductility level of mu using bisection method.
+        // F1 > Fy > F2
+
+        // initialization
+        w  = 2 * Math.PI / T[i];
+        w2 = w * w;
+
+        // Initial Fy: use standard deviation of Ug as a starting estimate,
+        // with a floor at 5% of PGA to avoid a zero starting point on flat records.
+        Fy   = Math.max(Std(Ug), Max(Abs(Ug)).val * 0.05);
+        F1   = NaN;
+        F2   = NaN;
+        Iter = 0;
+
+        while (true) {
+            Iter += 1;
+
+            if (Option == 1) {
+                // Bi-linear hysteretic Model
+                [Disp, Vel, acc, Acc] = SDOF_NewmarkNonLin(Ug, Fy, delt, ksi, T[i], InCond, alfa, beta, del, tol_R, dtT);
+            }
+            else if (Option == 2) {
+                // Clough Bi-linear with Stiffness Degradation Model
+                [Disp, Vel, acc, Acc] = SDOF_NewmarkNonLin(Ug, Fy, delt, ksi, T[i], InCond, alfa, beta, del, tol_R, dtT);
+            }
+
+            Xy = Fy / w2;
+            Md = Max(Abs(Disp)).val;
+            dc = Md / Xy;               // dc = peak displacement / yield displacement
+
+            if ((Iter >= 100) || ((Math.abs(dc - mu) / mu) <= tol_D))  { break; }  // Break the while-loop
+
+            // Bisection: establish bracket, then converge
+            if (dc > mu) {
+                // System is too flexible (too little strength) → raise Fy
+                F2 = Fy;
+                Fy = isNaN(F1) ? Fy * 2 : (F1 + F2) / 2;
+            } else {
+                // System is too stiff (too much strength) → lower Fy
+                F1 = Fy;
+                Fy = isNaN(F2) ? Fy / 2 : (F1 + F2) / 2;
+            }
+
+        }
+        SD[i] = Md;
+        SV[i] = Max(Abs(Vel)).val;
+        SA[i] = Max(Abs(Acc)).val; // total acc stored in SA 
+        Sa[i] = Max(Abs(acc)).val; // relative acc stored in Sa
+    }
+    return [SD, SV, SA, Sa];
 }
 //-----------------------------------------------------------------------------------------------
 function Statistics(data, SF) {

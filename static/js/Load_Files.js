@@ -3059,7 +3059,6 @@ async function DonwloadExcel_LoadDataPage() {
                             ChannelList[i].Results.SDOF.Es,
                             ChannelList[i].Results.SDOF.Ei
                         ];
-                        console.log(data)
                 AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
 
                 // Filter Response 

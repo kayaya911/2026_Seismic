@@ -49,8 +49,8 @@ function OnLoad() {
     Filter_Type_Change();
     SDOF_AnalysisType();
     ResSpec_AnalysisType();
-    ResSpec_Damping_Change(document.getElementById('DampingRatioCount'));
-    ResSpec_Ductility_Change(document.getElementById('DuctilityCount'));
+    ResSpec_Damping_Change(document.getElementById('ResSpec_DampingRatioCount'));
+    ResSpec_Ductility_Change(document.getElementById('ResSpec_DuctilityCount'));
 
     // Load_Data item from Analysis_Menu is selected 
     AnalysisMenu_Selection(document.getElementById("MainMenu_LoadData"));
@@ -156,6 +156,7 @@ async function Anlysis_Button() {
     else if ( PageNo == 1) { await Channel_Filter();   } // Filtering Page
     else if ( PageNo == 2) { await Channel_Integral(); } // Integral Page
     else if ( PageNo == 3) { await Channel_SDOF();     } // SDOF Page
+    else if ( PageNo == 4) { await Channel_ResSpec();  } // Response Spectrum Page
 }
 //-----------------------------------------------------------------------------------------------
 function Channel_Click(checkbox) {

@@ -340,9 +340,10 @@
                         <!-- Reponse Spectrum Parameters -->
                         <div class="Parameters" id="Parameters_ResSpec">
                             <label><b>Response Spectrum Type</b></label>
-                            <select class="form-custom" id="ResSpec_Analysis" onchange="ResSpec_AnalysisType()">
-                                <option value="Free Vibration" selected>Elastic Spectra</option>
-                                <option value="Forced Vibration">Constant-Ductility Inelastic Spectra</option>
+                            <select class="form-custom" id="ResSpec_AnalysisMethod" onchange="ResSpec_AnalysisType()">
+                                <option value="" selected>Elastic Spectra</option>
+                                <option value="">Constant-Ductility Inelastic Spectra (Bilinear hysteretic mode)</option>
+                                <option value="">Constant-Ductility Inelastic Spectra (Clough bilinear model)</option>
                             </select><br/>
 
                             <table class="table-sm Parameters-Table" id="ResSpec_Parameters_Table1">
@@ -352,23 +353,23 @@
                                     </tr>
                                     <tr>
                                         <td>Minimum Period</td>
-                                        <td><input title="Start Period" id="" type="number" onfocus="this.oldValue = this.value;"  onchange="" value="0.1" step="0.01"/></td>
+                                        <td><input title="Start Period" id="ResSpec_MinimumPeriod" type="number" onfocus="this.oldValue = this.value;"  onchange="" value="0.1" step="0.01"/></td>
                                     </tr>
                                     <tr>
                                         <td>Period Step</td>
-                                        <td><input title="Period Step" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.10" step="0.10"/></td>
+                                        <td><input title="Period Step" id="ResSpec_PeriodStep" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.10" step="0.10"/></td>
                                     </tr>
                                     <tr>
                                         <td>Maximum Period</td>
-                                        <td><input title="Stop Period" id="" type="number" onfocus="this.oldValue = this.value;" onchange=""value="5.0" step="0.10"/></td>
+                                        <td><input title="Stop Period" id="ResSpec_MaximumPeriod" type="number" onfocus="this.oldValue = this.value;" onchange=""value="5.0" step="0.10"/></td>
                                     </tr>
                                     <tr>
                                         <td>Unloading Stiffness Degradation</td>
-                                        <td><input title="Unloading Stiffness Degradation" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.20" step="0.01"/></td>
+                                        <td><input title="Unloading Stiffness Degradation" id="ResSpec_UnloadingStiffnessDegredation" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.20" step="0.01"/></td>
                                     </tr>
                                     <tr>
                                         <td>Post-Yield Hardening Ratio</td>
-                                        <td><input title="Post Yield Hardening Ratio" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.10" step="0.01"/></td>
+                                        <td><input title="Post Yield Hardening Ratio" id="ResSpec_PostYiledHardeningRatio" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.10" step="0.01"/></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -381,46 +382,46 @@
                                     </tr>
                                     <tr>
                                         <td>Damping Ratio Count</td>
-                                        <td><input title="Number of Damping Ratio Values" id="DampingRatioCount" type="number" onfocus="this.oldValue = this.value;" onchange="ResSpec_Damping_Change(this)" value="1" step="1"/></td>
+                                        <td><input title="Number of Damping Ratio Values" id="ResSpec_DampingRatioCount" type="number" onfocus="this.oldValue = this.value;" onchange="ResSpec_Damping_Change(this)" value="1" step="1"/></td>
                                     </tr>
                                     <tr>
                                         <td>Damping Ratio-1</td>
-                                        <td><input title="Damping Ratio of SDOF" id="" type="number" onfocus="this.oldValue = this.value;" onchange=""value="0.01" step="0.01"/></td>
+                                        <td><input title="Damping Ratio of SDOF" id="ResSpec_ksi_1" type="number" onfocus="this.oldValue = this.value;" onchange=""value="0.01" step="0.01"/></td>
                                     </tr>
                                     <tr>
                                         <td>Damping Ratio-2</td>
-                                        <td><input title="Damping Ratio of SDOF" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.02" step="0.01"/></td>
+                                        <td><input title="Damping Ratio of SDOF" id="ResSpec_ksi_2" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.02" step="0.01"/></td>
                                     </tr>
                                     <tr>
                                         <td>Damping Ratio-3</td>
-                                        <td><input title="Damping Ratio of SDOF" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.03" step="0.01"/></td>
+                                        <td><input title="Damping Ratio of SDOF" id="ResSpec_ksi_3" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.03" step="0.01"/></td>
                                     </tr>
                                     <tr>
                                         <td>Damping Ratio-4</td>
-                                        <td><input title="Damping Ratio of SDOF" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.04" step="0.01"/></td>
+                                        <td><input title="Damping Ratio of SDOF" id="ResSpec_ksi_4" type="number" onfocus="this.oldValue = this.value;" onchange="" value="0.04" step="0.01"/></td>
                                     </tr>
                                     <tr>
                                         <td> <label><b>Constant Ductility</b></label>  </td>
                                     </tr>
                                     <tr>
                                         <td>Ductility Count</td>
-                                        <td><input title="Number of Damping Ratio Values" id="DuctilityCount" type="number" onfocus="this.oldValue = this.value;" onchange="ResSpec_Ductility_Change(this)" value="1" step="1"/></td>
+                                        <td><input title="Number of Damping Ratio Values" id="ResSpec_DuctilityCount" type="number" onfocus="this.oldValue = this.value;" onchange="ResSpec_Ductility_Change(this)" value="1" step="1"/></td>
                                     </tr>
                                     <tr>
                                         <td>Constant Ductility-1</td>
-                                        <td><input  title="Displacement Ductility-1" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="1.5" step="0.10"/></td>
+                                        <td><input  title="Displacement Ductility-1" id="ResSpec_mu_1" type="number" onfocus="this.oldValue = this.value;" onchange="" value="1.5" step="0.10"/></td>
                                     </tr>
                                     <tr>
                                         <td>Constant Ductility-2</td>
-                                        <td><input title="Displacement Ductility-1" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="2.0" step="0.10"/></td>
+                                        <td><input title="Displacement Ductility-1" id="ResSpec_mu_2" type="number" onfocus="this.oldValue = this.value;" onchange="" value="2.0" step="0.10"/></td>
                                     </tr>
                                     <tr>
                                         <td>Constant Ductility-3</td>
-                                        <td><input title="Displacement Ductility-1" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="2.5" step="0.10"/></td>
+                                        <td><input title="Displacement Ductility-1" id="ResSpec_mu_3" type="number" onfocus="this.oldValue = this.value;" onchange="" value="2.5" step="0.10"/></td>
                                     </tr>
                                     <tr>
                                         <td>Constant Ductility-4</td>
-                                        <td><input title="Displacement Ductility-1" id="" type="number" onfocus="this.oldValue = this.value;" onchange="" value="3.0" step="0.10"/></td>
+                                        <td><input title="Displacement Ductility-1" id="ResSpec_mu_4" type="number" onfocus="this.oldValue = this.value;" onchange="" value="3.0" step="0.10"/></td>
                                     </tr>
                                 </tbody>
                             </table>

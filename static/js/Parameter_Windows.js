@@ -613,17 +613,29 @@ function ResSpec_AnalysisType() {
     ResSpec_Table1 = document.getElementById('ResSpec_Parameters_Table1');
 
     // Get the index number of the SDOF_Analysis
-    Indx = document.getElementById('ResSpec_Analysis').selectedIndex;
+    Indx = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;
 
     // Disable the FilterTable rows if no filtering is selected 
     if (Indx === 0) {
+        // Elastic Response Spectrum
         ResSpec_Table1.rows[0].style.display  = "table-row";
         ResSpec_Table1.rows[1].style.display  = "table-row";
         ResSpec_Table1.rows[2].style.display  = "table-row";
         ResSpec_Table1.rows[3].style.display  = "table-row";
         ResSpec_Table1.rows[4].style.display  = "none";
         ResSpec_Table1.rows[5].style.display  = "none";
-     } else if (Indx === 1) {
+    } else if (Indx === 1) {
+        // Constant Ductility Inelestic Response Spectrum
+        // Bilinear hysteretic model
+        ResSpec_Table1.rows[0].style.display  = "table-row";
+        ResSpec_Table1.rows[1].style.display  = "table-row";
+        ResSpec_Table1.rows[2].style.display  = "table-row";
+        ResSpec_Table1.rows[3].style.display  = "table-row";
+        ResSpec_Table1.rows[4].style.display  = "none";
+        ResSpec_Table1.rows[5].style.display  = "table-row";
+    } else if (Indx === 2) {
+        // Constant Ductility Inelestic Response Spectrum
+        // Clough bilinear with stiffness degradation
         ResSpec_Table1.rows[0].style.display  = "table-row";
         ResSpec_Table1.rows[1].style.display  = "table-row";
         ResSpec_Table1.rows[2].style.display  = "table-row";
@@ -678,6 +690,79 @@ function ResSpec_Ductility_Change(x) {
     }
     for (i = DispDuctNumber + 8; i <= 11; i ++) { 
         ResSpec_Table2.rows[i].style.display  = "none"; 
+    }
+}
+function ResSpec_Parameters() {
+    // Declaration of variables
+    let AnalysisMethod, T_Min, T_Step, T_Max, Stiff_Deg, PostYieldHard;
+    let DampingRatioCount, ksi_1, ksi_2, ksi_3, ksi_4;
+    let DuctilityCount, mu_1, mu_2, mu_3, mu_4;
+    let Alfa, Beta, dtT, tol, tol_ductility;
+    let AnalysisMethod_string;
+
+    // Get parameters 
+    AnalysisMethod  = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;
+    T_Min           = Number(document.getElementById('ResSpec_MinimumPeriod').value);
+    T_Step          = Number(document.getElementById('ResSpec_PeriodStep').value);
+    T_Max           = Number(document.getElementById('ResSpec_MaximumPeriod').value);
+    Stiff_Deg       = Number(document.getElementById('ResSpec_UnloadingStiffnessDegredation').value);
+    PostYieldHard   = Number(document.getElementById('ResSpec_PostYiledHardeningRatio').value);
+
+    //
+    DampingRatioCount = Number(document.getElementById('ResSpec_DampingRatioCount').value);
+    ksi_1             = Number(document.getElementById('ResSpec_ksi_1').value);
+    ksi_2             = Number(document.getElementById('ResSpec_ksi_2').value);
+    ksi_3             = Number(document.getElementById('ResSpec_ksi_3').value);
+    ksi_4             = Number(document.getElementById('ResSpec_ksi_4').value);
+    
+    DuctilityCount    = Number(document.getElementById('ResSpec_DuctilityCount').value);
+    mu_1             = Number(document.getElementById('ResSpec_mu_1').value);
+    mu_2             = Number(document.getElementById('ResSpec_mu_2').value);
+    mu_3             = Number(document.getElementById('ResSpec_mu_3').value);
+    mu_4             = Number(document.getElementById('ResSpec_mu_4').value);
+
+    // Netwmake configuration settings 
+    Alfa          = Number(document.getElementById('Newmark_Alfa').value);
+    Beta          = Number(document.getElementById('Newmark_Beta').value);
+    dtT           = Number(document.getElementById('Newmark_dtT').value);
+    tol           = Number(document.getElementById('Newmark_OutOfBalanceForceTolerance').value);
+    tol_ductility = Number(document.getElementById('Newmark_DuctilityConvergenceTolerance').value);
+
+    if      (AnalysisMethod == 0) { AnalysisMethod_string = 'Elastic Spectra';                         }
+    else if (AnalysisMethod == 1) { AnalysisMethod_string = 'Constant Ductility Inelestic Spectra - Bilinear Hysteretic Model';  }
+    else if (AnalysisMethod == 2) { AnalysisMethod_string = 'Constant Ductility Inelestic Spectra - Clough Bilinear Model';      }
+
+    // Return SDOF parameters
+    return {
+        IsAnalysisCompleted         : false,
+        AnalysisMethod              : AnalysisMethod,
+        AnalysisMethod_string       : AnalysisMethod_string,
+        T_Min                       : T_Min,
+        T_Step                      : T_Step,
+        T_Max                       : T_Max,
+        Stiff_Deg                   : Stiff_Deg,
+        PostYieldHard               : PostYieldHard,
+        DampingRatioCount           : DampingRatioCount,
+        ksi_1                       : ksi_1,
+        ksi_2                       : ksi_2,
+        ksi_3                       : ksi_3,
+        ksi_4                       : ksi_4,
+        DuctilityCount              : DuctilityCount,
+        mu_1                        : mu_1,
+        mu_2                        : mu_2,
+        mu_3                        : mu_3,
+        mu_4                        : mu_4,
+        SD                          : undefined,
+        SV                          : undefined,
+        SA                          : undefined,
+        Sa                          : undefined,
+        Alfa                        : Alfa,
+        Beta                        : Beta,
+        dtT                         : dtT,
+        tol                         : tol,
+        tol_ductility               : tol_ductility,
+        TypeAndUnits                : undefined,
+        DisplayData                 : undefined,
     }
 }
 //-----------------------------------------------------------------------------------------------
