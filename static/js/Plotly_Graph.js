@@ -38,8 +38,9 @@ async function Plotly_Graph_Update(ChNum) {
 
     // Get the existing layout in the PlotArea_ID
     layout_update = document.getElementById(PlotArea_ID).layout;
-    layout_update.xaxis.autorange = true;
-    layout_update.yaxis.autorange = true;
+
+    // Clear the graph by default then populate it later.
+    Plotly_Clear_Graph(ChNum);
 
     // Update Graph for this channel
     if (PageNo == 0) {
@@ -58,39 +59,6 @@ async function Plotly_Graph_Update(ChNum) {
         traces[0].line          = {color: 'red', width: 1.50, dash: 'solid' };
         traces[0].name          = '<b>Raw Data<b>';  // legend title
         traces[0].showlegend    = false;             // Don't show legend
-
-        // Empty - trace[1] not used 
-        traces[1].x             = [];
-        traces[1].y             = [];
-        traces[1].mode        = 'lines',
-        traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
-        traces[1].visible       = false;
-        traces[1].opacity       = 0.35;
-        traces[1].line          = {color: 'red', width: 1.00, dash: 'solid' };
-        traces[1].name          = '';                // legend title
-        traces[1].showlegend    = false;             // Don't show legend
-
-        // Empty - trace[2] not used 
-        traces[2].x             = [];
-        traces[2].y             = [];
-        traces[2].mode        = 'lines',
-        traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
-        traces[2].visible       = false;
-        traces[2].opacity       = 0.35;
-        traces[2].line          = {color: 'red', width: 1.00, dash: 'solid' };
-        traces[2].name          = '';                // legend title
-        traces[2].showlegend    = false;             // Don't show legend
-
-        // Empty - trace[3] not used 
-        traces[3].x             = [];
-        traces[3].y             = [];
-        traces[3].mode        = 'lines',
-        traces[3].marker      = { color: 'red', size: 5, symbol: 'circle' },
-        traces[3].visible       = false;
-        traces[3].opacity       = 0.35;
-        traces[3].line          = {color: 'red', width: 1.00, dash: 'solid' };
-        traces[3].name          = '';                // legend title
-        traces[3].showlegend    = false;             // Don't show legend
 
         // Update y-axis of Plotly Graph
         layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
@@ -157,43 +125,11 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[1].name        = '<b>Filtered Data<b>';  // legend title
                 traces[1].showlegend  = true;                   // Show legend 
 
-                // Empty - trace[2] not used 
-                traces[2].x           = [],
-                traces[2].y           = [];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[2].visible     = false;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-                traces[2].name        = '';                     // legend title
-                traces[2].showlegend  = false;                  // don't show legend 
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
-
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
             } 
             else if (IsFilter_CheckBox_Selected) {
-                // Empty trace[0] - Not used 
-                traces[0].x           = [];
-                traces[0].y           = [];
-                traces[0].mode        = 'lines',
-                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[0].visible     = false;
-                traces[0].opacity     = 0.35;
-                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[0].name        = '';                     // legend title
-                traces[0].showlegend  = false;                  // don't show legend 
                 
                 // Plot Filter Magnitude Response in trace[1]
                 traces[1].x           = ChannelList[ChNum].Results.Filter.f;
@@ -216,17 +152,6 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
                 traces[2].name        = '<b>Phase<b>';          // legend title
                 traces[2].showlegend  = true;                   // Show legend 
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT;   
                 layout_update.yaxis2.showticklabels = true; 
@@ -267,28 +192,6 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[1].name        = '<b>Filtered Data<b>';      // legend title
                 traces[1].showlegend  = true;                       // Show legend 
 
-                // Empty trace[2] - Not used 
-                traces[2].x           = [];
-                traces[2].y           = [];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[2].visible     = false;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-                traces[2].name        = '';                         // legend title
-                traces[2].showlegend  = false;                      // don't show legend 
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
-
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
@@ -310,7 +213,8 @@ async function Plotly_Graph_Update(ChNum) {
             FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.Filter.ZeroPhase;
             document.getElementById(FilterType_ID).innerHTML = FilterInfo;
 
-        } else {
+        } 
+        else {
             // 
             traces[0].x           = ChannelList[ChNum].time;
             traces[0].y           = Multiply(res_RawData.Data, ChannelList[ChNum].ScaleFactor);
@@ -321,39 +225,6 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].line        = {color: 'red', width: 1.00, dash: 'solid' };
             traces[0].name        = '';                 // legend title
             traces[0].showlegend  = false;              // don't show legend 
-
-            // Plot the Filtered data in tarace[1]
-            traces[1].x           = [];
-            traces[1].y           = [];
-            traces[1].mode        = 'lines',
-            traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
-            traces[1].visible     = false;
-            traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'red', width: 1.50, dash: 'solid' };
-            traces[1].name        = '';                 // legend title
-            traces[1].showlegend  = false;              // don't show legend 
-
-            // Empty tarce[2] - Not used 
-            traces[2].x           = [];
-            traces[2].y           = [];
-            traces[2].mode        = 'lines',
-            traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
-            traces[2].visible     = false;
-            traces[2].opacity     = 0.35;
-            traces[2].line        = {color: 'red', width: 1.00, dash: 'solid' };
-            traces[2].name        = '';                 // legend title
-            traces[2].showlegend  = false;              // don't show legend 
-
-            // Empty - trace[3] not used 
-            traces[3].x             = [];
-            traces[3].y             = [];
-            traces[3].mode        = 'lines',
-            traces[3].marker      = { color: 'red', size: 5, symbol: 'circle' },
-            traces[3].visible       = false;
-            traces[3].opacity       = 0.35;
-            traces[3].line          = {color: 'red', width: 1.00, dash: 'solid' };
-            traces[3].name          = '';                // legend title
-            traces[3].showlegend    = false;             // Don't show legend
 
             layout_update.yaxis.title.text      = res_RawData.yTitle;   // This is the unit that user wants to see on the graph.
             layout_update.yaxis2.showticklabels = false;
@@ -419,54 +290,11 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[0].name        = '';       // legend title
                 traces[0].showlegend  = false;    // Don't show legend
 
-                // Empty trace[2] - Not used 
-                traces[1].x           = [];
-                traces[1].y           = [];
-                traces[1].mode        = 'lines',
-                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[1].visible     = false;
-                traces[1].opacity     = 1.00;
-                traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[1].name        = '';         // legend title
-                traces[1].showlegend  = false;      // Don't show legend
-
-                // Empty trace[2] - Not used 
-                traces[2].x           = [];
-                traces[2].y           = [];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[2].visible     = false;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-                traces[2].name        = '';         // legend title
-                traces[2].showlegend  = false;      // Don't show legend
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
-
                 layout_update.yaxis.title.text      = yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
             }
             else if (IsFilter_CheckBox_Selected) {
-                // Empty trace[0] - Not used 
-                traces[0].x           = [];
-                traces[0].y           = [];
-                traces[0].mode        = 'lines',
-                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[0].visible     = false;
-                traces[0].opacity     = 0.35;
-                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[0].name        = '';             // legend title
-                traces[0].showlegend  = false;          // Don't show legend
                 
                 // Plot Filter Magnitude Response in trace[1]
                 traces[1].x           = ChannelList[ChNum].Results.Integral.f;
@@ -490,17 +318,6 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].name        = '<b>Phase<b>';          // legend title 
                 traces[2].showlegend  = true;                   // Show legend
 
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
-
                 layout_update.yaxis.title.text      = res.yTitle_FFT;
                 layout_update.yaxis2.showticklabels = true;
                 layout_update.yaxis2.title.text     = res.y2Title;
@@ -514,17 +331,6 @@ async function Plotly_Graph_Update(ChNum) {
                 // FFT of Filtered data
                 [Mag_FD, Angle_FD, f] = FourierSpec(res.Data,  ChannelList[ChNum].FSamp);
                 
-                // Plot Magnitude FFT response of data
-                traces[0].x           = [];
-                traces[0].y           = [];
-                traces[0].mode        = 'lines',
-                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[0].visible     = false;
-                traces[0].opacity     = 0.35;
-                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[0].name        = '';                     // legend title
-                traces[0].showlegend  = false;                  // Don't show legend
-
                 // Empty trace[1] - Not used 
                 traces[1].x           = f;
                 traces[1].y           = Mag_FD;
@@ -535,28 +341,6 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
                 traces[1].name        = '';                     // legend title
                 traces[1].showlegend  = false;                  // Show legend
-
-                // Empty trace[2] - Not used 
-                traces[2].x           = [];
-                traces[2].y           = [];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[2].visible     = false;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-                traces[2].name        = '';                     // legend title
-                traces[2].showlegend  = false;                  // Show legend
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT;
                 layout_update.yaxis2.showticklabels = false;
@@ -596,39 +380,6 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].line        = {color: 'red', width: 1.00, dash: 'solid' };
             traces[0].name        = '';         // legend title
             traces[0].showlegend  = false;      // Don't show legend    
-
-            // Empty tarce[1] - Not used 
-            traces[1].x           = [];
-            traces[1].y           = [];
-            traces[1].mode        = 'lines',
-            traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
-            traces[1].visible     = false;
-            traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'red', width: 1.50, dash: 'solid' };
-            traces[1].name        = '';         // legend title
-            traces[1].showlegend  = false;      // Don't show legend 
-
-            // Empty tarce[2] - Not used 
-            traces[2].x           = [];
-            traces[2].y           = [];
-            traces[2].mode        = 'lines',
-            traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
-            traces[2].visible     = false;
-            traces[2].opacity     = 0.35;
-            traces[2].line        = {color: 'red', width: 1.00, dash: 'solid' };
-            traces[2].name        = '';         // legend title
-            traces[2].showlegend  = false;      // Don't show legend 
-
-            // Empty - trace[3] not used 
-            traces[3].x             = [];
-            traces[3].y             = [];
-            traces[3].mode        = 'lines',
-            traces[3].marker      = { color: 'red', size: 5, symbol: 'circle' },
-            traces[3].visible       = false;
-            traces[3].opacity       = 0.35;
-            traces[3].line          = {color: 'red', width: 1.00, dash: 'solid' };
-            traces[3].name          = '';                // legend title
-            traces[3].showlegend    = false;             // Don't show legend
 
             layout_update.yaxis.title.text      = yTitle;
             layout_update.yaxis2.showticklabels = false;
@@ -729,55 +480,12 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[0].name        = ' ';                // legend title
                 traces[0].showlegend  = false;              // Show legend
                 
-                // Plot the Filtered data in tarace[1]
-                traces[1].x           = [];
-                traces[1].y           = [];
-                traces[1].mode        = 'lines',
-                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[1].visible     = true;
-                traces[1].opacity     = 0.35;
-                traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
-                traces[1].name        = '';                      // legend title
-                traces[1].showlegend  = false;                   // Show legend 
-
-                // Empty - trace[2] not used 
-                traces[2].x           = [],
-                traces[2].y           = [];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[2].visible     = false;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-                traces[2].name        = '';                     // legend title
-                traces[2].showlegend  = false;                  // don't show legend 
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
-
                 layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
 
             } 
             else if (IsFilter_CheckBox_Selected) {
-                // Empty trace[0] - Not used 
-                traces[0].x           = [];
-                traces[0].y           = [];
-                traces[0].mode        = 'lines',
-                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[0].visible     = false;
-                traces[0].opacity     = 0.35;
-                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[0].name        = '';                     // legend title
-                traces[0].showlegend  = false;                  // don't show legend 
                 
                 // Plot Filter Magnitude Response in trace[1]
                 traces[1].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
@@ -800,17 +508,6 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
                 traces[2].name        = '<b>Phase<b>';          // legend title
                 traces[2].showlegend  = true;                   // Show legend 
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = '<b>Magnitude<b>';
                 layout_update.yaxis2.showticklabels = true; 
@@ -838,39 +535,6 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
                 traces[0].name        = '';                      // legend title
                 traces[0].showlegend  = false;                   // Show legend 
-
-                // Plot FFT Magnitude Response of Filtered data
-                traces[1].x           = [];
-                traces[1].y           = [];
-                traces[1].mode        = 'lines',
-                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[1].visible     = false;
-                traces[1].opacity     = 0.35;
-                traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
-                traces[1].name        = '';                      // legend title
-                traces[1].showlegend  = true;                    // Show legend 
-
-                // Empty trace[2] - Not used 
-                traces[2].x           = [];
-                traces[2].y           = [];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[2].visible     = false;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-                traces[2].name        = '';                         // legend title
-                traces[2].showlegend  = false;                      // don't show legend 
-
-                // Empty - trace[3] not used 
-                traces[3].x             = [];
-                traces[3].y             = [];
-                traces[3].mode          = 'lines',
-                traces[3].marker        = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[3].visible       = false;
-                traces[3].opacity       = 0.35;
-                traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[3].name          = '';                // legend title
-                traces[3].showlegend    = false;             // Don't show legend
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
@@ -901,50 +565,6 @@ async function Plotly_Graph_Update(ChNum) {
         }
         else {
 
-            // Plot Raw data in trace[0]
-            traces[0].x           = [];
-            traces[0].y           = [];
-            traces[0].mode        = 'lines',
-            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-            traces[0].visible     = true;
-            traces[0].opacity     = 0.35;
-            traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-            traces[0].name        = '<b>Raw Data<b>';   // legend title
-            traces[0].showlegend  = false;              // Show legend
-            
-            // Plot the Filtered data in tarace[1]
-            traces[1].x           = [];
-            traces[1].y           = [];
-            traces[1].mode        = 'lines',
-            traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-            traces[1].visible     = true;
-            traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
-            traces[1].name        = '<b>Filtered Data<b>';  // legend title
-            traces[1].showlegend  = true;                   // Show legend 
-
-            // Empty - trace[2] not used 
-            traces[2].x           = [],
-            traces[2].y           = [];
-            traces[2].mode        = 'lines',
-            traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-            traces[2].visible     = false;
-            traces[2].opacity     = 0.35;
-            traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-            traces[2].name        = '';                     // legend title
-            traces[2].showlegend  = false;                  // don't show legend 
-
-            // Empty - trace[3] not used 
-            traces[3].x             = [];
-            traces[3].y             = [];
-            traces[3].mode        = 'lines',
-            traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-            traces[3].visible       = false;
-            traces[3].opacity       = 0.35;
-            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-            traces[3].name          = '';                // legend title
-            traces[3].showlegend    = false;             // Don't show legend
-
             layout_update.yaxis.title.text      = '';   // This is the unit that user wants to see on the graph.
             layout_update.yaxis2.showticklabels = false;
             layout_update.yaxis2.title.text     = "";
@@ -970,8 +590,6 @@ async function Plotly_Graph_Update(ChNum) {
         // Show SDOF row in InforBar
         document.getElementById(SDOF_Row_ID).style.display        = "table-row";
         document.getElementById(SDOF_Method_Row_ID).style.display = "table-row";
-
-        
         
     }
     else if (PageNo == 4) {
@@ -1118,49 +736,6 @@ async function Plotly_Graph_Update(ChNum) {
 
         }
         else {
-            // Plot Raw data in trace[0]
-            traces[0].x           = [];
-            traces[0].y           = [];
-            traces[0].mode        = 'lines',
-            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-            traces[0].visible     = true;
-            traces[0].opacity     = 0.35;
-            traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-            traces[0].name        = '<b>Raw Data<b>';   // legend title
-            traces[0].showlegend  = false;              // Show legend
-            
-            // Plot the Filtered data in tarace[1]
-            traces[1].x           = [];
-            traces[1].y           = [];
-            traces[1].mode        = 'lines',
-            traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-            traces[1].visible     = true;
-            traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
-            traces[1].name        = '<b>Filtered Data<b>';  // legend title
-            traces[1].showlegend  = true;                   // Show legend 
-
-            // Empty - trace[2] not used 
-            traces[2].x           = [],
-            traces[2].y           = [];
-            traces[2].mode        = 'lines',
-            traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
-            traces[2].visible     = false;
-            traces[2].opacity     = 0.35;
-            traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
-            traces[2].name        = '';                     // legend title
-            traces[2].showlegend  = false;                  // don't show legend 
-
-            // Empty - trace[3] not used 
-            traces[3].x             = [];
-            traces[3].y             = [];
-            traces[3].mode        = 'lines',
-            traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-            traces[3].visible       = false;
-            traces[3].opacity       = 0.35;
-            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
-            traces[3].name          = '';                // legend title
-            traces[3].showlegend    = false;             // Don't show legend
 
             layout_update.yaxis.title.text      = '';   // This is the unit that user wants to see on the graph.
             layout_update.yaxis2.showticklabels = false;
@@ -1583,4 +1158,35 @@ function Plotly_Filter_Response(el) {
     Plotly_Graph_Update(ChNum);
 }
 //-------------------------------------------------------------------------------------------------------------
+function Plotly_Clear_Graph(ChNum) {
 
+    // Decleration of variables 
+    let i, traces, layout_update, PlotArea_ID;
+    
+    PlotArea_ID = "PlotArea_ID_"  + ChannelList[ChNum].Unique_ID;
+
+    // Get the existing traces in the PlotArea_ID
+    traces = document.getElementById(PlotArea_ID).data;
+
+    // Get the existing layout in the PlotArea_ID
+    layout_update = document.getElementById(PlotArea_ID).layout;
+    layout_update.xaxis.autorange = true;
+    layout_update.yaxis.autorange = true;
+
+    // Delete all traces
+    for (i=0; i<traces.length; i++) {
+        traces[i].x           = [];
+        traces[i].y           = [];
+        traces[i].mode        = 'lines',
+        traces[i].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+        traces[i].visible     = false;
+        traces[i].opacity     = 0.35;
+        traces[i].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+        traces[i].name        = '<b>Raw Data<b>';   // legend title
+        traces[i].showlegend  = false;              // Show legend
+    }
+
+    // Update the graph
+    Plotly.update(PlotArea_ID, traces, layout_update);
+
+}
