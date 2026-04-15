@@ -51,36 +51,44 @@ async function Plotly_Graph_Update(ChNum) {
         // Update trace for rawData
         traces[0].x             = ChannelList[ChNum].time;
         traces[0].y             = Multiply(res.Data, ChannelList[ChNum].ScaleFactor);
+        traces[0].mode        = 'lines',
+        traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
         traces[0].visible       = true;
         traces[0].opacity       = 1.00;
-        traces[0].line          = {color: 'blue', width: 1.50, dash: 'solid' };
+        traces[0].line          = {color: 'red', width: 1.50, dash: 'solid' };
         traces[0].name          = '<b>Raw Data<b>';  // legend title
         traces[0].showlegend    = false;             // Don't show legend
 
         // Empty - trace[1] not used 
         traces[1].x             = [];
         traces[1].y             = [];
+        traces[1].mode        = 'lines',
+        traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
         traces[1].visible       = false;
         traces[1].opacity       = 0.35;
-        traces[1].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+        traces[1].line          = {color: 'red', width: 1.00, dash: 'solid' };
         traces[1].name          = '';                // legend title
         traces[1].showlegend    = false;             // Don't show legend
 
         // Empty - trace[2] not used 
         traces[2].x             = [];
         traces[2].y             = [];
+        traces[2].mode        = 'lines',
+        traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
         traces[2].visible       = false;
         traces[2].opacity       = 0.35;
-        traces[2].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+        traces[2].line          = {color: 'red', width: 1.00, dash: 'solid' };
         traces[2].name          = '';                // legend title
         traces[2].showlegend    = false;             // Don't show legend
 
         // Empty - trace[3] not used 
         traces[3].x             = [];
         traces[3].y             = [];
+        traces[3].mode        = 'lines',
+        traces[3].marker      = { color: 'red', size: 5, symbol: 'circle' },
         traces[3].visible       = false;
         traces[3].opacity       = 0.35;
-        traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+        traces[3].line          = {color: 'red', width: 1.00, dash: 'solid' };
         traces[3].name          = '';                // legend title
         traces[3].showlegend    = false;             // Don't show legend
 
@@ -130,6 +138,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Raw data in trace[0]
                 traces[0].x           = ChannelList[ChNum].time;
                 traces[0].y           = Detrend(Multiply(res_RawData.Data, ChannelList[ChNum].ScaleFactor), 0); // Remove mean
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[0].visible     = true;
                 traces[0].opacity     = 0.35;
                 traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -139,6 +149,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot the Filtered data in tarace[1]
                 traces[1].x           = ChannelList[ChNum].time,
                 traces[1].y           = res_FilteredData.Data;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -148,6 +160,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[2] not used 
                 traces[2].x           = [],
                 traces[2].y           = [];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = false;
                 traces[2].opacity     = 0.35;
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -157,6 +171,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -171,6 +187,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[0] - Not used 
                 traces[0].x           = [];
                 traces[0].y           = [];
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[0].visible     = false;
                 traces[0].opacity     = 0.35;
                 traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -180,6 +198,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Filter Magnitude Response in trace[1]
                 traces[1].x           = ChannelList[ChNum].Results.Filter.f;
                 traces[1].y           = ChannelList[ChNum].Results.Filter.Mag;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -189,6 +209,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Filter Phase Response in trace[2]
                 traces[2].x           = ChannelList[ChNum].Results.Filter.f;
                 traces[2].y           = ChannelList[ChNum].Results.Filter.Angle;
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = true;
                 traces[2].opacity     = 1.00;
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
@@ -198,6 +220,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -224,6 +248,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot FFT Magnitude Response of Raw data
                 traces[0].x           = f;
                 traces[0].y           = Mag_RD;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[0].visible     = true;
                 traces[0].opacity     = 0.35;
                 traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -233,6 +259,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot FFT Magnitude Response of Filtered data
                 traces[1].x           = f;
                 traces[1].y           = Mag_FD;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -242,6 +270,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[2] - Not used 
                 traces[2].x           = [];
                 traces[2].y           = [];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = false;
                 traces[2].opacity     = 0.35;
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -251,6 +281,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -282,36 +314,44 @@ async function Plotly_Graph_Update(ChNum) {
             // 
             traces[0].x           = ChannelList[ChNum].time;
             traces[0].y           = Multiply(res_RawData.Data, ChannelList[ChNum].ScaleFactor);
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[0].visible     = true;
             traces[0].opacity     = 0.35;
-            traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[0].line        = {color: 'red', width: 1.00, dash: 'solid' };
             traces[0].name        = '';                 // legend title
             traces[0].showlegend  = false;              // don't show legend 
 
             // Plot the Filtered data in tarace[1]
             traces[1].x           = [];
             traces[1].y           = [];
+            traces[1].mode        = 'lines',
+            traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[1].visible     = false;
             traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+            traces[1].line        = {color: 'red', width: 1.50, dash: 'solid' };
             traces[1].name        = '';                 // legend title
             traces[1].showlegend  = false;              // don't show legend 
 
             // Empty tarce[2] - Not used 
             traces[2].x           = [];
             traces[2].y           = [];
+            traces[2].mode        = 'lines',
+            traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[2].visible     = false;
             traces[2].opacity     = 0.35;
-            traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
+            traces[2].line        = {color: 'red', width: 1.00, dash: 'solid' };
             traces[2].name        = '';                 // legend title
             traces[2].showlegend  = false;              // don't show legend 
 
             // Empty - trace[3] not used 
             traces[3].x             = [];
             traces[3].y             = [];
+            traces[3].mode        = 'lines',
+            traces[3].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[3].visible       = false;
             traces[3].opacity       = 0.35;
-            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[3].line          = {color: 'red', width: 1.00, dash: 'solid' };
             traces[3].name          = '';                // legend title
             traces[3].showlegend    = false;             // Don't show legend
 
@@ -371,6 +411,8 @@ async function Plotly_Graph_Update(ChNum) {
 
                 traces[0].x           = ChannelList[ChNum].time;
                 traces[0].y           = res.Data;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[0].visible     = true;
                 traces[0].opacity     = 1.00;
                 traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -380,6 +422,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[2] - Not used 
                 traces[1].x           = [];
                 traces[1].y           = [];
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = false;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -389,6 +433,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[2] - Not used 
                 traces[2].x           = [];
                 traces[2].y           = [];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = false;
                 traces[2].opacity     = 0.35;
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -398,6 +444,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -412,6 +460,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[0] - Not used 
                 traces[0].x           = [];
                 traces[0].y           = [];
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[0].visible     = false;
                 traces[0].opacity     = 0.35;
                 traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -421,6 +471,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Filter Magnitude Response in trace[1]
                 traces[1].x           = ChannelList[ChNum].Results.Integral.f;
                 traces[1].y           = ChannelList[ChNum].Results.Integral.Mag;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -430,6 +482,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Filter Phase Response in trace[2]
                 traces[2].x           = ChannelList[ChNum].Results.Integral.f;
                 traces[2].y           = ChannelList[ChNum].Results.Integral.Angle;
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = true;
                 traces[2].opacity     = 1.00;
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
@@ -439,6 +493,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -461,6 +517,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Magnitude FFT response of data
                 traces[0].x           = [];
                 traces[0].y           = [];
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[0].visible     = false;
                 traces[0].opacity     = 0.35;
                 traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -470,6 +528,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[1] - Not used 
                 traces[1].x           = f;
                 traces[1].y           = Mag_FD;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -479,6 +539,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[2] - Not used 
                 traces[2].x           = [];
                 traces[2].y           = [];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = false;
                 traces[2].opacity     = 0.35;
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -488,6 +550,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -525,36 +589,44 @@ async function Plotly_Graph_Update(ChNum) {
             else if (Indx_Vel)  { traces[0].y = [];         yTitle = res.yTitle_Vel;   }
             else if (Indx_Disp) { traces[0].y = [];         yTitle = res.yTitle_Disp;  }
 
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[0].visible     = true;
             traces[0].opacity     = 0.35;
-            traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[0].line        = {color: 'red', width: 1.00, dash: 'solid' };
             traces[0].name        = '';         // legend title
             traces[0].showlegend  = false;      // Don't show legend    
 
             // Empty tarce[1] - Not used 
             traces[1].x           = [];
             traces[1].y           = [];
+            traces[1].mode        = 'lines',
+            traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[1].visible     = false;
             traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+            traces[1].line        = {color: 'red', width: 1.50, dash: 'solid' };
             traces[1].name        = '';         // legend title
             traces[1].showlegend  = false;      // Don't show legend 
 
             // Empty tarce[2] - Not used 
             traces[2].x           = [];
             traces[2].y           = [];
+            traces[2].mode        = 'lines',
+            traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[2].visible     = false;
             traces[2].opacity     = 0.35;
-            traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
+            traces[2].line        = {color: 'red', width: 1.00, dash: 'solid' };
             traces[2].name        = '';         // legend title
             traces[2].showlegend  = false;      // Don't show legend 
 
             // Empty - trace[3] not used 
             traces[3].x             = [];
             traces[3].y             = [];
+            traces[3].mode        = 'lines',
+            traces[3].marker      = { color: 'red', size: 5, symbol: 'circle' },
             traces[3].visible       = false;
             traces[3].opacity       = 0.35;
-            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[3].line          = {color: 'red', width: 1.00, dash: 'solid' };
             traces[3].name          = '';                // legend title
             traces[3].showlegend    = false;             // Don't show legend
 
@@ -649,6 +721,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Raw data in trace[0]
                 traces[0].x           = timeData;
                 traces[0].y           = res.Data;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[0].visible     = true;
                 traces[0].opacity     = 1.00;
                 traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -658,6 +732,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot the Filtered data in tarace[1]
                 traces[1].x           = [];
                 traces[1].y           = [];
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 0.35;
                 traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
@@ -667,6 +743,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[2] not used 
                 traces[2].x           = [],
                 traces[2].y           = [];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = false;
                 traces[2].opacity     = 0.35;
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -676,6 +754,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -691,6 +771,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[0] - Not used 
                 traces[0].x           = [];
                 traces[0].y           = [];
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[0].visible     = false;
                 traces[0].opacity     = 0.35;
                 traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -700,6 +782,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Filter Magnitude Response in trace[1]
                 traces[1].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
                 traces[1].y           = ChannelList[ChNum].Results.SDOF.FiltPar.Mag;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = true;
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -709,6 +793,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot Filter Phase Response in trace[2]
                 traces[2].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
                 traces[2].y           = ChannelList[ChNum].Results.SDOF.FiltPar.Angle;
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = true;
                 traces[2].opacity     = 1.00;
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
@@ -718,6 +804,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -743,6 +831,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot FFT Magnitude Response of Raw data
                 traces[0].x           = f;
                 traces[0].y           = Mag_FD;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[0].visible     = true;
                 traces[0].opacity     = 1.00;
                 traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -752,6 +842,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Plot FFT Magnitude Response of Filtered data
                 traces[1].x           = [];
                 traces[1].y           = [];
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                 traces[1].visible     = false;
                 traces[1].opacity     = 0.35;
                 traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
@@ -761,6 +853,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty trace[2] - Not used 
                 traces[2].x           = [];
                 traces[2].y           = [];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].visible     = false;
                 traces[2].opacity     = 0.35;
                 traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -770,6 +864,8 @@ async function Plotly_Graph_Update(ChNum) {
                 // Empty - trace[3] not used 
                 traces[3].x             = [];
                 traces[3].y             = [];
+                traces[3].mode          = 'lines',
+                traces[3].marker        = { color: 'grey', size: 5, symbol: 'circle' },
                 traces[3].visible       = false;
                 traces[3].opacity       = 0.35;
                 traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -808,6 +904,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Plot Raw data in trace[0]
             traces[0].x           = [];
             traces[0].y           = [];
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
             traces[0].visible     = true;
             traces[0].opacity     = 0.35;
             traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -817,6 +915,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Plot the Filtered data in tarace[1]
             traces[1].x           = [];
             traces[1].y           = [];
+            traces[1].mode        = 'lines',
+            traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
             traces[1].visible     = true;
             traces[1].opacity     = 1.00;
             traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
@@ -826,6 +926,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Empty - trace[2] not used 
             traces[2].x           = [],
             traces[2].y           = [];
+            traces[2].mode        = 'lines',
+            traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
             traces[2].visible     = false;
             traces[2].opacity     = 0.35;
             traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -835,6 +937,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Empty - trace[3] not used 
             traces[3].x             = [];
             traces[3].y             = [];
+            traces[3].mode        = 'lines',
+            traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
             traces[3].visible       = false;
             traces[3].opacity       = 0.35;
             traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
@@ -1017,6 +1121,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Plot Raw data in trace[0]
             traces[0].x           = [];
             traces[0].y           = [];
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
             traces[0].visible     = true;
             traces[0].opacity     = 0.35;
             traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -1026,6 +1132,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Plot the Filtered data in tarace[1]
             traces[1].x           = [];
             traces[1].y           = [];
+            traces[1].mode        = 'lines',
+            traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
             traces[1].visible     = true;
             traces[1].opacity     = 1.00;
             traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
@@ -1035,6 +1143,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Empty - trace[2] not used 
             traces[2].x           = [],
             traces[2].y           = [];
+            traces[2].mode        = 'lines',
+            traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
             traces[2].visible     = false;
             traces[2].opacity     = 0.35;
             traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
@@ -1044,6 +1154,8 @@ async function Plotly_Graph_Update(ChNum) {
             // Empty - trace[3] not used 
             traces[3].x             = [];
             traces[3].y             = [];
+            traces[3].mode        = 'lines',
+            traces[3].marker      = { color: 'grey', size: 5, symbol: 'circle' },
             traces[3].visible       = false;
             traces[3].opacity       = 0.35;
             traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
