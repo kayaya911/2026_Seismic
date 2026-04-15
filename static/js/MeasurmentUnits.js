@@ -662,6 +662,48 @@ function Convert_Data_To_Graph_Unit_SDOF(Data, ChNum) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
+function Convert_Data_To_Graph_Unit_ResSpec(Data, ChNum) {
+    
+    let Or_Data, LU, Ind, Indx, temp, ss, arr;
+
+    // SDOF-data using Measurment-index
+    Or_Data = TypeAndUnit(ChannelList[ChNum].Results.ResSpec.TypeAndUnits); 
+
+    // List of Units of the SDOF-data using Type-Number
+    LU = List_Units(Or_Data.Type, false);
+
+    // Indexnumber of User-sepecified Unit on the Plotly Graph
+    Ind = document.getElementById("Unit_Plot_ID_" + ChannelList[ChNum].Unique_ID).selectedIndex;
+
+    // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
+    temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+
+    if      (ChannelList[ChNum].Results.ResSpec.DisplayData == 'acc' )   { Or_Data.Type_String = 'Relative Acceleration';                                    }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Acc' )   { Or_Data.Type_String = 'Total Acceleration';                                       }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Disp')   { Or_Data.Type_String = 'Displacement';          temp.Unit = 'Mass • ' + temp.Unit; }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Vel' )   { Or_Data.Type_String = 'Velocity';              temp.Unit = 'Mass • ' + temp.Unit; }
+
+    // Original statistical values are already scaled by Scale Factor of the channel 
+    // Therefore, we just need to conver the units.
+    if (ChannelList[ChNum].Results.ResSpec.IsAnalysisCompleted) {
+        ss    = Statistics(temp.Data);
+    } else {
+        ss = { Peak:'', Mean:'', RMS:'' };
+    }
+
+    //  temp
+    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']<b>';
+    temp.yTitle_FFT  = '<b>Magnitude<b>';
+    temp.y2Title     = '<b>Phase<b>';
+
+    temp.Peak        = ss.Peak;
+    temp.Mean        = ss.Mean;
+    temp.RMS         = ss.RMS;
+    
+    return temp;
+
+}
+//-------------------------------------------------------------------------------------------------------------
 function Update_Units_infoTable(i) {
 
     // retrun if no graph to plot
@@ -795,3 +837,91 @@ function Update_Units_infoTable(i) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
+function Update_Units_infoTable_ResSpec(i) {
+
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let AM, II, Units_SelectElement, Ind, Type, DisplayData;
+    let SDOF_Plot_ID, Unit_Cell_ID;
+
+    // Defaults
+    Units_SelectElement = Select_Element(List_Units(8).Units);                    
+    Type                = 2;  
+    DisplayData         = 'Disp';
+
+    // SDOF_ID
+    SDOF_Plot_ID = "SDOF_Plot_ID_"  + ChannelList[i].Unique_ID;
+    Unit_Cell_ID = "Unit_Cell_ID_"  + ChannelList[i].Unique_ID;
+
+    AM   = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;   // Analysis Method (Elastic Spectra, Inelestic spectra, etc) from ResSpec-Parameetrs Window
+    II   = document.getElementById(SDOF_Plot_ID).selectedIndex;               // Index of the SDOF_ResultsDisplay in InfoTable
+    
+    if (II == -1) { return; }
+
+    if      (AM == 0) {  
+        // Elastic Spectra
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total Acceleration
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative Acceleration
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+    } 
+    else if (AM == 1) {  
+        // Constant Ductility Inelastic Spectra (Bilinear Hysteretic model)
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total Acceleration
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative Acceleration
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+    } 
+    else if (AM == 2) {  
+        // Constant Ductility Inelastic Spectra (Clough Bilinear model)
+        if (II == 0) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total Acceleration
+        if (II == 1) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative Acceleration
+        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+    }
+
+    // Assign select-element to cell-element in table
+    document.getElementById(Unit_Cell_ID).innerHTML = "";
+    document.getElementById(Unit_Cell_ID).appendChild(Units_SelectElement);
+
+    // Index number of the Unit on the Data-Page (PageNo=0)
+    Ind = document.getElementById("Unit_ID_" + ChannelList[i].Unique_ID).selectedIndex;
+
+    // Measurment-Index of the user-selected Display-and-Unit on InfoTable
+    ChannelList[i].Results.ResSpec.TypeAndUnits = TypeAndUnit(List_Units(Type, false).UnitNum[Ind], false).TypeAndUnit;
+    ChannelList[i].Results.ResSpec.DisplayData  = DisplayData;
+
+    // Update Graph
+    Plotly_Graph_Update(i);
+
+    // Creates new Select-Element for Plotly Info-table (Graph-Unit List)
+    function Select_Element(Unit_List) {
+        
+        // Decleration of variables
+        let j, opt, select, ID;
+
+        ID = 'Unit_Plot_ID_' + ChannelList[i].Unique_ID;
+
+        // Create select element and populate it 
+        select = document.createElement('select');
+        select.setAttribute('id', ID);
+        select.setAttribute('class', 'form-select form-select-sm');
+        select.setAttribute('onchange', 'Plotly_Graph_Update(' + ChannelList_UniqueID(ChannelList[i].Unique_ID) + ')');
+        
+        // Options for the select element 
+        for (j = 0; j < Unit_List.length; j++) {
+            opt = document.createElement("option");
+            opt.value = Unit_List[j];
+            opt.text = Unit_List[j];
+            select.add(opt, null);
+        }
+        select.selectedIndex = document.getElementById(ID).selectedIndex;
+        return select;
+    }
+
+}
+//-------------------------------------------------------------------------------------------------------------
+
+

@@ -1326,7 +1326,7 @@ async function Channel_SDOF() {
     }
 }
 //-----------------------------------------------------------------------------------------------
-async function Channel_ResSpec() {
+async function Channel_ResponseSpectrum() {
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
     document.getElementById("Run_Button").disabled = true;
@@ -1377,7 +1377,8 @@ async function Channel_ResSpec() {
         Ug = BaselineAndFilter(Ug, FiltPar);
 
         // STEP 8: Array of SDOF-periods
-        T = LinStep(ResSpec_Par.T_Min, ResSpec_Par.T_Max, ResSpec_Par.T_Step);
+        T             = LinStep(ResSpec_Par.T_Min, ResSpec_Par.T_Max, ResSpec_Par.T_Step);
+        ResSpec_Par.T = T;
 
         // STEP 9: Analysis
         if      (ResSpec_Par.AnalysisMethod == 0) {
@@ -1397,7 +1398,7 @@ async function Channel_ResSpec() {
                 ksi              = ResSpec_Par['ksi_'+(j+1).toString()]; 
                 [SD, SV, SA, Sa] = SDOF_ResponseSpectrum(Ug, delt, ksi, T);
 
-                // Store results 
+                // Store results for each ksi value 
                 ResSpec_Par.SD[j] = SD;
                 ResSpec_Par.SV[j] = SV;
                 ResSpec_Par.SA[j] = SA;
@@ -1435,7 +1436,7 @@ async function Channel_ResSpec() {
                 
                 [SD, SV, SA, Sa] = SDOF_ResSpectrum_Constant_Ductility(Ug, delt, ksi, T, Alfa, Beta, PostYieldHard, mu, Option, Stiff_Deg, tol_R, tol_D, dtT)
 
-                // Store results 
+                // Store results for each constant-ductility value 
                 ResSpec_Par.SD[j] = SD;
                 ResSpec_Par.SV[j] = SV;
                 ResSpec_Par.SA[j] = SA;
@@ -1443,21 +1444,28 @@ async function Channel_ResSpec() {
 
             }
 
-
         }
         else { break; }
 
         // STEP 9: Store Filter Parameters
         ResSpec_Par.FiltPar = FiltPar;
 
-        // STEP 11: Flag Successfully Completion
+        // STEP 10: Flag Successfully Completion
         ResSpec_Par.IsAnalysisCompleted = true;
 
-        // STEP 12: Store Results 
-        ChannelList[i].Results.SDOF = ResSpec_Par;
+        // STEP 11: Store Results 
+        ChannelList[i].Results.ResSpec = ResSpec_Par;
 
+        // STEP 12: Update select element in InfoTable
+        ResSpec_ResultsDisplay(i);
 
-        // STEP XXXX: Update Progress Indicator - Display completion status in UI progress bar
+        // STEP 13: Update InfoTable
+        Update_Units_infoTable_ResSpec(i);
+
+        // STEP 14: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        await Plotly_Graph_Update(i);
+
+        // STEP 15: Update Progress Indicator - Display completion status in UI progress bar
         perc = ((i+1)/ChannelList.length*100).toFixed(0); 
         if (perc != 100) {
             ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
@@ -1465,7 +1473,7 @@ async function Channel_ResSpec() {
             ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
         }
 
-        // STEP XXXX: Brief delay for UI update visibility (5ms)
+        // STEP 16: Brief delay for UI update visibility (5ms)
         await sleep(5);
 
     }
@@ -1496,10 +1504,6 @@ async function Channel_ResSpec() {
         return FilteredData;
 
     }
-
-}
-//-----------------------------------------------------------------------------------------------
-async function Channel_ResponseSpectrum() {
 
 }
 //-----------------------------------------------------------------------------------------------

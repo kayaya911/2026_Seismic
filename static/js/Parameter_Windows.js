@@ -556,24 +556,22 @@ async function SDOF_AnalysisType() {
 }
 function SDOF_SelectToDisplay() {
 
-    let i, Indx, SDOF_Plot_ID;
+    let j, Indx, SDOF_Plot_ID;
 
-    for (i=0; i<ChannelList.length; i++) {
-        
+    // Get the selected index number
+    Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
+    if (Indx == 0) { return; }
+
+    for (j=0; j<ChannelList.length; j++) {
+
         // skip if this channel is not selected for dislay
-        if (!ChannelList[i].PlotGraph) { continue; }
-
-        // Get the selected index number
-        Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
-
-        if (Indx == 0) { continue; }
+        if (!ChannelList[j].PlotGraph) { continue; }
 
         // Change the index number for this channel 
-        SDOF_Plot_ID  = "SDOF_Plot_ID_" + ChannelList[i].Unique_ID;
+        SDOF_Plot_ID  = "SDOF_Plot_ID_" + ChannelList[j].Unique_ID;
         document.getElementById(SDOF_Plot_ID).selectedIndex = Indx-1;
 
-        Update_Units_infoTable(i);
-
+        Update_Units_infoTable(j);
     }
 }
 function SDOF_ResultsDisplay(i) {
@@ -596,7 +594,7 @@ function SDOF_ResultsDisplay(i) {
     }
     select.setAttribute('onchange', 'Update_Units_infoTable('+ i.toString() +')');
 
-    // Readjust the Index
+    // Read just the Index
     Indx = document.getElementById('SDOF_SelectToDisplay').selectedIndex;
     if (Indx != 0) { select.selectedIndex = Indx-1; }
 
@@ -604,13 +602,14 @@ function SDOF_ResultsDisplay(i) {
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
 // Response Spectrum Window Parameters ----------------------------------------------------------
-function ResSpec_AnalysisType() {
+async function ResSpec_AnalysisType() {
 
     // Declaration of variables
-    let ResSpec_Table1, ResSpec_Table2, Indx;
+    let ResSpec_Table1, ResSpec_Table2, Indx, OptionsList, sel_el, opt, i;
 
     // Get the table that contains Response Spectrum Analysis Parameters 
     ResSpec_Table1 = document.getElementById('ResSpec_Parameters_Table1');
+    ResSpec_Table2 = document.getElementById('ResSpec_Parameters_Table2');
 
     // Get the index number of the SDOF_Analysis
     Indx = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;
@@ -622,8 +621,28 @@ function ResSpec_AnalysisType() {
         ResSpec_Table1.rows[1].style.display  = "table-row";
         ResSpec_Table1.rows[2].style.display  = "table-row";
         ResSpec_Table1.rows[3].style.display  = "table-row";
-        ResSpec_Table1.rows[4].style.display  = "none";
+        ResSpec_Table1.rows[4].style.display  = "table-row";
         ResSpec_Table1.rows[5].style.display  = "none";
+        ResSpec_Table1.rows[6].style.display  = "none";
+
+
+        ResSpec_Table2.rows[0].style.display   = "table-row";
+        ResSpec_Table2.rows[1].style.display   = "table-row";
+        ResSpec_Table2.rows[2].style.display   = "table-row";
+        ResSpec_Table2.rows[3].style.display   = "table-row";
+        ResSpec_Table2.rows[4].style.display   = "table-row";
+        ResSpec_Table2.rows[5].style.display   = "table-row";
+        ResSpec_Table2.rows[6].style.display   = "none";
+        ResSpec_Table2.rows[7].style.display   = "none";
+        ResSpec_Table2.rows[8].style.display   = "none";
+        ResSpec_Table2.rows[9].style.display   = "none";
+        ResSpec_Table2.rows[10].style.display  = "none";
+        ResSpec_Table2.rows[11].style.display  = "none";
+
+        ResSpec_Damping_Change(document.getElementById('ResSpec_DampingRatioCount'));
+
+        OptionsList    = ['Total Acceleration', 'Relative Acceleration', 'Velocity', 'Displacement'];
+
     } else if (Indx === 1) {
         // Constant Ductility Inelestic Response Spectrum
         // Bilinear hysteretic model
@@ -631,8 +650,27 @@ function ResSpec_AnalysisType() {
         ResSpec_Table1.rows[1].style.display  = "table-row";
         ResSpec_Table1.rows[2].style.display  = "table-row";
         ResSpec_Table1.rows[3].style.display  = "table-row";
-        ResSpec_Table1.rows[4].style.display  = "none";
-        ResSpec_Table1.rows[5].style.display  = "table-row";
+        ResSpec_Table1.rows[4].style.display  = "table-row";
+        ResSpec_Table1.rows[5].style.display  = "none";
+        ResSpec_Table1.rows[6].style.display  = "table-row";
+
+        ResSpec_Table2.rows[0].style.display   = "none";
+        ResSpec_Table2.rows[1].style.display   = "none";
+        ResSpec_Table2.rows[2].style.display   = "none";
+        ResSpec_Table2.rows[3].style.display   = "none";
+        ResSpec_Table2.rows[4].style.display   = "none";
+        ResSpec_Table2.rows[5].style.display   = "none";
+        ResSpec_Table2.rows[6].style.display   = "table-row";
+        ResSpec_Table2.rows[7].style.display   = "table-row";
+        ResSpec_Table2.rows[8].style.display   = "table-row";
+        ResSpec_Table2.rows[9].style.display   = "table-row";
+        ResSpec_Table2.rows[10].style.display  = "table-row";
+        ResSpec_Table2.rows[11].style.display  = "table-row";
+
+        ResSpec_Ductility_Change(document.getElementById('ResSpec_DuctilityCount'));
+
+        OptionsList    = ['Total Acceleration', 'Relative Acceleration', 'Velocity', 'Displacement'];
+
     } else if (Indx === 2) {
         // Constant Ductility Inelestic Response Spectrum
         // Clough bilinear with stiffness degradation
@@ -642,7 +680,48 @@ function ResSpec_AnalysisType() {
         ResSpec_Table1.rows[3].style.display  = "table-row";
         ResSpec_Table1.rows[4].style.display  = "table-row";
         ResSpec_Table1.rows[5].style.display  = "table-row";
+        ResSpec_Table1.rows[6].style.display  = "table-row";
+
+        ResSpec_Table2.rows[0].style.display   = "none";
+        ResSpec_Table2.rows[1].style.display   = "none";
+        ResSpec_Table2.rows[2].style.display   = "none";
+        ResSpec_Table2.rows[3].style.display   = "none";
+        ResSpec_Table2.rows[4].style.display   = "none";
+        ResSpec_Table2.rows[5].style.display   = "none";
+        ResSpec_Table2.rows[6].style.display   = "table-row";
+        ResSpec_Table2.rows[7].style.display   = "table-row";
+        ResSpec_Table2.rows[8].style.display   = "table-row";
+        ResSpec_Table2.rows[9].style.display   = "table-row";
+        ResSpec_Table2.rows[10].style.display  = "table-row";
+        ResSpec_Table2.rows[11].style.display  = "table-row";
+
+        ResSpec_Ductility_Change(document.getElementById('ResSpec_DuctilityCount'));
+
+        OptionsList    = ['Total Acceleration', 'Relative Acceleration', 'Velocity', 'Displacement'];
+
     }
+
+    // Get the selectToDisplay and update its content 
+    sel_el = document.getElementById('ResSpec_SelectToDisplay');
+    sel_el.innerHTML = '';
+
+    // Add empty entry to the begining of the list
+    OptionsList.unshift('');
+
+    for (i=0; i<OptionsList.length; i++) {
+        opt = document.createElement("option");
+        opt.value = OptionsList[i];
+        opt.text = OptionsList[i];
+        sel_el.add(opt, null);
+    }
+
+    // Select the fist item in the list, which is None
+    sel_el.selectedIndex = 0;
+
+    // Update UI (Screen)
+    for (i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i);  }
+
+
 }
 function ResSpec_Damping_Change(x) {
 
@@ -659,7 +738,7 @@ function ResSpec_Damping_Change(x) {
     // Get the table that contains Response Spectrum Analysis Parameters 
     ResSpec_Table2 = document.getElementById('ResSpec_Parameters_Table2');
 
-    // Number of Constant Ductility Count 
+    // Number of Damping Ratio Count 
     DampinRatioNumber = Number(ResSpec_Table2.rows[1].cells[1].getElementsByTagName('input')[0].value);
     for (i = 2; i < DampinRatioNumber+2; i++) {
         ResSpec_Table2.rows[i].style.display  = "table-row"; 
@@ -728,15 +807,16 @@ function ResSpec_Parameters() {
     tol           = Number(document.getElementById('Newmark_OutOfBalanceForceTolerance').value);
     tol_ductility = Number(document.getElementById('Newmark_DuctilityConvergenceTolerance').value);
 
-    if      (AnalysisMethod == 0) { AnalysisMethod_string = 'Elastic Spectra';                         }
-    else if (AnalysisMethod == 1) { AnalysisMethod_string = 'Constant Ductility Inelestic Spectra - Bilinear Hysteretic Model';  }
-    else if (AnalysisMethod == 2) { AnalysisMethod_string = 'Constant Ductility Inelestic Spectra - Clough Bilinear Model';      }
+    if      (AnalysisMethod == 0) { AnalysisMethod_string = 'Elastic Spectra';        }
+    else if (AnalysisMethod == 1) { AnalysisMethod_string = 'Bilinear Hysteretic';    }
+    else if (AnalysisMethod == 2) { AnalysisMethod_string = 'Clough Bilinear Model';  }
 
     // Return SDOF parameters
     return {
         IsAnalysisCompleted         : false,
         AnalysisMethod              : AnalysisMethod,
         AnalysisMethod_string       : AnalysisMethod_string,
+        T                           : undefined,
         T_Min                       : T_Min,
         T_Step                      : T_Step,
         T_Max                       : T_Max,
@@ -764,6 +844,51 @@ function ResSpec_Parameters() {
         TypeAndUnits                : undefined,
         DisplayData                 : undefined,
     }
+}
+function ResSpec_SelectToDisplay() {
+
+    let i, Indx, SDOF_Plot_ID;
+
+    for (i=0; i<ChannelList.length; i++) {
+        
+        // skip if this channel is not selected for dislay
+        if (!ChannelList[i].PlotGraph) { continue; }
+
+        // Get the selected index number
+        Indx = document.getElementById('ResSpec_SelectToDisplay').selectedIndex;
+
+        if (Indx == 0) { continue; }
+
+        // Change the index number for this channel 
+        SDOF_Plot_ID  = "SDOF_Plot_ID_" + ChannelList[i].Unique_ID;
+        document.getElementById(SDOF_Plot_ID).selectedIndex = Indx-1;
+
+        Update_Units_infoTable_ResSpec(i);
+
+    }
+}
+function ResSpec_ResultsDisplay(i) {
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let select, opt, OptionsList, Indx;
+    
+    OptionsList = Array.from(document.getElementById('ResSpec_SelectToDisplay').options).map(opt => opt.text);
+    OptionsList.shift(); // removes the fist entry from the list
+
+    select      = document.getElementById("SDOF_Plot_ID_"  + ChannelList[i].Unique_ID);
+    select.innerText = '';
+    for (let j = 0; j < OptionsList.length; j++) {
+        opt = document.createElement("option");
+        opt.text = OptionsList[j];
+        select.add(opt, null);
+    }
+    select.setAttribute('onchange', 'Update_Units_infoTable_ResSpec('+ i.toString() +')');
+
+    // Read just the Index
+    Indx = document.getElementById('ResSpec_SelectToDisplay').selectedIndex;
+    if (Indx != 0) { select.selectedIndex = Indx-1; }
 }
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------

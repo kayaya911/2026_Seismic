@@ -870,6 +870,187 @@ async function Plotly_Graph_Update(ChNum) {
         
         
     }
+    else if (PageNo == 4) {
+        // Response Spectrum Page 
+
+        // Get the index number of the SDOF_Analysis Method
+        Indx = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;
+
+        // Make sure that the filter analysis is successfully completed
+        if (ChannelList[ChNum].Results.ResSpec.IsAnalysisCompleted && (ChannelList[ChNum].Results.ResSpec.AnalysisMethod == Indx)) {
+
+            // Scale the data to the user-specified unit in Plotly Graph (info table)
+            DisplayData = ChannelList[ChNum].Results.ResSpec.DisplayData;
+            timeData    = ChannelList[ChNum].Results.ResSpec.T;
+
+            if      (DisplayData == "Disp"    ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SD,   ChNum );  }
+            else if (DisplayData == "Vel"     ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SV,   ChNum );  }
+            else if (DisplayData == "acc"     ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.Sa,   ChNum );  }
+            else if (DisplayData == "Acc"     ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SA,   ChNum );  }
+            
+            // Get the status of two checkboxes in the Infor table on Plotly Graph
+            IsFilter_CheckBox_Selected = document.getElementById(FilterResp_ID).checked;
+            IsFFT_CheckBox_Selected    = document.getElementById(FilterFFT_ID).checked;
+
+            if (!IsFilter_CheckBox_Selected && !IsFFT_CheckBox_Selected) {
+                
+                // Plot Spectrum in trace[0]
+                traces[0].x           = timeData;
+                traces[0].y           = res.Data[0];
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = 'ksi_1 : ' + ChannelList[ChNum].Results.ResSpec.ksi_1.toString();              // legend title
+                traces[0].showlegend  = true;              // Show legend
+                
+                // Plot Spectrum in tarace[1]
+                if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 2) {
+                    traces[1].x           = timeData;
+                    traces[1].y           = res.Data[1];
+                    traces[1].visible     = true;
+                    traces[1].opacity     = 1.00;
+                    traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[1].name        = 'ksi_2 : ' + ChannelList[ChNum].Results.ResSpec.ksi_2.toString();                      // legend title
+                    traces[1].showlegend  = true;                   // Show legend 
+                } else {
+                    traces[1].x           = [];
+                    traces[1].y           = [];
+                    traces[1].visible     = false;
+                    traces[1].opacity     = 1.00;
+                    traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[1].name        = '';                      // legend title
+                    traces[1].showlegend  = false;                   // Show legend 
+                }
+                
+                // Plot Spectrum in tarace[2]
+                if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 3) {
+                    traces[2].x           = timeData;
+                    traces[2].y           = res.Data[2];
+                    traces[2].visible     = true;
+                    traces[2].opacity     = 1.00;
+                    traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[2].name        = 'ksi_3 : ' + ChannelList[ChNum].Results.ResSpec.ksi_3.toString();                      // legend title
+                    traces[2].showlegend  = true;                   // Show legend 
+                } else {
+                    traces[2].x           = [];
+                    traces[2].y           = [];
+                    traces[2].visible     = false;
+                    traces[2].opacity     = 1.00;
+                    traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[2].name        = '';                      // legend title
+                    traces[2].showlegend  = false;                   // Show legend 
+                }
+
+                // Plot Spectrum in tarace[3]
+                if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 4) {
+                    traces[3].x           = timeData;
+                    traces[3].y           = res.Data[3];
+                    traces[3].visible     = true;
+                    traces[3].opacity     = 1.00;
+                    traces[3].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[3].name        = 'ksi_4 : ' + ChannelList[ChNum].Results.ResSpec.ksi_4.toString();                      // legend title
+                    traces[3].showlegend  = true;                   // Show legend 
+                } else {
+                    traces[3].x           = [];
+                    traces[3].y           = [];
+                    traces[3].visible     = false;
+                    traces[3].opacity     = 1.00;
+                    traces[3].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[3].name        = '';                      // legend title
+                    traces[3].showlegend  = false;                   // Show legend 
+                }
+
+                layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
+                layout_update.yaxis2.showticklabels = false;
+                layout_update.yaxis2.title.text     = "";
+
+            } 
+
+            // Update the Statistics of (RawData, Velocity, Displacement) in table - scaled to user-specified unit
+            //document.getElementById( Statictics_Peak_ID ).innerHTML = res.Peak.toPrecision(4);
+            //document.getElementById( Statictics_Mean_ID ).innerHTML = res.Mean.toPrecision(4);
+            //document.getElementById( Statictics_RMS_ID  ).innerHTML = res.RMS.toPrecision(4);
+
+            // Show Baseline-Row in InforBar
+            document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.ResSpec.FiltPar.BaselineCorrection_String;
+
+            // Show Filter_ID-Row in InfoBar
+            FilterInfo  = ChannelList[ChNum].Results.ResSpec.FiltPar.FilterName_String;
+            FilterInfo += "<br>" + ChannelList[ChNum].Results.ResSpec.FiltPar.FilterType_String;
+            FilterInfo += " " + ChannelList[ChNum].Results.ResSpec.FiltPar.FilterBand;
+            FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.ResSpec.FiltPar.ZeroPhase;
+            document.getElementById(FilterType_ID).innerHTML = FilterInfo;
+
+            // Assign the analysis method
+            document.getElementById(SDOF_Method_ID).innerHTML = ChannelList[ChNum].Results.ResSpec.AnalysisMethod_string;
+
+
+        }
+        else {
+            // Plot Raw data in trace[0]
+            traces[0].x           = [];
+            traces[0].y           = [];
+            traces[0].visible     = true;
+            traces[0].opacity     = 0.35;
+            traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+            traces[0].name        = '<b>Raw Data<b>';   // legend title
+            traces[0].showlegend  = false;              // Show legend
+            
+            // Plot the Filtered data in tarace[1]
+            traces[1].x           = [];
+            traces[1].y           = [];
+            traces[1].visible     = true;
+            traces[1].opacity     = 1.00;
+            traces[1].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+            traces[1].name        = '<b>Filtered Data<b>';  // legend title
+            traces[1].showlegend  = true;                   // Show legend 
+
+            // Empty - trace[2] not used 
+            traces[2].x           = [],
+            traces[2].y           = [];
+            traces[2].visible     = false;
+            traces[2].opacity     = 0.35;
+            traces[2].line        = {color: 'green', width: 1.00, dash: 'solid' };
+            traces[2].name        = '';                     // legend title
+            traces[2].showlegend  = false;                  // don't show legend 
+
+            // Empty - trace[3] not used 
+            traces[3].x             = [];
+            traces[3].y             = [];
+            traces[3].visible       = false;
+            traces[3].opacity       = 0.35;
+            traces[3].line          = {color: 'grey', width: 1.00, dash: 'solid' };
+            traces[3].name          = '';                // legend title
+            traces[3].showlegend    = false;             // Don't show legend
+
+            layout_update.yaxis.title.text      = '';   // This is the unit that user wants to see on the graph.
+            layout_update.yaxis2.showticklabels = false;
+            layout_update.yaxis2.title.text     = "";
+
+            // Empty the Statistics
+            document.getElementById( Statictics_Peak_ID ).innerHTML = '';
+            document.getElementById( Statictics_Mean_ID ).innerHTML = '';
+            document.getElementById( Statictics_RMS_ID  ).innerHTML = '';
+
+            // Show Baseline-Row in InforBar
+            document.getElementById(BaseLine_ID).innerHTML = '';
+
+            // Show Filter_ID-Row in InfoBar
+            document.getElementById(FilterType_ID).innerHTML = '';
+        }
+
+        // Show Baseline-Row in InforBar
+        document.getElementById(BaseLineRow_ID).style.display = "table-row";
+        
+        // Show Filter_ID-Row in InfoBar
+        document.getElementById(FilterRow_ID).style.display = "table-row";
+
+        // Show SDOF row in InforBar
+        document.getElementById(SDOF_Row_ID).style.display        = "table-row";
+        document.getElementById(SDOF_Method_Row_ID).style.display = "table-row";
+
+
+    }
 
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);
