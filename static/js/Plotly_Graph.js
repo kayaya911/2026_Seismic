@@ -895,29 +895,48 @@ async function Plotly_Graph_Update(ChNum) {
             if (!IsFilter_CheckBox_Selected && !IsFFT_CheckBox_Selected) {
                 
                 // Plot Spectrum in trace[0]
-                traces[0].x           = timeData;
-                traces[0].y           = res.Data[0];
-                traces[0].visible     = true;
-                traces[0].opacity     = 1.00;
-                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[0].name        = 'ksi_1 : ' + ChannelList[ChNum].Results.ResSpec.ksi_1.toString();              // legend title
-                traces[0].showlegend  = true;              // Show legend
-                
+                if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 1) {
+                    
+                    traces[0].x           = timeData;
+                    traces[0].y           = res.Data[0];
+                    traces[0].mode        = 'lines+markers',
+                    traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
+                    traces[0].visible     = true;
+                    traces[0].opacity     = 1.00;
+                    traces[0].line        = {color: 'red', width: 1.50, dash: 'solid' };
+                    traces[0].name        = 'ksi_1 : ' + ChannelList[ChNum].Results.ResSpec.ksi_1.toString();              // legend title
+                    traces[0].showlegend  = true;              // Show legend
+                } else {
+                    traces[0].x           = [];
+                    traces[0].y           = [];
+                    traces[0].mode        = 'lines',
+                    traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
+                    traces[0].visible     = false;
+                    traces[0].opacity     = 1.00;
+                    traces[0].line        = {color: 'red', width: 1.50, dash: 'solid' };
+                    traces[0].name        = '';                      // legend title
+                    traces[0].showlegend  = false;                   // Show legend 
+                }
+
                 // Plot Spectrum in tarace[1]
                 if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 2) {
                     traces[1].x           = timeData;
                     traces[1].y           = res.Data[1];
+                    traces[1].mode        = 'lines+markers',
+                    traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
                     traces[1].visible     = true;
                     traces[1].opacity     = 1.00;
-                    traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
                     traces[1].name        = 'ksi_2 : ' + ChannelList[ChNum].Results.ResSpec.ksi_2.toString();                      // legend title
                     traces[1].showlegend  = true;                   // Show legend 
                 } else {
                     traces[1].x           = [];
                     traces[1].y           = [];
+                    traces[1].mode        = 'lines',
+                    traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
                     traces[1].visible     = false;
                     traces[1].opacity     = 1.00;
-                    traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
                     traces[1].name        = '';                      // legend title
                     traces[1].showlegend  = false;                   // Show legend 
                 }
@@ -926,6 +945,8 @@ async function Plotly_Graph_Update(ChNum) {
                 if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 3) {
                     traces[2].x           = timeData;
                     traces[2].y           = res.Data[2];
+                    traces[2].mode        = 'lines+markers',
+                    traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                     traces[2].visible     = true;
                     traces[2].opacity     = 1.00;
                     traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -934,6 +955,8 @@ async function Plotly_Graph_Update(ChNum) {
                 } else {
                     traces[2].x           = [];
                     traces[2].y           = [];
+                    traces[2].mode        = 'lines',
+                    traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
                     traces[2].visible     = false;
                     traces[2].opacity     = 1.00;
                     traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -945,17 +968,21 @@ async function Plotly_Graph_Update(ChNum) {
                 if (ChannelList[ChNum].Results.ResSpec.DampingRatioCount >= 4) {
                     traces[3].x           = timeData;
                     traces[3].y           = res.Data[3];
+                    traces[3].mode        = 'lines+markers',
+                    traces[3].marker      = { color: 'orange', size: 5, symbol: 'circle' },
                     traces[3].visible     = true;
                     traces[3].opacity     = 1.00;
-                    traces[3].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
                     traces[3].name        = 'ksi_4 : ' + ChannelList[ChNum].Results.ResSpec.ksi_4.toString();                      // legend title
                     traces[3].showlegend  = true;                   // Show legend 
                 } else {
                     traces[3].x           = [];
                     traces[3].y           = [];
+                    traces[3].mode        = 'lines',
+                    traces[3].marker      = { color: 'orange', size: 5, symbol: 'circle' },
                     traces[3].visible     = false;
                     traces[3].opacity     = 1.00;
-                    traces[3].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                    traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
                     traces[3].name        = '';                      // legend title
                     traces[3].showlegend  = false;                   // Show legend 
                 }

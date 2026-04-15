@@ -678,10 +678,10 @@ function Convert_Data_To_Graph_Unit_ResSpec(Data, ChNum) {
     // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
     temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
 
-    if      (ChannelList[ChNum].Results.ResSpec.DisplayData == 'acc' )   { Or_Data.Type_String = 'Relative Acceleration';                                    }
-    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Acc' )   { Or_Data.Type_String = 'Total Acceleration';                                       }
-    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Disp')   { Or_Data.Type_String = 'Displacement';          temp.Unit = 'Mass • ' + temp.Unit; }
-    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Vel' )   { Or_Data.Type_String = 'Velocity';              temp.Unit = 'Mass • ' + temp.Unit; }
+    if      (ChannelList[ChNum].Results.ResSpec.DisplayData == 'acc' )   { Or_Data.Type_String = 'Relative Acceleration';    }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Acc' )   { Or_Data.Type_String = 'Total Acceleration';       }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Disp')   { Or_Data.Type_String = 'Displacement Spectrum';    }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Vel' )   { Or_Data.Type_String = 'Velocity Spectrum';        }
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
