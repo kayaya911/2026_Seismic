@@ -2401,7 +2401,8 @@ function AddDataToWorkSheet(WorkSheet, Header, Pos1, Data, Pos2, Data2=null, Pos
 async function DonwloadExcel_LoadDataPage() {
   
     // Decleration of Variables 
-    let i, FileName, WorkBook, WorkSheet, header, data, data2, data3, rN=1, range, columnConfig, temp;
+    let i, j, FileName, WorkBook, WorkSheet, header, data, data2, data3, rN=1, range, columnConfig, temp, temp2, Indx, plotCount;
+    let CEA1, CEA2;
   
     FileName = "SDA_Results.xlsx";
   
@@ -2659,7 +2660,7 @@ async function DonwloadExcel_LoadDataPage() {
             // Integral Units
             temp = TypeAndUnit(ChannelList[i].TypeAndUnits);
 
-            let Indx = ChannelList[i].Results.SDOF.AnalysisMethod;
+            Indx = ChannelList[i].Results.SDOF.AnalysisMethod;
 
             if      (Indx == 0) { 
 
@@ -3237,7 +3238,6 @@ async function DonwloadExcel_LoadDataPage() {
                 AddDataToWorkSheet(WorkSheet, header, "O1", data, "P1");
                 
                 // SDOF Information
-                // Populate Filter Settings to WorkSheet
                 header = [["SDOF"]];
                 data = "";
                 AddDataToWorkSheet(WorkSheet, header, "O9", data, "P9");
@@ -3342,6 +3342,144 @@ async function DonwloadExcel_LoadDataPage() {
             }
 
         }
+        else if (PageNo == 4) {
+
+            Indx = ChannelList[i].Results.ResSpec.AnalysisMethod;
+
+            // Populate Time and Rawdata
+            header = [  "Time (s)", 
+                        "Raw Data ("              + ChannelList[i].UnitString + ")", 
+                    ];
+
+            data   = [  ChannelList[i].time, 
+                        Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor),
+                    ];
+            AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
+            
+            // Populate period values 
+            AddDataToWorkSheet(WorkSheet, [["Period (s)"]], "D1", Transpose([ChannelList[i].Results.ResSpec.T]), "D2");
+
+
+            if      (Indx == 0) { plotCount = ChannelList[i].Results.ResSpec.DampingRatioCount; temp = 'ksi_'; }
+            else if (Indx == 1) { plotCount = ChannelList[i].Results.ResSpec.DuctilityCount;    temp = 'mu_'; }
+            else if (Indx == 2) { plotCount = ChannelList[i].Results.ResSpec.DuctilityCount;    temp = 'mu_'; }
+            
+            CEA1 = "E1";
+            CEA2 = "E2";
+
+            // loop over each DampingRatio or Constant-Ductility
+            for (j=0; j<plotCount; j++) {
+
+                temp2 = temp + (j+1).toString();
+
+                header = [  "SA (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",  
+                            "Sa (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                            "SV (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                            "SD (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                        ];
+                data   = [  ChannelList[i].Results.ResSpec.SA[j], 
+                            ChannelList[i].Results.ResSpec.Sa[j],
+                            ChannelList[i].Results.ResSpec.SV[j],
+                            ChannelList[i].Results.ResSpec.SD[j],
+                        ];
+
+                AddDataToWorkSheet(WorkSheet, [header], CEA1, Transpose(data), CEA2); 
+                CEA1 = ShiftExcellAddress(CEA1, 4, 0);
+                CEA2 = ShiftExcellAddress(CEA1, 0, 1); 
+            }
+            CEA1 = ShiftExcellAddress(CEA1, 1, 0);
+            CEA2 = ShiftExcellAddress(CEA1, 1, 0);
+            
+            // Populate FileName, ChannelNumber, Duration (s), Data Type, Data Unit, Scale Factor, Orientation and Sampling Frequency
+            header = [["File Name"],             ["Analysis Method"],                                     ["Channel Number"],     ["Duration (s)"],          ["Scale Factor"],             ["Orientation"],              ["Sampling Frequency (Hz)"]];   
+            data   = [[ChannelList[i].FileName], [ChannelList[i].Results.ResSpec.AnalysisMethod_string],  [ChannelList[i].ChNum], [ChannelList[i].Duration], [ChannelList[i].ScaleFactor], [ChannelList[i].Orientation], [ChannelList[i].FSamp]];
+            AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+
+            CEA1 = ShiftExcellAddress(CEA1, 0, 8);
+            CEA2 = ShiftExcellAddress(CEA2, 0, 8);
+
+            // Spectrum Information
+            header = [["Spectrum"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+
+            CEA1 = ShiftExcellAddress(CEA1, 0, 1);
+            CEA2 = ShiftExcellAddress(CEA2, 0, 1);
+
+            header = [["Minimum Period"],                     ["Period Step"],                          ["Maximum Period"]                      ];   
+            data   = [[ChannelList[i].Results.ResSpec.T_Min], [ChannelList[i].Results.ResSpec.T_Step],  [ChannelList[i].Results.ResSpec.T_Max]  ];
+            AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+            
+           
+            if (Indx == 1) { 
+                CEA1 = ShiftExcellAddress(CEA1, 0, 3);
+                CEA2 = ShiftExcellAddress(CEA2, 0, 3);
+
+                AddDataToWorkSheet(WorkSheet, [["Post Yield Hardening Ratio"]], CEA1, [[ChannelList[i].Results.ResSpec.PostYieldHard]], CEA2); 
+                
+                CEA1 = ShiftExcellAddress(CEA1, 0, 2);
+                CEA2 = ShiftExcellAddress(CEA2, 0, 2);
+            }
+            else if (Indx == 2) { 
+                CEA1 = ShiftExcellAddress(CEA1, 0, 3);
+                CEA2 = ShiftExcellAddress(CEA2, 0, 3);
+
+                AddDataToWorkSheet(WorkSheet, [["Post Yield Hardening Ratio"], ["Unloading Stiffness Degradation"]], CEA1, [[ChannelList[i].Results.ResSpec.PostYieldHard], [ChannelList[i].Results.ResSpec.Stiff_Deg]], CEA2); 
+                
+                CEA1 = ShiftExcellAddress(CEA1, 0, 3);
+                CEA2 = ShiftExcellAddress(CEA2, 0, 3);
+            }
+            else {
+                CEA1 = ShiftExcellAddress(CEA1, 0, 4);
+                CEA2 = ShiftExcellAddress(CEA2, 0, 4);
+            }
+            
+
+            // Populate Filter Settings to WorkSheet
+            header = [["Filter Settings"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+
+            CEA1 = ShiftExcellAddress(CEA1, 0, 1);
+            CEA2 = ShiftExcellAddress(CEA2, 0, 1);
+
+            header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
+            data = [[ChannelList[i].Results.ResSpec.FiltPar.BaselineCorrection_String],
+                    [ChannelList[i].Results.ResSpec.FiltPar.FilterName_String],
+                    [ChannelList[i].Results.ResSpec.FiltPar.FilterType_String],
+                    [ChannelList[i].Results.ResSpec.FiltPar.FilterOrder],
+                    [ChannelList[i].Results.ResSpec.FiltPar.FilterBand],
+                    [ChannelList[i].Results.ResSpec.FiltPar.ZeroPhase],
+                    [ChannelList[i].Results.ResSpec.FiltPar.IsStable],
+                ];
+            AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+
+            CEA1 = ShiftExcellAddress(CEA1, 0, 8);
+            CEA2 = ShiftExcellAddress(CEA2, 0, 8);
+
+            // Populate Filter Coefficients to WorkSheet
+            header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
+            data = [ChannelList[i].Results.ResSpec.FiltPar.a, ChannelList[i].Results.ResSpec.FiltPar.b];
+            AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+
+            // All column formatting
+            columnConfig = [
+                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 0:  Time (s)
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 1:  Raw Data 
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 13: Empty
+                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2:  Period
+            ];
+            for (j=0; j<plotCount*4; j++) {
+                columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // spectral values 
+            }
+            columnConfig.push( { width:  5, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty
+            columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty
+            columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty
+
+            range = XLSX.utils.decode_range(WorkSheet['!ref']);
+            ColumnStyle(WorkSheet, range, columnConfig);
+
+        }
         
         // Add the workSheet to WorkBook
         XLSX.utils.book_append_sheet(WorkBook, WorkSheet, (i+1).toString());
@@ -3365,5 +3503,44 @@ async function DonwloadExcel_LoadDataPage() {
     // Enable Download Button
     document.getElementById("Header_Download").disabled = false;
 
+    // Helper functions
+    function ShiftExcellAddress(row_excel, col, row) {
+        // Strip optional $ anchors (e.g. "$B$3" → "B3")
+        const clean = row_excel.replace(/\$/g, "");
+
+        // Split into column letters and row number
+        const match = clean.match(/^([A-Z]+)(\d+)$/i);
+        if (!match) throw new Error(`Invalid cell address: "${row_excel}"`);
+
+        const [, colStr, rowStr] = match;
+
+        // --- Column: letters → 1-based number ---
+        const colToNum = (letters) =>
+            letters.toUpperCase().split("").reduce((acc, ch) => acc * 26 + (ch.charCodeAt(0) - 64), 0);
+
+        // --- Column: 1-based number → letters ---
+        const numToCol = (n) => {
+            let s = "";
+            while (n > 0) {
+            const rem = (n - 1) % 26;
+            s = String.fromCharCode(65 + rem) + s;
+            n = Math.floor((n - 1) / 26);
+            }
+            return s;
+        };
+
+        const newCol = colToNum(colStr) + col;
+        const newRow = parseInt(rowStr, 10) + row;
+
+        if (newCol < 1) throw new Error(`Column shift goes out of bounds (result: ${newCol})`);
+        if (newRow < 1) throw new Error(`Row shift goes out of bounds (result: ${newRow})`);
+
+        return numToCol(newCol) + newRow;
+    }
+
 }
 //----------------------------------------------------------------------------------------
+
+
+
+
