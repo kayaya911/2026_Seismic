@@ -1377,10 +1377,12 @@ async function Channel_ResponseSpectrum() {
         Ug = BaselineAndFilter(Ug, FiltPar);
 
         // STEP 8: Array of SDOF-periods
-        T             = LinStep(ResSpec_Par.T_Min, ResSpec_Par.T_Max, ResSpec_Par.T_Step);
-        ResSpec_Par.T = T;
+        T = LinStep(ResSpec_Par.T_Min, ResSpec_Par.T_Max, ResSpec_Par.T_Step); 
 
-        // STEP 9: Analysis
+        // STEP 9: Check the last period value 
+        if (T.at(-1) !=  ResSpec_Par.T_Max) { T.push(ResSpec_Par.T_Max); };
+        
+        // STEP 10: Analysis
         if      (ResSpec_Par.AnalysisMethod == 0) {
             // Elactic Spectra
 
@@ -1398,6 +1400,12 @@ async function Channel_ResponseSpectrum() {
                 ksi              = ResSpec_Par['ksi_'+(j+1).toString()]; 
                 [SD, SV, SA, Sa] = SDOF_ResponseSpectrum(Ug, delt, ksi, T);
 
+                // Add the response at zero-period T=0s
+                SA.unshift(Max(Abs(Ug)).val);
+                Sa.unshift(0);
+                SV.unshift(0);
+                SD.unshift(0);
+
                 // Store results for each ksi value 
                 ResSpec_Par.SD[j] = SD;
                 ResSpec_Par.SV[j] = SV;
@@ -1405,7 +1413,6 @@ async function Channel_ResponseSpectrum() {
                 ResSpec_Par.Sa[j] = Sa;
 
             }
-            
 
         }
         else if ((ResSpec_Par.AnalysisMethod == 1) || (ResSpec_Par.AnalysisMethod == 2)){
@@ -1436,6 +1443,12 @@ async function Channel_ResponseSpectrum() {
                 
                 [SD, SV, SA, Sa] = SDOF_ResSpectrum_Constant_Ductility(Ug, delt, ksi, T, Alfa, Beta, PostYieldHard, mu, Option, Stiff_Deg, tol_R, tol_D, dtT)
 
+                // Add the response at zero-period T=0s
+                SA.unshift(Max(Abs(Ug)).val);
+                Sa.unshift(0);
+                SV.unshift(0);
+                SD.unshift(0);
+
                 // Store results for each constant-ductility value 
                 ResSpec_Par.SD[j] = SD;
                 ResSpec_Par.SV[j] = SV;
@@ -1447,25 +1460,29 @@ async function Channel_ResponseSpectrum() {
         }
         else { break; }
 
-        // STEP 9: Store Filter Parameters
+        // STEP 11: Store the period-array
+        ResSpec_Par.T = T;
+        ResSpec_Par.T.unshift(0);
+
+        // STEP 12: Store Filter Parameters
         ResSpec_Par.FiltPar = FiltPar;
 
-        // STEP 10: Flag Successfully Completion
+        // STEP 13: Flag Successfully Completion
         ResSpec_Par.IsAnalysisCompleted = true;
 
-        // STEP 11: Store Results 
+        // STEP 14: Store Results 
         ChannelList[i].Results.ResSpec = ResSpec_Par;
 
-        // STEP 12: Update select element in InfoTable
+        // STEP 15: Update select element in InfoTable
         ResSpec_ResultsDisplay(i);
 
-        // STEP 13: Update InfoTable
+        // STEP 16: Update InfoTable
         Update_Units_infoTable_ResSpec(i);
 
-        // STEP 14: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        // STEP 17: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 15: Update Progress Indicator - Display completion status in UI progress bar
+        // STEP 18: Update Progress Indicator - Display completion status in UI progress bar
         perc = ((i+1)/ChannelList.length*100).toFixed(0); 
         if (perc != 100) {
             ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
@@ -1473,7 +1490,7 @@ async function Channel_ResponseSpectrum() {
             ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
         }
 
-        // STEP 16: Brief delay for UI update visibility (5ms)
+        // STEP 19: Brief delay for UI update visibility (5ms)
         await sleep(5);
 
     }

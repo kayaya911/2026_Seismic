@@ -890,6 +890,52 @@ function ResSpec_ResultsDisplay(i) {
     Indx = document.getElementById('ResSpec_SelectToDisplay').selectedIndex;
     if (Indx != 0) { select.selectedIndex = Indx-1; }
 }
+function ResSpec_TMin_Change() {
+    // Declaration of variables
+    let x          = document.getElementById('ResSpec_MinimumPeriod');
+    let T_Min      = Number(document.getElementById('ResSpec_MinimumPeriod').value);
+    let T_Max      = Number(document.getElementById('ResSpec_MaximumPeriod').value);
+
+    // Make sure that the T_Min is greather than zero 
+    if (T_Min <= 0)                              { 
+        document.getElementById('ResSpec_MinimumPeriod').value = x.oldValue;
+        ProgressBar_Update('Invalid value - Minumum Period must be greather than 0 !', 'red');
+    }
+    else if (T_Min >= T_Max) {
+        document.getElementById('ResSpec_MinimumPeriod').value = x.oldValue;
+        ProgressBar_Update('Invalid value - Minumum Period must be smaller than Maximum Period !', 'red');
+    }
+    else { ProgressBar_Update('', 'black'); }
+}
+function ResSpec_TStep_Change() {
+    // Declaration of variables
+    let y          = document.getElementById('ResSpec_PeriodStep');
+    let T_Step     = Number(document.getElementById('ResSpec_PeriodStep').value);
+
+    // Make sure that the T_Min is greather than zero 
+    if (T_Step <= 0) {
+        document.getElementById('ResSpec_PeriodStep').value = y.oldValue;
+        ProgressBar_Update('Invalid value - Period Step must be greather than 0 !', 'red')
+    }
+    else { ProgressBar_Update('', 'black'); }
+}
+function ResSpec_TMax_Change() {
+    // Declaration of variables
+    let z          = document.getElementById('ResSpec_MaximumPeriod');
+    let T_Min      = Number(document.getElementById('ResSpec_MinimumPeriod').value);
+    let T_Max      = Number(document.getElementById('ResSpec_MaximumPeriod').value);
+
+    // Make sure that the T_Min is greather than zero 
+    if (T_Max <= 0) {
+        document.getElementById('ResSpec_MaximumPeriod').value = z.oldValue;
+        ProgressBar_Update('Invalid value - Maximum Period must be greather than 0 !', 'red');
+    }
+    else if (T_Max <= T_Min) {
+        document.getElementById('ResSpec_MaximumPeriod').value = z.oldValue;
+        ProgressBar_Update('Invalid value - Maximum Period must be greather than Minimum Period !', 'red');
+    }
+    else { ProgressBar_Update('', 'black'); }
+}
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
 // 

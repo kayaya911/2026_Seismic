@@ -449,7 +449,7 @@ function Convert_Units_Data(Data, In, Out, Opt) {
         if      (oU.Unit == 22) { Scale = 1.0;       Offset = 0;                                               }  // Degrees
         else if (oU.Unit == 23) { Scale = 1.0;       Offset = 0;                                               }  // Volts
     }
-
+    
     // return results
     return { 
         Data    : Add(Multiply(Data, Scale), Offset), 

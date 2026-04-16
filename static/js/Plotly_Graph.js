@@ -14,7 +14,7 @@ async function Plotly_Graph_Update(ChNum) {
     let traces, layout_update, res, res1, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
     let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
-    let plotCount;
+    let plotCount, temp;
 
     let PlotArea_ID         = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
     let Statictics_Peak_ID  = "Statictics_Peak_ID_" + ChannelList[ChNum].Unique_ID;
@@ -127,28 +127,28 @@ async function Plotly_Graph_Update(ChNum) {
             else if (IsFilter_CheckBox_Selected) {
                 
                 // Plot Filter Magnitude Response in trace[1]
-                traces[2].x           = ChannelList[ChNum].Results.Filter.f;
-                traces[2].y           = ChannelList[ChNum].Results.Filter.Mag;
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y2",
-                traces[2].visible     = true;
-                traces[2].opacity     = 1.00;
-                traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[2].name        = '<b>Magnitude<b>';      // legend title
-                traces[2].showlegend  = true;                   // Show legend 
+                traces[0].x           = ChannelList[ChNum].Results.Filter.f;
+                traces[0].y           = ChannelList[ChNum].Results.Filter.Mag;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = '<b>Magnitude<b>';      // legend title
+                traces[0].showlegend  = true;                   // Show legend 
 
                 // Plot Filter Phase Response in trace[2]
-                traces[3].x           = ChannelList[ChNum].Results.Filter.f;
-                traces[3].y           = ChannelList[ChNum].Results.Filter.Angle;
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[3].yaxis       = "y2",
-                traces[3].visible     = true;
-                traces[3].opacity     = 1.00;
-                traces[3].line        = {color: 'green', width: 1.50, dash: 'solid' };
-                traces[3].name        = '<b>Phase<b>';          // legend title
-                traces[3].showlegend  = true;                   // Show legend 
+                traces[1].x           = ChannelList[ChNum].Results.Filter.f;
+                traces[1].y           = ChannelList[ChNum].Results.Filter.Angle;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y2",
+                traces[1].visible     = true;
+                traces[1].opacity     = 1.00;
+                traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
+                traces[1].name        = '<b>Phase<b>';          // legend title
+                traces[1].showlegend  = true;                   // Show legend 
 
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT;   
                 layout_update.yaxis2.showticklabels = true; 
@@ -168,28 +168,28 @@ async function Plotly_Graph_Update(ChNum) {
                 [Mag_RD, Angle_RD, f] = FourierSpec(Detrend(Multiply(res_RawData.Data, ChannelList[ChNum].ScaleFactor), 0),   ChannelList[ChNum].FSamp);
 
                 // Plot FFT Magnitude Response of Raw data
-                traces[2].x           = f;
-                traces[2].y           = Mag_RD;
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'grey', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y2",
-                traces[2].visible     = true;
-                traces[2].opacity     = 0.35;
-                traces[2].line        = {color: 'grey', width: 1.00, dash: 'solid' };
-                traces[2].name        = '<b>Raw Data<b>';       // legend title
-                traces[2].showlegend  = true;                   // Show legend 
+                traces[0].x           = f;
+                traces[0].y           = Mag_RD;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 0.35;
+                traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
+                traces[0].name        = '<b>Raw Data<b>';       // legend title
+                traces[0].showlegend  = true;                   // Show legend 
 
                 // Plot FFT Magnitude Response of Filtered data
-                traces[3].x           = f;
-                traces[3].y           = Mag_FD;
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[3].yaxis       = "y2",
-                traces[3].visible     = true;
-                traces[3].opacity     = 1.00;
-                traces[3].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[3].name        = '<b>Filtered Data<b>';      // legend title
-                traces[3].showlegend  = true;                       // Show legend 
+                traces[1].x           = f;
+                traces[1].y           = Mag_FD;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y1",
+                traces[1].visible     = true;
+                traces[1].opacity     = 1.00;
+                traces[1].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[1].name        = '<b>Filtered Data<b>';      // legend title
+                traces[1].showlegend  = true;                       // Show legend 
 
                 layout_update.yaxis.title.text      = res_FilteredData.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
@@ -287,28 +287,28 @@ async function Plotly_Graph_Update(ChNum) {
             else if (IsFilter_CheckBox_Selected) {
                 
                 // Plot Filter Magnitude Response in trace[1]
-                traces[2].x           = ChannelList[ChNum].Results.Integral.f;
-                traces[2].y           = ChannelList[ChNum].Results.Integral.Mag;
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y2",
-                traces[2].visible     = true;
-                traces[2].opacity     = 1.00;
-                traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[2].name        = '<b>Magnitude<b>';      // legend title 
-                traces[2].showlegend  = true;                   // Show legend
+                traces[0].x           = ChannelList[ChNum].Results.Integral.f;
+                traces[0].y           = ChannelList[ChNum].Results.Integral.Mag;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = '<b>Magnitude<b>';      // legend title 
+                traces[0].showlegend  = true;                   // Show legend
 
                 // Plot Filter Phase Response in trace[2]
-                traces[3].x           = ChannelList[ChNum].Results.Integral.f;
-                traces[3].y           = ChannelList[ChNum].Results.Integral.Angle;
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[3].yaxis       = "y2",
-                traces[3].visible     = true;
-                traces[3].opacity     = 1.00;
-                traces[3].line        = {color: 'green', width: 1.50, dash: 'solid' };
-                traces[3].name        = '<b>Phase<b>';          // legend title 
-                traces[3].showlegend  = true;                   // Show legend
+                traces[1].x           = ChannelList[ChNum].Results.Integral.f;
+                traces[1].y           = ChannelList[ChNum].Results.Integral.Angle;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y2",
+                traces[1].visible     = true;
+                traces[1].opacity     = 1.00;
+                traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
+                traces[1].name        = '<b>Phase<b>';          // legend title 
+                traces[1].showlegend  = true;                   // Show legend
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT;
                 layout_update.yaxis2.showticklabels = true;
@@ -324,16 +324,16 @@ async function Plotly_Graph_Update(ChNum) {
                 [Mag_FD, Angle_FD, f] = FourierSpec(res.Data,  ChannelList[ChNum].FSamp);
                 
                 // Empty trace[1] - Not used 
-                traces[2].x           = f;
-                traces[2].y           = Mag_FD;
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y2",
-                traces[2].visible     = true;
-                traces[2].opacity     = 1.00;
-                traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[2].name        = '';                     // legend title
-                traces[2].showlegend  = false;                  // Show legend
+                traces[0].x           = f;
+                traces[0].y           = Mag_FD;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = '';                     // legend title
+                traces[0].showlegend  = false;                  // Show legend
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT;
                 layout_update.yaxis2.showticklabels = false;
@@ -466,34 +466,32 @@ async function Plotly_Graph_Update(ChNum) {
             else if (IsFilter_CheckBox_Selected) {
                 
                 // Plot Filter Magnitude Response in trace[1]
-                traces[2].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
-                traces[2].y           = ChannelList[ChNum].Results.SDOF.FiltPar.Mag;
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y2",
-                traces[2].visible     = true;
-                traces[2].opacity     = 1.00;
-                traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[2].name        = '<b>Magnitude<b>';      // legend title
-                traces[2].showlegend  = true;                   // Show legend 
+                traces[0].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
+                traces[0].y           = ChannelList[ChNum].Results.SDOF.FiltPar.Mag;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = '<b>Magnitude<b>';      // legend title
+                traces[0].showlegend  = true;                   // Show legend 
 
                 // Plot Filter Phase Response in trace[2]
-                traces[3].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
-                traces[3].y           = ChannelList[ChNum].Results.SDOF.FiltPar.Angle;
-                traces[3].mode        = 'lines',
-                traces[3].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                traces[3].yaxis       = "y2",
-                traces[3].visible     = true;
-                traces[3].opacity     = 1.00;
-                traces[3].line        = {color: 'green', width: 1.50, dash: 'solid' };
-                traces[3].name        = '<b>Phase<b>';          // legend title
-                traces[3].showlegend  = true;                   // Show legend 
+                traces[1].x           = ChannelList[ChNum].Results.SDOF.FiltPar.f;
+                traces[1].y           = ChannelList[ChNum].Results.SDOF.FiltPar.Angle;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y2",
+                traces[1].visible     = true;
+                traces[1].opacity     = 1.00;
+                traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
+                traces[1].name        = '<b>Phase<b>';          // legend title
+                traces[1].showlegend  = true;                   // Show legend 
 
                 layout_update.yaxis.title.text      = '<b>Magnitude<b>';
                 layout_update.yaxis2.showticklabels = true; 
                 layout_update.yaxis2.title.text     = res.y2Title;
-                layout_update.xaxis.autorange = true;
-                layout_update.yaxis.autorange = true;
                 
             }
             else if (IsFFT_CheckBox_Selected) {
@@ -506,22 +504,20 @@ async function Plotly_Graph_Update(ChNum) {
                 [Mag_FD, Angle_FD, f] = FourierSpec(res.Data,  ChannelList[ChNum].FSamp);
                 
                 // Plot FFT Magnitude Response of Raw data
-                traces[2].x           = f;
-                traces[2].y           = Mag_FD;
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y2",
-                traces[2].visible     = true;
-                traces[2].opacity     = 1.00;
-                traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[2].name        = '';                      // legend title
-                traces[2].showlegend  = false;                   // Show legend 
+                traces[0].x           = f;
+                traces[0].y           = Mag_FD;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[0].name        = '';                      // legend title
+                traces[0].showlegend  = false;                   // Show legend 
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
                 layout_update.yaxis2.title.text     = "";
-                layout_update.xaxis.autorange = true;
-                layout_update.yaxis.autorange = true;
 
             }
 
@@ -572,9 +568,9 @@ async function Plotly_Graph_Update(ChNum) {
         // Make sure that the filter analysis is successfully completed
         if (ChannelList[ChNum].Results.ResSpec.IsAnalysisCompleted && (ChannelList[ChNum].Results.ResSpec.AnalysisMethod == Indx)) {
 
-            if      (Indx == 0) { plotCount = ChannelList[ChNum].Results.ResSpec.DampingRatioCount; }
-            else if (Indx == 1) { plotCount = ChannelList[ChNum].Results.ResSpec.DuctilityCount;    }
-            else if (Indx == 2) { plotCount = ChannelList[ChNum].Results.ResSpec.DuctilityCount;    }
+            if      (Indx == 0) { plotCount = ChannelList[ChNum].Results.ResSpec.DampingRatioCount;  temp = 'ksi'; }
+            else if (Indx == 1) { plotCount = ChannelList[ChNum].Results.ResSpec.DuctilityCount;     temp = 'mu';  }
+            else if (Indx == 2) { plotCount = ChannelList[ChNum].Results.ResSpec.DuctilityCount;     temp = 'mu';  }
 
             // Scale the data to the user-specified unit in Plotly Graph (info table)
             DisplayData = ChannelList[ChNum].Results.ResSpec.DisplayData;
@@ -602,8 +598,8 @@ async function Plotly_Graph_Update(ChNum) {
                     traces[0].visible     = true;
                     traces[0].opacity     = 1.00;
                     traces[0].line        = {color: 'red', width: 1.50, dash: 'solid' };
-                    traces[0].name        = 'ksi_1 : ' + ChannelList[ChNum].Results.ResSpec.ksi_1.toString();              // legend title
-                    traces[0].showlegend  = true;              // Show legend
+                    traces[0].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_1"].toString();    // legend title
+                    traces[0].showlegend  = true;                    // Show legend
                 }
 
                 // Plot Spectrum in tarace[1]
@@ -616,7 +612,7 @@ async function Plotly_Graph_Update(ChNum) {
                     traces[1].visible     = true;
                     traces[1].opacity     = 1.00;
                     traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
-                    traces[1].name        = 'ksi_2 : ' + ChannelList[ChNum].Results.ResSpec.ksi_2.toString();                      // legend title
+                    traces[1].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_2"].toString();  // legend title
                     traces[1].showlegend  = true;                   // Show legend 
                 }
                 
@@ -630,7 +626,7 @@ async function Plotly_Graph_Update(ChNum) {
                     traces[2].visible     = true;
                     traces[2].opacity     = 1.00;
                     traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                    traces[2].name        = 'ksi_3 : ' + ChannelList[ChNum].Results.ResSpec.ksi_3.toString();                      // legend title
+                    traces[2].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_3"].toString();    // legend title
                     traces[2].showlegend  = true;                   // Show legend 
                 }
 
@@ -644,7 +640,7 @@ async function Plotly_Graph_Update(ChNum) {
                     traces[3].visible     = true;
                     traces[3].opacity     = 1.00;
                     traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
-                    traces[3].name        = 'ksi_4 : ' + ChannelList[ChNum].Results.ResSpec.ksi_4.toString();                      // legend title
+                    traces[3].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_4"].toString();     // legend title
                     traces[3].showlegend  = true;                   // Show legend 
                 }
 
@@ -817,17 +813,18 @@ async function Plotly_NewGraph(Div_ID, Channel) {
     layout = {
         title           : { text: GraphTitle, font: {size: 10 }, x: 0.5, xanchor: 'center', y: 0.98, yanchor: 'top'},
         xaxis           : { zeroline: false, automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: xLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true },
-        yaxis           : { zeroline: true,  automargin: true, tickfont: { size: 15 }, tickformat: '.2e', linecolor: 'black', linewidth: 1, mirror: true, title: {text: yLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true },
-        yaxis2          : { zeroline: false, automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false },
+        yaxis           : { zeroline: true,  automargin: true, tickfont: { size: 15 }, tickformat: '.2e', linecolor: 'black', linewidth: 1, mirror: true, title: {text: yLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, rangemode: 'tozero' },
+        yaxis2          : { zeroline: true,  automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false, matches: "y", rangemode: 'tozero'},
         plot_bgcolor    : '#ffffff', 
         paper_bgcolor   : '#ffffff',
-        legend          : { x: 1.00, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#ffffff', },
+        legend          : { x: 1.00, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#f8f4f4', bordercolor: '#6c6a6a', borderwidth: 1.5, },
         autosize        : true,
         margin          : {t: 20, r:20, b:5, l:5},
         shapes          : [],
     };
 
     config = {
+        edits                   : { legendPosition: true, }, // Allow moving/dragging the legend on plot
         responsive              : true,
         displayModeBar          : true,    // show-hide floating toolbar all together 
         modeBarButtonsToRemove  : [],
@@ -1051,6 +1048,9 @@ async function Plotly_Info_Table(Channel) {
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
     cell.innerHTML = "";
     cell.id        = FilterType_ID;
+
+    // Adjust the width of the first column in the Table 
+    for (let row of Tabel.rows) { row.cells[0].style.width = '8rem'; }
 
     return Tabel;
 }
