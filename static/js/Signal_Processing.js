@@ -857,7 +857,18 @@ async function Channel_Filter() {
     for (i=0; i<ChannelList.length; i++) {
             
         // STEP 1: Skip this Channel if it is not selected for analysis
-        if (!ChannelList[i].Selected) {  continue;  }
+        if (!ChannelList[i].Selected) {
+            await Plotly_Graph_Update(i);
+
+            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+            if (perc != 100) {
+                ProgressBar_Update( 'Filter -- ' + (perc).toString() + '% completed!', 'red');
+            } else {
+                ProgressBar_Update( 'Filter -- ' + (perc).toString() + '% completed!', 'black');
+            }
+            await sleep(5);
+            continue; 
+        }
 
         // STEP 2: Get filter parameters
         FiltPar = Filter_Parameters();
@@ -948,7 +959,18 @@ async function Channel_Integral() {
     for (i=0; i<ChannelList.length; i++) {
 
         // STEP 1: Skip this Channel if it is not selected for analysis
-        if (!ChannelList[i].Selected) {  continue;  }
+        if (!ChannelList[i].Selected) {
+            await Plotly_Graph_Update(i);
+
+            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+            if (perc != 100) {
+                ProgressBar_Update( 'Integral -- ' + (perc).toString() + '% completed!', 'red');
+            } else {
+                ProgressBar_Update( 'Integral -- ' + (perc).toString() + '% completed!', 'black');
+            }
+            await sleep(5);
+            continue; 
+        }
 
         // STEP 2: Get filter parameters
         FiltPar      = Filter_Parameters();
@@ -1057,7 +1079,13 @@ async function Channel_SDOF() {
         if (!ChannelList[i].Selected) {
 
             await Plotly_Graph_Update(i);
-            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+
+            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+            if (perc != 100) {
+                ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
+            } else {
+                ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
+            }
             await sleep(5);
             continue; 
         }
@@ -1066,7 +1094,13 @@ async function Channel_SDOF() {
         if (ChannelList[i].Type != 0) { 
 
             await Plotly_Graph_Update(i);
-            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            
+            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+            if (perc != 100) {
+                ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
+            } else {
+                ProgressBar_Update( SDOF_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
+            }
             await sleep(5);
             continue; 
         }
@@ -1338,31 +1372,40 @@ async function Channel_ResponseSpectrum() {
     let i, j, n, FiltPar, ResSpec_Par, Ug, T, ksi, SD, SV, SA, Sa, Temp, perc;
     let delt, Alfa, Beta, PostYieldHard, mu, Option, Stiff_Deg, tol_R, tol_D, dtT
 
-
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) { 
-    
-        // STEP 1: Skip this Channel if it is not selected for analysis
+        
+        // STEP 1: Get Filter-Parameters and ResSpectrum-Parameters
+        FiltPar     = Filter_Parameters();
+        ResSpec_Par = ResSpec_Parameters();
+
+        // STEP 2: Skip this Channel if it is not selected for analysis
         if (!ChannelList[i].Selected) {
 
             await Plotly_Graph_Update(i);
-            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+            if (perc != 100) {
+                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
+            } else {
+                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
+            }
             await sleep(5);
             continue; 
         }
 
-        // STEP 2: Skip if not an acceleration channel
+        // STEP 3: Skip if not an acceleration channel
         if (ChannelList[i].Type != 0) { 
 
             await Plotly_Graph_Update(i);
-            ProgressBar_Update( AnalysisMethod + ' -- ' + ((i+1)/ChannelList.length*100).toFixed(0).toString() + '% completed!', 'black');
+            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+            if (perc != 100) {
+                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
+            } else {
+                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
+            }
             await sleep(5);
             continue; 
         }
-
-        // STEP 3: Get Filter-Parameters and ResSpectrum-Parameters
-        FiltPar     = Filter_Parameters();
-        ResSpec_Par = ResSpec_Parameters();
         
         // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
         FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
