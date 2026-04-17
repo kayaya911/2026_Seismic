@@ -682,6 +682,8 @@ function Convert_Data_To_Graph_Unit_ResSpec(Data, ChNum) {
     else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Acc' )   { Or_Data.Type_String = 'Total Acceleration';       }
     else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Disp')   { Or_Data.Type_String = 'Displacement Spectrum';    }
     else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'Vel' )   { Or_Data.Type_String = 'Velocity Spectrum';        }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'PAcc')   { Or_Data.Type_String = 'Pseudo-Acceleration';      }
+    else if (ChannelList[ChNum].Results.ResSpec.DisplayData == 'PVel')   { Or_Data.Type_String = 'Pseudo-Velocity';          }
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
@@ -866,6 +868,8 @@ function Update_Units_infoTable_ResSpec(i) {
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative Acceleration
         if (II == 2) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
         if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
+        if (II == 4) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='PAcc';   } // Pseudo-Acceleration
+        if (II == 5) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='PVel';   } // Pseudo-Velocity
     } 
     else if (AM == 1) {  
         // Constant Ductility Inelastic Spectra (Bilinear Hysteretic model)

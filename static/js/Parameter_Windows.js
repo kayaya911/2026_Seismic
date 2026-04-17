@@ -641,7 +641,7 @@ async function ResSpec_AnalysisType() {
 
         ResSpec_Damping_Change(document.getElementById('ResSpec_DampingRatioCount'));
 
-        OptionsList    = ['Total Acceleration', 'Relative Acceleration', 'Velocity', 'Displacement'];
+        OptionsList    = ['Total Acceleration', 'Relative Acceleration', 'Velocity', 'Displacement', 'Pseudo-Acceleration', 'Pseudo-Velocity'];
 
     } else if (Indx === 1) {
         // Constant Ductility Inelestic Response Spectrum
@@ -836,6 +836,8 @@ function ResSpec_Parameters() {
         SV                          : undefined,
         SA                          : undefined,
         Sa                          : undefined,
+        SPa                         : undefined,
+        SPv                         : undefined,
         Alfa                        : Alfa,
         Beta                        : Beta,
         dtT                         : dtT,

@@ -2401,7 +2401,7 @@ function AddDataToWorkSheet(WorkSheet, Header, Pos1, Data, Pos2, Data2=null, Pos
 async function DonwloadExcel_LoadDataPage() {
   
     // Decleration of Variables 
-    let i, j, FileName, WorkBook, WorkSheet, header, data, data2, data3, rN=1, range, columnConfig, temp, temp2, Indx, plotCount;
+    let i, j, FileName, WorkBook, WorkSheet, header, data, data2, data3, rN=1, range, columnConfig, temp, temp2, Indx, plotCount, NumOfResults;
     let CEA1, CEA2;
   
     FileName = "SDA_Results.xlsx";
@@ -3360,9 +3360,9 @@ async function DonwloadExcel_LoadDataPage() {
             AddDataToWorkSheet(WorkSheet, [["Period (s)"]], "D1", Transpose([ChannelList[i].Results.ResSpec.T]), "D2");
 
 
-            if      (Indx == 0) { plotCount = ChannelList[i].Results.ResSpec.DampingRatioCount; temp = 'ksi_'; }
-            else if (Indx == 1) { plotCount = ChannelList[i].Results.ResSpec.DuctilityCount;    temp = 'mu_'; }
-            else if (Indx == 2) { plotCount = ChannelList[i].Results.ResSpec.DuctilityCount;    temp = 'mu_'; }
+            if      (Indx == 0) { plotCount = ChannelList[i].Results.ResSpec.DampingRatioCount; temp = 'ksi_';  NumOfResults = 6;  }
+            else if (Indx == 1) { plotCount = ChannelList[i].Results.ResSpec.DuctilityCount;    temp = 'mu_';   NumOfResults = 4;  }
+            else if (Indx == 2) { plotCount = ChannelList[i].Results.ResSpec.DuctilityCount;    temp = 'mu_';   NumOfResults = 4;  }
             
             CEA1 = "E1";
             CEA2 = "E2";
@@ -3372,10 +3372,10 @@ async function DonwloadExcel_LoadDataPage() {
 
                 temp2 = temp + (j+1).toString();
 
-                header = [  "SA (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",  
-                            "Sa (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
-                            "SV (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
-                            "SD (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                header = [  "SA ("  + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",  
+                            "Sa ("  + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                            "SV ("  + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                            "SD ("  + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
                         ];
                 data   = [  ChannelList[i].Results.ResSpec.SA[j], 
                             ChannelList[i].Results.ResSpec.Sa[j],
@@ -3386,6 +3386,19 @@ async function DonwloadExcel_LoadDataPage() {
                 AddDataToWorkSheet(WorkSheet, [header], CEA1, Transpose(data), CEA2); 
                 CEA1 = ShiftExcellAddress(CEA1, 4, 0);
                 CEA2 = ShiftExcellAddress(CEA1, 0, 1); 
+                
+                if (Indx==0) {
+                    header = [  "SPa (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                                "SPv (" + temp2 + " = " + ChannelList[i].Results.ResSpec[temp2] + ") (" + ChannelList[i].UnitString + ")",
+                            ];
+                    data   = [  ChannelList[i].Results.ResSpec.SPa[j],
+                                ChannelList[i].Results.ResSpec.SPv[j],
+                            ];
+                    AddDataToWorkSheet(WorkSheet, [header], CEA1, Transpose(data), CEA2); 
+                    CEA1 = ShiftExcellAddress(CEA1, 2, 0);
+                    CEA2 = ShiftExcellAddress(CEA1, 0, 1); 
+                }
+
             }
             CEA1 = ShiftExcellAddress(CEA1, 1, 0);
             CEA2 = ShiftExcellAddress(CEA1, 1, 0);
@@ -3469,7 +3482,7 @@ async function DonwloadExcel_LoadDataPage() {
                 { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 13: Empty
                 { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2:  Period
             ];
-            for (j=0; j<plotCount*4; j++) {
+            for (j=0; j<plotCount*NumOfResults; j++) {
                 columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // spectral values 
             }
             columnConfig.push( { width:  5, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty

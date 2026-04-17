@@ -1369,7 +1369,7 @@ async function Channel_ResponseSpectrum() {
     await sleep(5);
 
     // Declaration of variables 
-    let i, j, n, FiltPar, ResSpec_Par, Ug, T, ksi, SD, SV, SA, Sa, Temp, perc;
+    let i, j, n, FiltPar, ResSpec_Par, Ug, T, ksi, SD, SV, SA, Sa, SPa, SPv, Temp, perc;
     let delt, Alfa, Beta, PostYieldHard, mu, Option, Stiff_Deg, tol_R, tol_D, dtT
 
     // Loop over each channel
@@ -1381,30 +1381,24 @@ async function Channel_ResponseSpectrum() {
 
         // STEP 2: Skip this Channel if it is not selected for analysis
         if (!ChannelList[i].Selected) {
-
+            // Update Graph
             await Plotly_Graph_Update(i);
-            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
-            if (perc != 100) {
-                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
-            } else {
-                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
-            }
-            await sleep(5);
+            
+            // Update Userinterface
+            UX_Update(i);
+            
             continue; 
         }
 
         // STEP 3: Skip if not an acceleration channel
         if (ChannelList[i].Type != 0) { 
-
+            // Update Graph
             await Plotly_Graph_Update(i);
-            perc = ((i+1)/ChannelList.length*100).toFixed(0); 
-            if (perc != 100) {
-                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
-            } else {
-                ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
-            }
-            await sleep(5);
-            continue; 
+            
+            // Update Userinterface
+            UX_Update(i);
+            
+            continue;       
         }
         
         // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
@@ -1432,29 +1426,38 @@ async function Channel_ResponseSpectrum() {
             n = ResSpec_Par.DampingRatioCount;
 
             // Pre-allocation
-            ResSpec_Par.SD = new Array(n).fill(0);
-            ResSpec_Par.SV = new Array(n).fill(0);
-            ResSpec_Par.SA = new Array(n).fill(0);
-            ResSpec_Par.Sa = new Array(n).fill(0);
+            ResSpec_Par.SD  = new Array(n).fill(0);
+            ResSpec_Par.SV  = new Array(n).fill(0);
+            ResSpec_Par.SA  = new Array(n).fill(0);
+            ResSpec_Par.Sa  = new Array(n).fill(0);
+            ResSpec_Par.SPa = new Array(n).fill(0);
+            ResSpec_Par.SPv = new Array(n).fill(0);
 
-            for (let j=0; j<n; j++) {
+            for (j=0; j<n; j++) {
 
-                delt             = ChannelList[i].delt;
-                ksi              = ResSpec_Par['ksi_'+(j+1).toString()]; 
-                [SD, SV, SA, Sa] = SDOF_ResponseSpectrum(Ug, delt, ksi, T);
+                delt                       = ChannelList[i].delt;
+                ksi                        = ResSpec_Par['ksi_'+(j+1).toString()]; 
+                [SD, SV, SA, Sa, SPa, SPv] = SDOF_ResponseSpectrum(Ug, delt, ksi, T);
 
                 // Add the response at zero-period T=0s
                 SA.unshift(Max(Abs(Ug)).val);
                 Sa.unshift(0);
                 SV.unshift(0);
                 SD.unshift(0);
+                SPa.unshift(0);
+                SPv.unshift(0);
 
                 // Store results for each ksi value 
-                ResSpec_Par.SD[j] = SD;
-                ResSpec_Par.SV[j] = SV;
-                ResSpec_Par.SA[j] = SA;
-                ResSpec_Par.Sa[j] = Sa;
+                ResSpec_Par.SD[j]  = SD;
+                ResSpec_Par.SV[j]  = SV;
+                ResSpec_Par.SA[j]  = SA;
+                ResSpec_Par.Sa[j]  = Sa;
+                ResSpec_Par.SPa[j] = SPa;
+                ResSpec_Par.SPv[j] = SPv;
 
+                // Update Userinterface
+                UX_Update(i, j, n);
+                await sleep(5);
             }
 
         }
@@ -1498,6 +1501,9 @@ async function Channel_ResponseSpectrum() {
                 ResSpec_Par.SA[j] = SA;
                 ResSpec_Par.Sa[j] = Sa;
 
+                // Update Userinterface
+                UX_Update(i, j, n);
+                await sleep(5);
             }
 
         }
@@ -1525,17 +1531,8 @@ async function Channel_ResponseSpectrum() {
         // STEP 17: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 18: Update Progress Indicator - Display completion status in UI progress bar
-        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
-        if (perc != 100) {
-            ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
-        } else {
-            ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
-        }
-
-        // STEP 19: Brief delay for UI update visibility (5ms)
+        // STEP 18:
         await sleep(5);
-
     }
 
     // Enable CALCULATE Button
@@ -1563,6 +1560,23 @@ async function Channel_ResponseSpectrum() {
         // Return Filtered data 
         return FilteredData;
 
+    }
+    async function UX_Update(i,j,n) {
+        
+        // n : number of damping-ratio or constant-ductility
+        // i : channel number 
+        // j : damping-ratio or constant-ductility number
+
+        let perc;
+
+        if ((j==null) && (n==null)) {  perc = ((i+1)/ChannelList.length*100).toFixed(0);             }
+        else                        {  perc = (((i*n)+(j+1))/(n*ChannelList.length)*100).toFixed(0); }   
+
+        if (perc != 100) {
+            ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
+        }
     }
 
 }
@@ -6549,7 +6563,8 @@ function SDOF_ResponseSpectrum(Ug, delt, ksi, T) {
     // Modified : 29.Jan.2026
 
     let i, Disp, Vel, acc, Acc, len, InDisp, InVel;
-    let SD, SV, SA, Sa;
+    let SD, SV, SA, Sa, SPa, SPv;
+    let Omega, w;
 
     // Check default values of input arguments
     if (Ug   == null) { Ug =  Rand(1000); };
@@ -6571,28 +6586,35 @@ function SDOF_ResponseSpectrum(Ug, delt, ksi, T) {
     len = T.length;
 
     // Pre-allocation of variables
-    SD = new Array(len).fill(0);
-    SV = new Array(len).fill(0);
-    SA = new Array(len).fill(0);
-    Sa = new Array(len).fill(0);
+    SD  = new Array(len).fill(0);
+    SV  = new Array(len).fill(0);
+    SA  = new Array(len).fill(0);
+    Sa  = new Array(len).fill(0);
+    SPa = new Array(len).fill(0);
+    SPv = new Array(len).fill(0);
 
     // Initial Conditions
     InDisp = 0.0;
     InVel  = 0.0;
+    Omega  = 2 * Math.PI;
 
     for (i=0; i < len; i++) {
         // Solution for each natural period of SDOF
 
         [, Disp, Vel, acc, Acc] = SDOF_PieceWiseLin((1 / T[i]), ksi, delt, InDisp, InVel, Ug);
 
+        w = Omega / T[i];
+
         // Store results
-        SD[i] = Max(Abs(Disp)).val;
-        SV[i] = Max(Abs(Vel)).val;
-        SA[i] = Max(Abs(Acc)).val;
-        Sa[i] = Max(Abs(acc)).val;
+        SD[i]  = Max(Abs(Disp)).val;
+        SV[i]  = Max(Abs(Vel)).val;
+        SA[i]  = Max(Abs(Acc)).val;
+        Sa[i]  = Max(Abs(acc)).val;
+        SPa[i] = SD[i] * Math.pow(w, 2);
+        SPv[i] = SD[i] * w;
     }
     // Return results
-    return [SD, SV, SA, Sa];
+    return [SD, SV, SA, Sa, SPa, SPv];
 }
 //-----------------------------------------------------------------------------------------------
 function SDOF_ResSpectrum_Constant_Ductility(Ug, delt, ksi, T, alfa, beta, del, mu, Option, gamma, tol_R, tol_D, dtT) {

@@ -580,6 +580,9 @@ async function Plotly_Graph_Update(ChNum) {
             else if (DisplayData == "Vel"     ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SV,   ChNum );  }
             else if (DisplayData == "acc"     ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.Sa,   ChNum );  }
             else if (DisplayData == "Acc"     ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SA,   ChNum );  }
+            else if (DisplayData == "PAcc"    ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SPa,  ChNum );  }
+            else if (DisplayData == "PVel"    ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SPv,  ChNum );  }
+
             
             // Get the status of two checkboxes in the Infor table on Plotly Graph
             IsFilter_CheckBox_Selected = document.getElementById(FilterResp_ID).checked;
