@@ -12,6 +12,8 @@
     overflow-y: scroll;
     scrollbar-width: none;
     font-size: 0.8rem;
+
+    background-color: #ffffff;
 }
 
 .Plotly_Div {
@@ -41,7 +43,7 @@
 
     overflow-y: scroll;
     scrollbar-width: none;
-    
+
     width: 15rem;
     min-width: 20rem;
     height: 100%;

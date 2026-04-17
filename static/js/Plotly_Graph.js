@@ -817,7 +817,7 @@ async function Plotly_NewGraph(Div_ID, Channel) {
         yaxis2          : { zeroline: true,  automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false, matches: "y", rangemode: 'tozero'},
         plot_bgcolor    : '#ffffff', 
         paper_bgcolor   : '#ffffff',
-        legend          : { x: 1.00, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#f8f4f4', bordercolor: '#6c6a6a', borderwidth: 1.5, },
+        legend          : { x: 0.99, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#f8f4f4', bordercolor: '#6c6a6a', borderwidth: 1.5, },
         autosize        : true,
         margin          : {t: 20, r:20, b:5, l:5},
         shapes          : [],
