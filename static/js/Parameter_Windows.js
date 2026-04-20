@@ -442,7 +442,7 @@ async function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "none";
         SDOF_Table.rows[11].style.display = "none";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+        OptionsList    = ['Displacement', 'Velocity', 'Energy'];
 
     } else if (Indx == 1) {
         // Forced Vibration 
@@ -458,7 +458,7 @@ async function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "none";
         SDOF_Table.rows[11].style.display = "none";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Steady-state Response', 'Transient Response', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy', 'Harmonic Force'];
+        OptionsList    = ['Displacement', 'Velocity', 'Steady-state Response', 'Transient Response', 'Energy', 'Harmonic Force'];
 
     } else if (Indx == 2) {
         // Piece-Wise Exact
@@ -474,7 +474,7 @@ async function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "none";
         SDOF_Table.rows[11].style.display = "none";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Energy'];
     
     } else if (Indx == 3) {
         // Central Difference
@@ -490,7 +490,7 @@ async function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "none";
         SDOF_Table.rows[11].style.display = "none";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Energy'];
 
     } else if (Indx == 4) {
         // Newmark Linear
@@ -506,7 +506,7 @@ async function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "none";
         SDOF_Table.rows[11].style.display = "none";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force', 'Kinetic Energy', 'Damping Energy', 'Strain Energy', 'Input Energy'];
+        OptionsList    = ['Displacement', 'Velocity', 'Relative Acceleration', 'Total Acceleration', 'Spring Force', 'Damping Force', 'Inertia Force', 'Energy'];
 
     } else if (Indx == 5) {
         // Newmark non-Linear

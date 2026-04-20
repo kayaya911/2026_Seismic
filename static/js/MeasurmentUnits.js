@@ -605,7 +605,7 @@ function Convert_Data_To_Graph_Unit(Data, ChNum) {
 //-------------------------------------------------------------------------------------------------------------
 function Convert_Data_To_Graph_Unit_SDOF(Data, ChNum) {
     
-    let Or_Data, LU, Ind, Indx, temp, ss, arr;
+    let Or_Data, LU, Ind, Indx, temp, ss;
 
     // SDOF-data using Measurment-index
     Or_Data = TypeAndUnit(ChannelList[ChNum].Results.SDOF.TypeAndUnits); 
@@ -620,17 +620,15 @@ function Convert_Data_To_Graph_Unit_SDOF(Data, ChNum) {
     temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
     
     // Double convert the data if applicable 
-    arr = ["Ek", "Ed", "Es", "Ei"];
-    if (arr.includes(ChannelList[ChNum].Results.SDOF.DisplayData)) {
+    if (ChannelList[ChNum].Results.SDOF.DisplayData == "E") {
         temp = Convert_Units_Data(temp.Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
 
         Indx      = document.getElementById('Unit_Plot_ID_'+ChannelList[ChNum].Unique_ID).selectedIndex;
         temp.Unit = document.getElementById('Unit_Plot_ID_'+ChannelList[ChNum].Unique_ID)[Indx].innerHTML;
 
-        if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ek') { Or_Data.Type_String = 'Kinetic Energy';  temp.Unit = 'Mass • ' + temp.Unit; }
-        else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ed') { Or_Data.Type_String = 'Damping Energy';  temp.Unit = 'Mass • ' + temp.Unit; }
-        else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Es') { Or_Data.Type_String = 'Strain Energy';   temp.Unit = 'Mass • ' + temp.Unit; }
-        else if (ChannelList[ChNum].Results.SDOF.DisplayData == 'Ei') { Or_Data.Type_String = 'Input Energy';    temp.Unit = 'Mass • ' + temp.Unit;  }
+        Or_Data.Type_String = 'Energy';  
+        temp.Unit           = 'Mass • ' + temp.Unit;
+
     }
 
     if      (ChannelList[ChNum].Results.SDOF.DisplayData == 'Fs'  )   { Or_Data.Type_String = 'Spring Force';          temp.Unit = 'Mass • ' + temp.Unit; }
@@ -733,10 +731,7 @@ function Update_Units_infoTable(i) {
         // Free Vibration
         if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
-        if (II == 2) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 3) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 2) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
     } 
     else if (AM == 1) {  
         // Forced Vibration
@@ -744,11 +739,8 @@ function Update_Units_infoTable(i) {
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
         if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='ssDisp'; } // Steady-State Response
         if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='trDisp'; } // Transient Response
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
-        if (II == 8) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='HarFor'; } // Harmonic Force
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 5) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='HarFor'; } // Harmonic Force
     } 
     else if (AM == 2) {  
         // Piece-Wise Exact
@@ -756,10 +748,7 @@ function Update_Units_infoTable(i) {
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
         if (II == 2) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative acceleration
         if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total acceleration
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
     }
     else if (AM == 3) {  
         // Central Difference Method 
@@ -767,10 +756,7 @@ function Update_Units_infoTable(i) {
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
         if (II == 2) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='acc';    } // Relative acceleration
         if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Acc';    } // Total acceleration
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 5) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 6) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
     } 
     else if (AM == 4) {  
         // Newmark Linear 
@@ -781,10 +767,7 @@ function Update_Units_infoTable(i) {
         if (II == 4) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fs';     } // Spring (restoring) force per unit mass
         if (II == 5) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fc';     } // Damping force per unit mass
         if (II == 6) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='Fi';     } // Inertia force per unit mass
-        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ek';     } // Ek   ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 8) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ed';     } // Ed
-        if (II == 9) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Es';     } // Es
-        if (II == 10){  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='Ei';     } // Ei
+        if (II == 7) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
     } 
     else if (AM == 5) {  
         // Newmark non-Linear

@@ -11,10 +11,11 @@ async function Plotly_Graph_Update(ChNum) {
     else { document.getElementById("Div_ID_"+ChannelList[ChNum].Unique_ID).style.display = 'flex'; }
     
     // Decleration of variables 
-    let traces, layout_update, res, res1, res_RawData, timeData, res_FilteredData, FilterInfo;
+    let traces, layout_update, res, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
     let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
     let plotCount, temp;
+    let res1=[], res2=[], res3=[], tD, LS1, LS2, LS3, LS4, LT1='', LT2='', LT3='', LT4='', tD1, tD2, tD3, tD4;
 
     let PlotArea_ID         = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
     let Statictics_Peak_ID  = "Statictics_Peak_ID_" + ChannelList[ChNum].Unique_ID;
@@ -408,21 +409,50 @@ async function Plotly_Graph_Update(ChNum) {
         if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted && (ChannelList[ChNum].Results.SDOF.AnalysisMethod == Indx)) {
 
             // Scale the data to the user-specified unit in Plotly Graph (info table)
-            DisplayData = ChannelList[ChNum].Results.SDOF.DisplayData;
-            timeData    = ChannelList[ChNum].time;
+            DisplayData  = ChannelList[ChNum].Results.SDOF.DisplayData;
+            timeData     = ChannelList[ChNum].time;
+            res1         = []; 
+            res2         = [];
+            res3         = [];
+            tD1          = timeData;
+            tD2          = [];
+            tD3          = [];
+            tD4          = [];
+            LS1          = false;
+            LS2          = false;
+            LS3          = false;
+            LS4          = false;
 
-            if      (DisplayData == "Disp"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp,     ChNum );  }
+            if      (DisplayData == "Disp"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp,     ChNum );  
+                                                if (ChannelList[ChNum].Results.SDOF.AnalysisMethod == 1) {
+                                                    res1  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Up,       ChNum ); 
+                                                    res2  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Uc,       ChNum );
+                                                    res3  = [];
+                                                    tD1  = timeData; tD2  = timeData; tD3  = timeData; tD4  = []; 
+                                                    LS1   = true; LS2= true; LS3 = true;
+                                                    LT1  = 'Displacement'; 
+                                                    LT2  = 'Steady State'; 
+                                                    LT3  = 'Transient';
+                                                }
+            }
             else if (DisplayData == "Vel"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Vel,      ChNum );  }
             else if (DisplayData == "acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.acc,      ChNum );  }
             else if (DisplayData == "Acc"     ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Acc,      ChNum );  }
             else if (DisplayData == "Fs"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,       ChNum );  }
             else if (DisplayData == "Fc"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fc,       ChNum );  }
             else if (DisplayData == "Fi"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fi,       ChNum );  }
-            else if (DisplayData == "Ek"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,       ChNum );  }
-            else if (DisplayData == "Ed"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,       ChNum );  }
-            else if (DisplayData == "Es"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,       ChNum );  }
-            else if (DisplayData == "Ei"      ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,       ChNum );  }
             else if (DisplayData == "HarFor"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.HarForce, ChNum );  }
+            else if (DisplayData == 'E'       ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ek,       ChNum );  
+                                                  res1 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ed,       ChNum );
+                                                  res2 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Es,       ChNum );
+                                                  res3 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Ei,       ChNum );
+                                                  tD1  = timeData; tD2  = timeData; tD3  = timeData; tD4  = timeData; 
+                                                  LS1  = true;  LS2  = true;  LS3  = true;  LS4  = true;
+                                                  LT1  = 'Kinetic Energy'; 
+                                                  LT2  = 'Damping Energy'; 
+                                                  LT3  = 'Strain Energy'; 
+                                                  LT4  = 'Input Energy'; 
+                                                }
             else if (DisplayData == "ssDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Up,       ChNum );  }
             else if (DisplayData == "trDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Uc,       ChNum );  }
             else if (DisplayData == "Hyst"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,       ChNum );
@@ -447,7 +477,7 @@ async function Plotly_Graph_Update(ChNum) {
             if (!IsFilter_CheckBox_Selected && !IsFFT_CheckBox_Selected) {
                 
                 // Plot Raw data in trace[0]
-                traces[0].x           = timeData;
+                traces[0].x           = tD1;
                 traces[0].y           = res.Data;
                 traces[0].mode        = 'lines',
                 traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
@@ -455,8 +485,42 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[0].visible     = true;
                 traces[0].opacity     = 1.00;
                 traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                traces[0].name        = ' ';                // legend title
-                traces[0].showlegend  = false;              // Show legend
+                traces[0].name        = LT1;                // legend title
+                traces[0].showlegend  = LS1;       // Show legend
+
+                traces[1].x           = tD2;
+                traces[1].y           = res1.Data;
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y1",
+                traces[1].visible     = true;
+                traces[1].opacity     = 1.00;
+                traces[1].line        = {color: 'red', width: 1.50, dash: 'solid' };
+                traces[1].name        = LT2;                // legend title
+                traces[1].showlegend  = LS2;       // Show legend
+
+
+                traces[2].x           = tD3;
+                traces[2].y           = res2.Data;
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
+                traces[2].yaxis       = "y1",
+                traces[2].visible     = true;
+                traces[2].opacity     = 1.00;
+                traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
+                traces[2].name        = LT3;                // legend title
+                traces[2].showlegend  = LS3;       // Show legend
+
+                traces[3].x           = tD4;
+                traces[3].y           = res3.Data;
+                traces[3].mode        = 'lines',
+                traces[3].marker      = { color: 'orange', size: 5, symbol: 'circle' },
+                traces[3].yaxis       = "y1",
+                traces[3].visible     = true;
+                traces[3].opacity     = 1.00;
+                traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
+                traces[3].name        = LT4;               // legend title
+                traces[3].showlegend  = LS4;      // Show legend
                 
                 layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
                 layout_update.yaxis2.showticklabels = false;
