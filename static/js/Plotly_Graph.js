@@ -10,6 +10,9 @@ async function Plotly_Graph_Update(ChNum) {
     if (!ChannelList[ChNum].PlotGraph) { return; } 
     else { document.getElementById("Div_ID_"+ChannelList[ChNum].Unique_ID).style.display = 'flex'; }
 
+    console.log(ChNum)
+    console.log("-------")
+
     // Decleration of variables 
     let traces, layout_update, res, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
@@ -402,9 +405,6 @@ async function Plotly_Graph_Update(ChNum) {
     else if (PageNo == 3) {
         // SDOF Page
 
-        // Update the Display-select-opbject in InfoTable
-        SDOF_ResultsDisplay(ChNum);
-
         // Get the index number of the SDOF_Analysis Method
         Indx = document.getElementById('SDOF_Analysis').selectedIndex;
 
@@ -627,9 +627,6 @@ async function Plotly_Graph_Update(ChNum) {
     }
     else if (PageNo == 4) {
         // Response Spectrum Page 
-        
-        // Update the Display-select-opbject in InfoTable
-        ResSpec_ResultsDisplay(ChNum);
 
         // Get the index number of the SDOF_Analysis Method
         Indx = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;
@@ -1237,9 +1234,6 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "table-row";  // Baseline 
         Table.rows[7].style.display  = "table-row";  // Filter 
     }
-
-
-    SDOF_ResultsDisplay(ChNum) ;
 
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);

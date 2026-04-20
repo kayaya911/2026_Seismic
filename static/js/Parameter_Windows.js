@@ -575,7 +575,6 @@ function SDOF_SelectToDisplay() {
     }
 }
 function SDOF_ResultsDisplay(i) {
-
     // retrun if no graph to plot
     if (!ChannelList[i].PlotGraph) { return; }
 
@@ -870,7 +869,6 @@ function ResSpec_SelectToDisplay() {
     }
 }
 function ResSpec_ResultsDisplay(i) {
-    
     // retrun if no graph to plot
     if (!ChannelList[i].PlotGraph) { return; }
 
