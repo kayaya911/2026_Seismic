@@ -453,8 +453,7 @@ async function Plotly_Graph_Update(ChNum) {
                                                   LT3  = 'Strain Energy'; 
                                                   LT4  = 'Input Energy'; 
                                                 }
-            else if (DisplayData == "ssDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Up,       ChNum );  }
-            else if (DisplayData == "trDisp"  ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Uc,       ChNum );  }
+            
             else if (DisplayData == "Hyst"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,       ChNum );
                                                   res1 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp,     ChNum );
                                                   timeData = res1.Data;
@@ -493,7 +492,7 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[1].mode        = 'lines',
                 traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
                 traces[1].yaxis       = "y1",
-                traces[1].visible     = true;
+                traces[1].visible     = 'legendonly';
                 traces[1].opacity     = 1.00;
                 traces[1].line        = {color: 'red', width: 1.50, dash: 'solid' };
                 traces[1].name        = LT2;                // legend title
@@ -505,7 +504,7 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[2].mode        = 'lines',
                 traces[2].marker      = { color: 'green', size: 5, symbol: 'circle' },
                 traces[2].yaxis       = "y1",
-                traces[2].visible     = true;
+                traces[2].visible     = 'legendonly';
                 traces[2].opacity     = 1.00;
                 traces[2].line        = {color: 'green', width: 1.50, dash: 'solid' };
                 traces[2].name        = LT3;                // legend title
@@ -516,7 +515,7 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[3].mode        = 'lines',
                 traces[3].marker      = { color: 'orange', size: 5, symbol: 'circle' },
                 traces[3].yaxis       = "y1",
-                traces[3].visible     = true;
+                traces[3].visible     = 'legendonly';
                 traces[3].opacity     = 1.00;
                 traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
                 traces[3].name        = LT4;               // legend title

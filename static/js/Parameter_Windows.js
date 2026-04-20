@@ -458,7 +458,7 @@ async function SDOF_AnalysisType() {
         SDOF_Table.rows[10].style.display = "none";
         SDOF_Table.rows[11].style.display = "none";
 
-        OptionsList    = ['Displacement', 'Velocity', 'Steady-state Response', 'Transient Response', 'Energy', 'Harmonic Force'];
+        OptionsList    = ['Displacement', 'Velocity', 'Energy', 'Harmonic Force'];
 
     } else if (Indx == 2) {
         // Piece-Wise Exact

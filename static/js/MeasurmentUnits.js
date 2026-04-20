@@ -737,10 +737,8 @@ function Update_Units_infoTable(i) {
         // Forced Vibration
         if (II == 0) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='Disp';   } // Displacement
         if (II == 1) {  Units_SelectElement = Select_Element(List_Units(4).Units);                    Type=1;  DisplayData='Vel';    } // Velocity
-        if (II == 2) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='ssDisp'; } // Steady-State Response
-        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(8).Units);                    Type=2;  DisplayData='trDisp'; } // Transient Response
-        if (II == 4) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
-        if (II == 5) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='HarFor'; } // Harmonic Force
+        if (II == 2) {  Units_SelectElement = Select_Element(['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']);  Type=1;  DisplayData='E';      } // E  ['g²s²', 'm²/s²', 'cm²/s²', 'mm²/s²']
+        if (II == 3) {  Units_SelectElement = Select_Element(List_Units(0).Units);                    Type=0;  DisplayData='HarFor'; } // Harmonic Force
     } 
     else if (AM == 2) {  
         // Piece-Wise Exact
