@@ -878,7 +878,7 @@ function ResSpec_ResultsDisplay(i) {
     OptionsList = Array.from(document.getElementById('ResSpec_SelectToDisplay').options).map(opt => opt.text);
     OptionsList.shift(); // removes the fist entry from the list
 
-    select      = document.getElementById("SDOF_Plot_ID_"  + ChannelList[i].Unique_ID);
+    select      = document.getElementById("ResSpec_Plot_ID_"  + ChannelList[i].Unique_ID);
     select.innerText = '';
     for (let j = 0; j < OptionsList.length; j++) {
         opt = document.createElement("option");

@@ -10,9 +10,6 @@ async function Plotly_Graph_Update(ChNum) {
     if (!ChannelList[ChNum].PlotGraph) { return; } 
     else { document.getElementById("Div_ID_"+ChannelList[ChNum].Unique_ID).style.display = 'flex'; }
 
-    console.log(ChNum)
-    console.log("-------")
-
     // Decleration of variables 
     let traces, layout_update, res, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
@@ -928,6 +925,7 @@ async function Plotly_Info_Table(Channel) {
     let FilterType_ID, FilterRow_ID, BaseLine_ID, BaseLineRow_ID, FilterResp_ID, GraphUnitRow_ID,FilterFFT_ID;
     let SDOF_Row_ID, SDOF_Plot_ID, SDOF_Cell_ID, SDOF_Method_ID, SDOF_Method_Row_ID;
     let Span, input, div1, div2, label, Unit_List, j, Unit_Cell_ID, Unit_Plot_ID, select;
+    let ResSpec_Row_ID, ResSpec_Plot_ID, ResSpec_Cell_ID;
 
     Statictics_Peak_ID    = "Statictics_Peak_ID_" + Channel.Unique_ID;
     Statictics_Mean_ID    = "Statictics_Mean_ID_" + Channel.Unique_ID;
@@ -939,6 +937,11 @@ async function Plotly_Info_Table(Channel) {
     SDOF_Row_ID           = "SDOF_Row_ID_" + Channel.Unique_ID;
     SDOF_Plot_ID          = "SDOF_Plot_ID_" + Channel.Unique_ID;
     SDOF_Cell_ID          = "SDOF_Cell_ID_" + Channel.Unique_ID;
+
+    ResSpec_Row_ID        = "ResSpec_Row_ID_" + Channel.Unique_ID;
+    ResSpec_Plot_ID       = "ResSpec_Plot_ID_" + Channel.Unique_ID;
+    ResSpec_Cell_ID       = "ResSpec_Cell_ID_" + Channel.Unique_ID;
+
     SDOF_Method_ID        = "SDOF_Method_ID_" + Channel.Unique_ID;
     SDOF_Method_Row_ID    = "SDOF_Method_Row_ID_" + Channel.Unique_ID;
     BaseLine_ID           = "BaseLine_ID_" + Channel.Unique_ID;
@@ -1009,7 +1012,7 @@ async function Plotly_Info_Table(Channel) {
 
 
 
-    // Create a new row for SDOF list
+    // Create a new row for SDOF-List
     row = Tabel.insertRow(-1);
     row.setAttribute('id', 'Row_Display_'+Channel.Unique_ID);
     row.setAttribute('id', SDOF_Row_ID);
@@ -1029,6 +1032,30 @@ async function Plotly_Info_Table(Channel) {
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
     cell.setAttribute('id', SDOF_Cell_ID);
     cell.appendChild(select);
+
+
+
+    // Create a new row for ResSpec-List
+    row = Tabel.insertRow(-1);
+    row.setAttribute('id', 'Row_ResSpec_Display_'+Channel.Unique_ID);
+    row.setAttribute('id', ResSpec_Row_ID);
+    row.style.display = "none";
+
+    cell = row.insertCell(0);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
+    cell.innerHTML = "Display";
+
+    select = document.createElement('select');
+    select.setAttribute("id", ResSpec_Plot_ID);
+    select.setAttribute('class', 'form-custom');
+    select.setAttribute('onchange', '');
+    select.selectedIndex = 0;
+
+    cell = row.insertCell(1);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
+    cell.setAttribute('id', ResSpec_Cell_ID);
+    cell.appendChild(select);
+
 
     // Create a new row for Graph-Unit
     row = Tabel.insertRow(-1);
@@ -1185,10 +1212,11 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
         Table.rows[3].style.display  = "none";       // Analysis Method
-        Table.rows[4].style.display  = "none";       // Display
-        Table.rows[5].style.display  = "table-row";  // Graph Unit
-        Table.rows[6].style.display  = "none";       // Baseline 
-        Table.rows[7].style.display  = "none";       // Filter 
+        Table.rows[4].style.display  = "none";       // SDOF Display
+        Table.rows[5].style.display  = "none";       // ResSpec Display
+        Table.rows[6].style.display  = "table-row";  // Graph Unit
+        Table.rows[7].style.display  = "none";       // Baseline 
+        Table.rows[8].style.display  = "none";       // Filter 
     }
     else if (PageNo == 1) {
         // Filter Page 
@@ -1196,10 +1224,11 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
         Table.rows[3].style.display  = "none";       // Analysis Method
-        Table.rows[4].style.display  = "none";       // Display
-        Table.rows[5].style.display  = "table-row";  // Graph Unit
-        Table.rows[6].style.display  = "table-row";  // Baseline 
-        Table.rows[7].style.display  = "table-row";  // Filter 
+        Table.rows[4].style.display  = "none";       // SDOF Display
+        Table.rows[5].style.display  = "none";       // ResSpec Display
+        Table.rows[6].style.display  = "table-row";  // Graph Unit
+        Table.rows[7].style.display  = "table-row";  // Baseline 
+        Table.rows[8].style.display  = "table-row";  // Filter 
     }
     else if (PageNo == 2) {
         // Integration page 
@@ -1207,10 +1236,11 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
         Table.rows[3].style.display  = "none";       // Analysis Method
-        Table.rows[4].style.display  = "none";       // Display
-        Table.rows[5].style.display  = "table-row";  // Graph Unit
-        Table.rows[6].style.display  = "table-row";  // Baseline 
-        Table.rows[7].style.display  = "table-row";  // Filter 
+        Table.rows[4].style.display  = "none";       // SDOF Display
+        Table.rows[5].style.display  = "none";       // ResSpec Display
+        Table.rows[6].style.display  = "table-row";  // Graph Unit
+        Table.rows[7].style.display  = "table-row";  // Baseline 
+        Table.rows[8].style.display  = "table-row";  // Filter 
     }
     else if (PageNo == 3) {
         // SDOF page 
@@ -1218,10 +1248,11 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
         Table.rows[3].style.display  = "table-row";  // Analysis Method
-        Table.rows[4].style.display  = "table-row";  // Display
-        Table.rows[5].style.display  = "table-row";  // Graph Unit
-        Table.rows[6].style.display  = "table-row";  // Baseline 
-        Table.rows[7].style.display  = "table-row";  // Filter 
+        Table.rows[4].style.display  = "table-row";  // SDOF Display
+        Table.rows[5].style.display  = "none";       // ResSpec Display
+        Table.rows[6].style.display  = "table-row";  // Graph Unit
+        Table.rows[7].style.display  = "table-row";  // Baseline 
+        Table.rows[8].style.display  = "table-row";  // Filter 
     }
     else if (PageNo == 4) {
         // ResSpectrum page 
@@ -1229,10 +1260,11 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[1].style.display  = "none";  // Mean
         Table.rows[2].style.display  = "none";  // RMS
         Table.rows[3].style.display  = "table-row";  // Analysis Method
-        Table.rows[4].style.display  = "table-row";  // Display
-        Table.rows[5].style.display  = "table-row";  // Graph Unit
-        Table.rows[6].style.display  = "table-row";  // Baseline 
-        Table.rows[7].style.display  = "table-row";  // Filter 
+        Table.rows[4].style.display  = "none";       // SDOF Display
+        Table.rows[5].style.display  = "table-row";  // ResSpec Display
+        Table.rows[6].style.display  = "table-row";  // Graph Unit
+        Table.rows[7].style.display  = "table-row";  // Baseline 
+        Table.rows[8].style.display  = "table-row";  // Filter 
     }
 
     // Update the graph

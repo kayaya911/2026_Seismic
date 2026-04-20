@@ -827,7 +827,7 @@ function Update_Units_infoTable_ResSpec(i) {
 
     // Declaration of varibalers 
     let AM, II, Units_SelectElement, Ind, Type, DisplayData;
-    let SDOF_Plot_ID, Unit_Cell_ID;
+    let ResSpec_Plot_ID, Unit_Cell_ID;
 
     // Defaults
     Units_SelectElement = Select_Element(List_Units(8).Units);                    
@@ -835,11 +835,11 @@ function Update_Units_infoTable_ResSpec(i) {
     DisplayData         = 'Disp';
 
     // SDOF_ID
-    SDOF_Plot_ID = "SDOF_Plot_ID_"  + ChannelList[i].Unique_ID;
-    Unit_Cell_ID = "Unit_Cell_ID_"  + ChannelList[i].Unique_ID;
+    ResSpec_Plot_ID = "ResSpec_Plot_ID_"  + ChannelList[i].Unique_ID;
+    Unit_Cell_ID    = "Unit_Cell_ID_"     + ChannelList[i].Unique_ID;
 
     AM   = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;   // Analysis Method (Elastic Spectra, Inelestic spectra, etc) from ResSpec-Parameetrs Window
-    II   = document.getElementById(SDOF_Plot_ID).selectedIndex;               // Index of the SDOF_ResultsDisplay in InfoTable
+    II   = document.getElementById(ResSpec_Plot_ID).selectedIndex;            // Index of the SDOF_ResultsDisplay in InfoTable
     
     if (II == -1) { return; }
 
