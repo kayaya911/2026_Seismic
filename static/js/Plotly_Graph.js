@@ -9,7 +9,7 @@ async function Plotly_Graph_Update(ChNum) {
     // Return if no graph is created for this channel
     if (!ChannelList[ChNum].PlotGraph) { return; } 
     else { document.getElementById("Div_ID_"+ChannelList[ChNum].Unique_ID).style.display = 'flex'; }
-    
+
     // Decleration of variables 
     let traces, layout_update, res, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
@@ -402,6 +402,9 @@ async function Plotly_Graph_Update(ChNum) {
     else if (PageNo == 3) {
         // SDOF Page
 
+        // Update the Display-select-opbject in InfoTable
+        SDOF_ResultsDisplay(ChNum);
+
         // Get the index number of the SDOF_Analysis Method
         Indx = document.getElementById('SDOF_Analysis').selectedIndex;
 
@@ -624,6 +627,9 @@ async function Plotly_Graph_Update(ChNum) {
     }
     else if (PageNo == 4) {
         // Response Spectrum Page 
+        
+        // Update the Display-select-opbject in InfoTable
+        ResSpec_ResultsDisplay(ChNum);
 
         // Get the index number of the SDOF_Analysis Method
         Indx = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;
@@ -728,8 +734,6 @@ async function Plotly_Graph_Update(ChNum) {
 
             // Assign the analysis method
             document.getElementById(SDOF_Method_ID).innerHTML = ChannelList[ChNum].Results.ResSpec.AnalysisMethod_string;
-
-
         }
         else {
 
@@ -1149,9 +1153,9 @@ function Plotly_Clear_Graph(ChNum) {
     if (!ChannelList[ChNum].PlotGraph) { return; } 
 
     // Decleration of variables 
-    let i, traces, layout_update, PlotArea_ID, Table;
+    let i, traces, layout_update, PlotArea_ID, SDOF_Plot_ID, Table;
     
-    PlotArea_ID = "PlotArea_ID_"  + ChannelList[ChNum].Unique_ID;
+    PlotArea_ID   = "PlotArea_ID_"   + ChannelList[ChNum].Unique_ID;
 
     // Get the existing traces in the PlotArea_ID
     traces = document.getElementById(PlotArea_ID).data;
@@ -1233,6 +1237,9 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "table-row";  // Baseline 
         Table.rows[7].style.display  = "table-row";  // Filter 
     }
+
+
+    SDOF_ResultsDisplay(ChNum) ;
 
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);

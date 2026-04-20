@@ -130,6 +130,7 @@ async function AnalysisMenu_Selection(a) {
         document.getElementById("Parameters_ResSpec").style.display = "flex";
         document.getElementById("Parameters_ResSpec2").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Response Spec";
+        
         PageNo = 4;
     }
     else if ((a.id == "MainMenu_Settings") || (a.id == "Header_Settings")) {
@@ -139,14 +140,9 @@ async function AnalysisMenu_Selection(a) {
 
     // Hide the Analysis_Menu on the screen
     document.getElementById("Analysis_Menu").style.display = "none";
-
+    
     // Update UI (Screen)
-    await UI_Update();
-
-    // Helper function
-    async function UI_Update() {
-        for (let i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i); }
-    }
+    for (let i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i); }
 }
 //-----------------------------------------------------------------------------------------------
 async function Anlysis_Button() {
