@@ -56,6 +56,8 @@
     margin-top: 1rem;;
     padding: 0rem;
     font-weight: bold;
+
+    user-select: none;
 }
 
 .Plotly_Span_ChannelInfo {
@@ -65,6 +67,8 @@
     padding-left: 0rem;
     font-weight: bold;
     white-space: pre-wrap; /* Preserves all spaces and line breaks in text */
+
+    user-select: none;
 }
 
 .Plotly_Stat_Table {
@@ -78,11 +82,13 @@
     padding-left: 0.2rem;
     padding-right: 0.5rem;
     border: 1px solid rgba(0, 0, 0, 0.1);
+    user-select: none;
 }
 
 .Plotly_Stat_Body_Td_Left {
     text-align: left;
     font-weight: bold;
+    user-select: none;
 }
 
 
