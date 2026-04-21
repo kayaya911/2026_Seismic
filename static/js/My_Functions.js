@@ -770,7 +770,8 @@ async function Toggle_Sidebar_Checkbox_For_PlotGraph(chb) {
     }
     
     // Update infoTable if PageNo==3
-    if (PageNo == 3 ) { SDOF_ResultsDisplay(ChNum); Update_Units_infoTable(ChNum); }
+    if (PageNo == 3 ) { SDOF_ResultsDisplay(ChNum);    Update_Units_infoTable(ChNum); }
+    if (PageNo == 4 ) { ResSpec_ResultsDisplay(ChNum); Update_Units_infoTable_ResSpec(ChNum); }
 
     // Update Graph
     Plotly_Graph_Update(ChNum);
@@ -816,11 +817,17 @@ async function Toggle_SidebBar_SelectAllChannels_For_Plotting() {
 
     // Get the status of the checkbox
     if (document.getElementById('Right_Click_Select_All_Plotting').checked) { 
-        MPG = Math.min(MaxPlotly_Graphs, InputArray.length); 
+
+        MPG = Math.min(MaxPlotly_Graphs, InputArray.length);  console.log(MPG, Current_Plotly_Num)
+        
+        // No plotly-graph
+        Turn_off_Plotly_Graphs(InputArray, MPG);
+        
+        // Start counting the graphs 
         Current_Plotly_Num = 0;
 
         // Loop-over the fist MaxPlotly_Graphs - 
-        for (i=0; i < MaxPlotly_Graphs; i++) {
+        for (i=0; i < MPG; i++) {
 
             Current_Plotly_Num++; 
 
@@ -845,25 +852,22 @@ async function Toggle_SidebBar_SelectAllChannels_For_Plotting() {
             
         }
 
-        // No plotly-graph
-        for (i=MaxPlotly_Graphs; i < InputArray.length; i++) {
-
-            // Set the checked property directly
-            InputArray[i].checked = false;    
-
-            // Get the channel number - change the status of plotting
-            ChNum =  ChannelList_UniqueID( InputArray[i].id.replace('PlotChecbox_', '') );
-            ChannelList[ChNum].PlotGraph = false;
-
-            // Div_ID of the Plotly graph /  Do not show the graph
-            DivID = document.getElementById(InputArray[i].id.replace('PlotChecbox_', 'Div_ID_'));
-            if (DivID != null) { DivID.style.display = 'none'; } 
-            
-        }
-
     } else {
         
         Current_Plotly_Num = 0;
+
+        // Turn-off all graphs 
+        Turn_off_Plotly_Graphs(InputArray);
+
+    }
+
+    // Order Plotly Graphs
+    Order_Plotly_Graphs();
+
+    // Helper function
+    function Turn_off_Plotly_Graphs(InputArray, startIndex) {
+
+        if (startIndex == null) { startIndex = 0; }
 
         for (i=0; i < InputArray.length; i++) {
 
@@ -879,11 +883,7 @@ async function Toggle_SidebBar_SelectAllChannels_For_Plotting() {
             if (DivID != null) { DivID.style.display = 'none'; }
 
         }
-
     }
-
-    // Order Plotly Graphs
-    Order_Plotly_Graphs();
     
 }
 //-----------------------------------------------------------------------------------------------

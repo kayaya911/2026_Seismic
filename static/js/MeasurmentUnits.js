@@ -837,12 +837,12 @@ function Update_Units_infoTable_ResSpec(i) {
     Type                = 2;  
     DisplayData         = 'Disp';
 
-    // SDOF_ID
+    // ResSpec_ID
     ResSpec_Plot_ID = "ResSpec_Plot_ID_"  + ChannelList[i].Unique_ID;
     Unit_Cell_ID    = "Unit_Cell_ID_"     + ChannelList[i].Unique_ID;
 
     AM   = document.getElementById('ResSpec_AnalysisMethod').selectedIndex;   // Analysis Method (Elastic Spectra, Inelestic spectra, etc) from ResSpec-Parameetrs Window
-    II   = document.getElementById(ResSpec_Plot_ID).selectedIndex;            // Index of the SDOF_ResultsDisplay in InfoTable
+    II   = document.getElementById(ResSpec_Plot_ID).selectedIndex;            // Index of the ResSpec_ResultsDisplay in InfoTable
     
     if (II == -1) { return; }
 
