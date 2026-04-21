@@ -17,23 +17,24 @@ async function Plotly_Graph_Update(ChNum) {
     let plotCount, temp;
     let res1=[], res2=[], res3=[], tD, LS1, LS2, LS3, LS4, LT1='', LT2='', LT3='', LT4='', tD1, tD2, tD3, tD4;
 
-    let PlotArea_ID         = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
-    let Statictics_Peak_ID  = "Statictics_Peak_ID_" + ChannelList[ChNum].Unique_ID;
-    let Statictics_Mean_ID  = "Statictics_Mean_ID_" + ChannelList[ChNum].Unique_ID;
-    let Statictics_RMS_ID   = "Statictics_RMS_ID_"  + ChannelList[ChNum].Unique_ID;
-    let GraphUnitRow_ID     = "GraphUnitRow_ID_"    + ChannelList[ChNum].Unique_ID;
-    let Unit_Cell_ID        = "Unit_Cell_ID_"       + ChannelList[ChNum].Unique_ID;
-    let BaseLine_ID         = "BaseLine_ID_"        + ChannelList[ChNum].Unique_ID;
-    let BaseLineRow_ID      = "BaseLineRow_ID_"     + ChannelList[ChNum].Unique_ID;
-    let SDOF_Row_ID         = "SDOF_Row_ID_"        + ChannelList[ChNum].Unique_ID;
-    let SDOF_Plot_ID        = "SDOF_Plot_ID_"       + ChannelList[ChNum].Unique_ID;
-    let SDOF_Method_ID      = "SDOF_Method_ID_"     + ChannelList[ChNum].Unique_ID;
-    let SDOF_Method_Row_ID  = "SDOF_Method_Row_ID_" + ChannelList[ChNum].Unique_ID;
-    let FilterType_ID       = "FilterType_ID_"      + ChannelList[ChNum].Unique_ID;
-    let FilterRow_ID        = "FilterRow_ID_"       + ChannelList[ChNum].Unique_ID;
-    let FilterResp_ID       = "FilterResp_ID_"      + ChannelList[ChNum].Unique_ID;
-    let FilterFFT_ID        = "FilterFFT_ID_"       + ChannelList[ChNum].Unique_ID;
-    let Unit_Plot_ID        = "Unit_Plot_ID_"       + ChannelList[ChNum].Unique_ID;
+    let PlotArea_ID            = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
+    let Statictics_Peak_ID     = "Statictics_Peak_ID_" + ChannelList[ChNum].Unique_ID;
+    let Statictics_Mean_ID     = "Statictics_Mean_ID_" + ChannelList[ChNum].Unique_ID;
+    let Statictics_RMS_ID      = "Statictics_RMS_ID_"  + ChannelList[ChNum].Unique_ID;
+    let Statictics_Residual_ID = "Statictics_Residual_ID_"  + ChannelList[ChNum].Unique_ID;
+    let GraphUnitRow_ID        = "GraphUnitRow_ID_"    + ChannelList[ChNum].Unique_ID;
+    let Unit_Cell_ID           = "Unit_Cell_ID_"       + ChannelList[ChNum].Unique_ID;
+    let BaseLine_ID            = "BaseLine_ID_"        + ChannelList[ChNum].Unique_ID;
+    let BaseLineRow_ID         = "BaseLineRow_ID_"     + ChannelList[ChNum].Unique_ID;
+    let SDOF_Row_ID            = "SDOF_Row_ID_"        + ChannelList[ChNum].Unique_ID;
+    let SDOF_Plot_ID           = "SDOF_Plot_ID_"       + ChannelList[ChNum].Unique_ID;
+    let SDOF_Method_ID         = "SDOF_Method_ID_"     + ChannelList[ChNum].Unique_ID;
+    let SDOF_Method_Row_ID     = "SDOF_Method_Row_ID_" + ChannelList[ChNum].Unique_ID;
+    let FilterType_ID          = "FilterType_ID_"      + ChannelList[ChNum].Unique_ID;
+    let FilterRow_ID           = "FilterRow_ID_"       + ChannelList[ChNum].Unique_ID;
+    let FilterResp_ID          = "FilterResp_ID_"      + ChannelList[ChNum].Unique_ID;
+    let FilterFFT_ID           = "FilterFFT_ID_"       + ChannelList[ChNum].Unique_ID;
+    let Unit_Plot_ID           = "Unit_Plot_ID_"       + ChannelList[ChNum].Unique_ID;
 
     // Get the existing traces in the PlotArea_ID
     traces = document.getElementById(PlotArea_ID).data;
@@ -342,9 +343,10 @@ async function Plotly_Graph_Update(ChNum) {
             }
 
             // Update the Statistics of (RawData, Velocity, Displacement) in table - scaled to user-specified unit
-            document.getElementById( Statictics_Peak_ID ).innerHTML = res.Peak.toPrecision(4);
-            document.getElementById( Statictics_Mean_ID ).innerHTML = res.Mean.toPrecision(4);
-            document.getElementById( Statictics_RMS_ID  ).innerHTML = res.RMS.toPrecision(4);
+            document.getElementById( Statictics_Peak_ID     ).innerHTML = res.Peak.toPrecision(4);
+            document.getElementById( Statictics_Mean_ID     ).innerHTML = res.Mean.toPrecision(4);
+            document.getElementById( Statictics_RMS_ID      ).innerHTML = res.RMS.toPrecision(4);
+            document.getElementById( Statictics_Residual_ID ).innerHTML = res.Residual.toPrecision(4);
 
             // Show Baseline-Row in InforBar
             document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.Integral.BaselineCorrection_String;
@@ -919,37 +921,38 @@ async function Plotly_NewGraph(Div_ID, Channel) {
 async function Plotly_Info_Table(Channel) {
 
     let Tabel, Table_Body, row, cell, opt;
-    let Statictics_Peak_ID, Statictics_Mean_ID, Statictics_RMS_ID;
+    let Statictics_Peak_ID, Statictics_Mean_ID, Statictics_RMS_ID, Statictics_Residual_ID;
     let FilterType_ID, FilterRow_ID, BaseLine_ID, BaseLineRow_ID, FilterResp_ID, GraphUnitRow_ID,FilterFFT_ID;
     let SDOF_Row_ID, SDOF_Plot_ID, SDOF_Cell_ID, SDOF_Method_ID, SDOF_Method_Row_ID;
     let Span, input, div1, div2, label, Unit_List, j, Unit_Cell_ID, Unit_Plot_ID, select;
     let ResSpec_Row_ID, ResSpec_Plot_ID, ResSpec_Cell_ID, Filter_Div_ID1,Filter_Div_ID2;
 
-    Statictics_Peak_ID    = "Statictics_Peak_ID_" + Channel.Unique_ID;
-    Statictics_Mean_ID    = "Statictics_Mean_ID_" + Channel.Unique_ID;
-    Statictics_RMS_ID     = "Statictics_RMS_ID_" + Channel.Unique_ID;
+    Statictics_Peak_ID     = "Statictics_Peak_ID_" + Channel.Unique_ID;
+    Statictics_Mean_ID     = "Statictics_Mean_ID_" + Channel.Unique_ID;
+    Statictics_RMS_ID      = "Statictics_RMS_ID_" + Channel.Unique_ID;
+    Statictics_Residual_ID = "Statictics_Residual_ID_" + Channel.Unique_ID;
 
-    GraphUnitRow_ID       = "GraphUnitRow_ID_" + Channel.Unique_ID;
-    Unit_Plot_ID          = "Unit_Plot_ID_" + Channel.Unique_ID;
-    Unit_Cell_ID          = "Unit_Cell_ID_" + Channel.Unique_ID;
-    SDOF_Row_ID           = "SDOF_Row_ID_" + Channel.Unique_ID;
-    SDOF_Plot_ID          = "SDOF_Plot_ID_" + Channel.Unique_ID;
-    SDOF_Cell_ID          = "SDOF_Cell_ID_" + Channel.Unique_ID;
+    GraphUnitRow_ID        = "GraphUnitRow_ID_" + Channel.Unique_ID;
+    Unit_Plot_ID           = "Unit_Plot_ID_" + Channel.Unique_ID;
+    Unit_Cell_ID           = "Unit_Cell_ID_" + Channel.Unique_ID;
+    SDOF_Row_ID            = "SDOF_Row_ID_" + Channel.Unique_ID;
+    SDOF_Plot_ID           = "SDOF_Plot_ID_" + Channel.Unique_ID;
+    SDOF_Cell_ID           = "SDOF_Cell_ID_" + Channel.Unique_ID;
 
-    ResSpec_Row_ID        = "ResSpec_Row_ID_" + Channel.Unique_ID;
-    ResSpec_Plot_ID       = "ResSpec_Plot_ID_" + Channel.Unique_ID;
-    ResSpec_Cell_ID       = "ResSpec_Cell_ID_" + Channel.Unique_ID;
+    ResSpec_Row_ID         = "ResSpec_Row_ID_" + Channel.Unique_ID;
+    ResSpec_Plot_ID        = "ResSpec_Plot_ID_" + Channel.Unique_ID;
+    ResSpec_Cell_ID        = "ResSpec_Cell_ID_" + Channel.Unique_ID;
 
-    SDOF_Method_ID        = "SDOF_Method_ID_" + Channel.Unique_ID;
-    SDOF_Method_Row_ID    = "SDOF_Method_Row_ID_" + Channel.Unique_ID;
-    BaseLine_ID           = "BaseLine_ID_" + Channel.Unique_ID;
-    BaseLineRow_ID        = "BaseLineRow_ID_" + Channel.Unique_ID;
-    FilterType_ID         = "FilterType_ID_" + Channel.Unique_ID;
-    FilterRow_ID          = "FilterRow_ID_" + Channel.Unique_ID;
-    FilterResp_ID         = "FilterResp_ID_" + Channel.Unique_ID;
-    FilterFFT_ID          = "FilterFFT_ID_" + Channel.Unique_ID;
-    Filter_Div_ID1        = "Filter_Div_ID1_" + Channel.Unique_ID;
-    Filter_Div_ID2        = "Filter_Div_ID2_" + Channel.Unique_ID;
+    SDOF_Method_ID         = "SDOF_Method_ID_" + Channel.Unique_ID;
+    SDOF_Method_Row_ID     = "SDOF_Method_Row_ID_" + Channel.Unique_ID;
+    BaseLine_ID            = "BaseLine_ID_" + Channel.Unique_ID;
+    BaseLineRow_ID         = "BaseLineRow_ID_" + Channel.Unique_ID;
+    FilterType_ID          = "FilterType_ID_" + Channel.Unique_ID;
+    FilterRow_ID           = "FilterRow_ID_" + Channel.Unique_ID;
+    FilterResp_ID          = "FilterResp_ID_" + Channel.Unique_ID;
+    FilterFFT_ID           = "FilterFFT_ID_" + Channel.Unique_ID;
+    Filter_Div_ID1         = "Filter_Div_ID1_" + Channel.Unique_ID;
+    Filter_Div_ID2         = "Filter_Div_ID2_" + Channel.Unique_ID;
 
     
     // Create a table and tabelBody
@@ -996,6 +999,17 @@ async function Plotly_Info_Table(Channel) {
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
     cell.innerHTML = Channel.RMS.toPrecision(4);
     cell.setAttribute('id', Statictics_RMS_ID);
+
+    // Create a new row for Residual-value
+    row = Tabel.insertRow(-1);
+    row.setAttribute('id', 'Row_Residual_'+Channel.Unique_ID);
+    cell = row.insertCell(0);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
+    cell.innerHTML = "Residual";
+    cell = row.insertCell(1);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
+    cell.innerHTML = Channel.Residual.toPrecision(4);
+    cell.setAttribute('id', Statictics_Residual_ID);
 
     
     // Create a new row for SDOF Analysis Method
@@ -1214,12 +1228,13 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[0].style.display  = "table-row";  // Peak
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
-        Table.rows[3].style.display  = "none";       // Analysis Method
-        Table.rows[4].style.display  = "none";       // SDOF Display
-        Table.rows[5].style.display  = "none";       // ResSpec Display
-        Table.rows[6].style.display  = "table-row";  // Graph Unit
-        Table.rows[7].style.display  = "none";       // Baseline 
-        Table.rows[8].style.display  = "none";       // Filter 
+        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[4].style.display  = "none";       // Analysis Method
+        Table.rows[5].style.display  = "none";       // SDOF Display
+        Table.rows[6].style.display  = "none";       // ResSpec Display
+        Table.rows[7].style.display  = "table-row";  // Graph Unit
+        Table.rows[8].style.display  = "none";       // Baseline 
+        Table.rows[9].style.display  = "none";       // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
@@ -1230,12 +1245,13 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[0].style.display  = "table-row";  // Peak
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
-        Table.rows[3].style.display  = "none";       // Analysis Method
-        Table.rows[4].style.display  = "none";       // SDOF Display
-        Table.rows[5].style.display  = "none";       // ResSpec Display
-        Table.rows[6].style.display  = "table-row";  // Graph Unit
-        Table.rows[7].style.display  = "table-row";  // Baseline 
-        Table.rows[8].style.display  = "table-row";  // Filter
+        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[4].style.display  = "none";       // Analysis Method
+        Table.rows[5].style.display  = "none";       // SDOF Display
+        Table.rows[6].style.display  = "none";       // ResSpec Display
+        Table.rows[7].style.display  = "table-row";  // Graph Unit
+        Table.rows[8].style.display  = "table-row";  // Baseline 
+        Table.rows[9].style.display  = "table-row";  // Filter
         
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
@@ -1246,12 +1262,13 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[0].style.display  = "table-row";  // Peak
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
-        Table.rows[3].style.display  = "none";       // Analysis Method
-        Table.rows[4].style.display  = "none";       // SDOF Display
-        Table.rows[5].style.display  = "none";       // ResSpec Display
-        Table.rows[6].style.display  = "table-row";  // Graph Unit
-        Table.rows[7].style.display  = "table-row";  // Baseline 
-        Table.rows[8].style.display  = "table-row";  // Filter 
+        Table.rows[3].style.display  = "table-row";  // Residual
+        Table.rows[4].style.display  = "none";       // Analysis Method
+        Table.rows[5].style.display  = "none";       // SDOF Display
+        Table.rows[6].style.display  = "none";       // ResSpec Display
+        Table.rows[7].style.display  = "table-row";  // Graph Unit
+        Table.rows[8].style.display  = "table-row";  // Baseline 
+        Table.rows[9].style.display  = "table-row";  // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
@@ -1262,12 +1279,13 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[0].style.display  = "table-row";  // Peak
         Table.rows[1].style.display  = "table-row";  // Mean
         Table.rows[2].style.display  = "table-row";  // RMS
-        Table.rows[3].style.display  = "table-row";  // Analysis Method
-        Table.rows[4].style.display  = "table-row";  // SDOF Display
-        Table.rows[5].style.display  = "none";       // ResSpec Display
-        Table.rows[6].style.display  = "table-row";  // Graph Unit
-        Table.rows[7].style.display  = "table-row";  // Baseline 
-        Table.rows[8].style.display  = "table-row";  // Filter 
+        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[4].style.display  = "table-row";  // Analysis Method
+        Table.rows[5].style.display  = "table-row";  // SDOF Display
+        Table.rows[6].style.display  = "none";       // ResSpec Display
+        Table.rows[7].style.display  = "table-row";  // Graph Unit
+        Table.rows[8].style.display  = "table-row";  // Baseline 
+        Table.rows[9].style.display  = "table-row";  // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
@@ -1278,12 +1296,13 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[0].style.display  = "none";  // Peak
         Table.rows[1].style.display  = "none";  // Mean
         Table.rows[2].style.display  = "none";  // RMS
-        Table.rows[3].style.display  = "table-row";  // Analysis Method
-        Table.rows[4].style.display  = "none";       // SDOF Display
-        Table.rows[5].style.display  = "table-row";  // ResSpec Display
-        Table.rows[6].style.display  = "table-row";  // Graph Unit
-        Table.rows[7].style.display  = "table-row";  // Baseline 
-        Table.rows[8].style.display  = "table-row";  // Filter 
+        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[4].style.display  = "table-row";  // Analysis Method
+        Table.rows[5].style.display  = "none";       // SDOF Display
+        Table.rows[6].style.display  = "table-row";  // ResSpec Display
+        Table.rows[7].style.display  = "table-row";  // Graph Unit
+        Table.rows[8].style.display  = "table-row";  // Baseline 
+        Table.rows[9].style.display  = "table-row";  // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';

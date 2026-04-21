@@ -848,7 +848,7 @@ function ResSpec_Parameters() {
 }
 function ResSpec_SelectToDisplay() {
 
-    let i, Indx, SDOF_Plot_ID;
+    let i, Indx, ResSpec_Plot_ID;
 
     for (i=0; i<ChannelList.length; i++) {
         
@@ -861,8 +861,8 @@ function ResSpec_SelectToDisplay() {
         if (Indx == 0) { continue; }
 
         // Change the index number for this channel 
-        SDOF_Plot_ID  = "SDOF_Plot_ID_" + ChannelList[i].Unique_ID;
-        document.getElementById(SDOF_Plot_ID).selectedIndex = Indx-1;
+        ResSpec_Plot_ID  = "ResSpec_Plot_ID_" + ChannelList[i].Unique_ID;
+        document.getElementById(ResSpec_Plot_ID).selectedIndex = Indx-1;
 
         Update_Units_infoTable_ResSpec(i);
 

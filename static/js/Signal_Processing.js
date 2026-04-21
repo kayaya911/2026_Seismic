@@ -997,15 +997,17 @@ async function Channel_Integral() {
         FiltPar.Disp = Filter([0.5/ChannelList[i].FSamp,  0.5/ChannelList[i].FSamp], [1, -1],   FiltPar.Vel).y;
 
         // STEP 8: Statistics of velocity and sisplacement 
-        Temp              = Statistics(FiltPar.Vel);
-        FiltPar.Peak_Vel  =  Temp.Peak;
-        FiltPar.Mean_Vel  =  Temp.Mean;
-        FiltPar.RMS_Vel   =  Temp.RMS;
+        Temp                 = Statistics(FiltPar.Vel);
+        FiltPar.Peak_Vel     =  Temp.Peak;
+        FiltPar.Mean_Vel     =  Temp.Mean;
+        FiltPar.RMS_Vel      =  Temp.RMS;
+        FiltPar.Residual_Vel = FiltPar.Vel.at(-1);
 
-        Temp              = Statistics(FiltPar.Disp);
-        FiltPar.Peak_Disp =  Temp.Peak;
-        FiltPar.Mean_Disp =  Temp.Mean;
-        FiltPar.RMS_Disp  =  Temp.RMS
+        Temp                   = Statistics(FiltPar.Disp);
+        FiltPar.Peak_Disp      =  Temp.Peak;
+        FiltPar.Mean_Disp      =  Temp.Mean;
+        FiltPar.RMS_Disp       =  Temp.RMS
+        FiltPar.Residual_Disp  = FiltPar.Disp.at(-1);
 
         // STEP 9: Flag Successfully Completion
         FiltPar.IsAnalysisCompleted = true;

@@ -537,14 +537,16 @@ function Convert_Data_To_Graph_Unit(Data, ChNum) {
             Indx_Vel  = document.getElementById("Int_Velocity").checked;
             Indx_Disp = document.getElementById("Int_Displacement").checked;
 
-            if      (Indx_Acc)  { temp_Stats = [ChannelList[ChNum].Peak,                       ChannelList[ChNum].Mean,                       ChannelList[ChNum].RMS];                       }
-            else if (Indx_Vel)  { temp_Stats = [ChannelList[ChNum].Results.Integral.Peak_Vel,  ChannelList[ChNum].Results.Integral.Mean_Vel,  ChannelList[ChNum].Results.Integral.RMS_Vel];  }
-            else if (Indx_Disp) { temp_Stats = [ChannelList[ChNum].Results.Integral.Peak_Disp, ChannelList[ChNum].Results.Integral.Mean_Disp, ChannelList[ChNum].Results.Integral.RMS_Disp]; }
+            if      (Indx_Acc)  { temp_Stats = [ChannelList[ChNum].Peak,                       ChannelList[ChNum].Mean,                       ChannelList[ChNum].RMS,                       ChannelList[ChNum].Residual                       ];  }
+            else if (Indx_Vel)  { temp_Stats = [ChannelList[ChNum].Results.Integral.Peak_Vel,  ChannelList[ChNum].Results.Integral.Mean_Vel,  ChannelList[ChNum].Results.Integral.RMS_Vel,  ChannelList[ChNum].Results.Integral.Residual_Vel  ];  }
+            else if (Indx_Disp) { temp_Stats = [ChannelList[ChNum].Results.Integral.Peak_Disp, ChannelList[ChNum].Results.Integral.Mean_Disp, ChannelList[ChNum].Results.Integral.RMS_Disp, ChannelList[ChNum].Results.Integral.Residual_Disp ];  }
 
             Stats = Convert_Units_Data(temp_Stats, Or_Data.Unit, LU.UnitNum[Ind], false);
 
+            temp.Residual    = Stats.Data[3];
+
         } else {
-            Stats = { Data : ['','',''] };
+            Stats = { Data : ['','','',''] };
         }
     } else if (PageNo == 3) {
         if (ChannelList[ChNum].Results.SDOF.IsAnalysisCompleted) {
@@ -573,6 +575,7 @@ function Convert_Data_To_Graph_Unit(Data, ChNum) {
     temp.Peak        = Stats.Data[0];
     temp.Mean        = Stats.Data[1];
     temp.RMS         = Stats.Data[2];
+    
 
     return temp;
     

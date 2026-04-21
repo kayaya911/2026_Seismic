@@ -38,6 +38,7 @@ class Channel {
         this.RMS                  = undefined;         // RMS value of digitized raw data
         this.Peak                 = undefined;         // Peak value of digitized raw data
         this.Mean                 = undefined;         // Mean value of digitized raw data
+        this.Residual             = undefined;         // Residual of digitized raw data  - last value of digitized raw data
         this.InstFreq             = undefined;         // Natural frequency of transducer (in Hz).
         this.InstPeriod           = undefined;         // Natural period of transducer (in seconds).
         this.InstDamp             = undefined;         // Damping ratio of transducer (fraction of critical).
@@ -856,10 +857,11 @@ async function Read_VIF(FileName, delta, dataview) {
         res.time           = time[Ch];              // Time array of the digitized data
 
         // Calculate Statictics
-        temp     = Statistics(res.data, res.ScaleFactor);
-        res.Peak = temp.Peak;
-        res.Mean = temp.Mean;
-        res.RMS  = temp.RMS;
+        temp         = Statistics(res.data, res.ScaleFactor);
+        res.Peak     = temp.Peak;
+        res.Mean     = temp.Mean;
+        res.RMS      = temp.RMS;
+        res.Residual = res.data.at(-1) * res.ScaleFactor;
 
         // Add to the Main Table and Tree View
         await Add_To_Table( res );
@@ -1095,10 +1097,11 @@ async function Read_V1(FileName, delta, dataview) {
         res.time           = Time[ChNum];          // Time array of the digitized data
 
         // Calculate Statictics
-        temp     = Statistics(res.data, res.ScaleFactor);
-        res.Peak = temp.Peak;
-        res.Mean = temp.Mean;
-        res.RMS  = temp.RMS;
+        temp         = Statistics(res.data, res.ScaleFactor);
+        res.Peak     = temp.Peak;
+        res.Mean     = temp.Mean;
+        res.RMS      = temp.RMS;
+        res.Residual = res.data.at(-1) * res.ScaleFactor;
 
         // Add to the Main Table and Tree View
         await Add_To_Table( res );
@@ -1342,10 +1345,11 @@ async function Read_ASC(FileName, delta, dataview) {
         res.time           = Time[i];                   // Time array of the digitized data
 
         // Calculate Statictics
-        temp     = Statistics(res.data, res.ScaleFactor);
-        res.Peak = temp.Peak;
-        res.Mean = temp.Mean;
-        res.RMS  = temp.RMS;
+        temp         = Statistics(res.data, res.ScaleFactor);
+        res.Peak     = temp.Peak;
+        res.Mean     = temp.Mean;
+        res.RMS      = temp.RMS;
+        res.Residual = res.data.at(-1) * res.ScaleFactor;
 
         // Add to the Main Table and Tree View
         await Add_To_Table( res );
@@ -1525,10 +1529,11 @@ async function Read_TXT(FileName, delta, dataview) {
         res.time           = Time[i];                   // Time array of the digitized data
 
         // Calculate Statictics
-        temp     = Statistics(res.data, res.ScaleFactor);
-        res.Peak = temp.Peak;
-        res.Mean = temp.Mean;
-        res.RMS  = temp.RMS;
+        temp         = Statistics(res.data, res.ScaleFactor);
+        res.Peak     = temp.Peak;
+        res.Mean     = temp.Mean;
+        res.RMS      = temp.RMS;
+        res.Residual = res.data.at(-1) * res.ScaleFactor;
 
         // Add to the Main Table and Tree View
         await Add_To_Table( res );
@@ -2041,10 +2046,11 @@ async function Read_MSD(FileName, delta, dataview) {
             res.time                = time;
 
             // Calculate Statictics
-            temp     = Statistics(res.data, res.ScaleFactor);
-            res.Peak = temp.Peak;
-            res.Mean = temp.Mean;
-            res.RMS  = temp.RMS;
+            temp         = Statistics(res.data, res.ScaleFactor);
+            res.Peak     = temp.Peak;
+            res.Mean     = temp.Mean;
+            res.RMS      = temp.RMS;
+            res.Residual = res.data.at(-1) * res.ScaleFactor;
 
             // Add to the Main Table and Tree View
             await Add_To_Table( res );
@@ -2614,16 +2620,16 @@ async function DonwloadExcel_LoadDataPage() {
             // Populate Peak, Mean, RMS
             AddDataToWorkSheet(WorkSheet, [["Raw Data (" + ChannelList[i].UnitString + ")"]], "K8", [["Velocity (" + temp.IntegrationUnits.FirstIntegral.Unit_String + ")"]], "L8", [["Displacement (" + temp.IntegrationUnits.SecondIntegral.Unit_String + ")"]], "M8");
             
-            header = [ ["Peak"],  ["Mean"],  ["RMS"]];
-            data  = [[ChannelList[i].Peak], [ChannelList[i].Mean], [ChannelList[i].RMS]];  // Statistics of raw data and filtered data already include ScaleFactor
-            data2 = [[ChannelList[i].Results.Integral.Peak_Vel], [ChannelList[i].Results.Integral.Mean_Vel], [ChannelList[i].Results.Integral.RMS_Vel]];
-            data3 = [[ChannelList[i].Results.Integral.Peak_Disp], [ChannelList[i].Results.Integral.Mean_Disp], [ChannelList[i].Results.Integral.RMS_Disp]];
+            header = [ ["Peak"],  ["Mean"],  ["RMS"], ["Residual"]];
+            data  = [[ChannelList[i].Peak], [ChannelList[i].Mean], [ChannelList[i].RMS], [ChannelList[i].Residual]];  // Statistics of raw data and filtered data already include ScaleFactor
+            data2 = [[ChannelList[i].Results.Integral.Peak_Vel], [ChannelList[i].Results.Integral.Mean_Vel], [ChannelList[i].Results.Integral.RMS_Vel], [ChannelList[i].Results.Integral.Residual_Vel]];
+            data3 = [[ChannelList[i].Results.Integral.Peak_Disp], [ChannelList[i].Results.Integral.Mean_Disp], [ChannelList[i].Results.Integral.RMS_Disp], [ChannelList[i].Results.Integral.Residual_Disp]];
             AddDataToWorkSheet(WorkSheet, header, "J9", data, "K9", data2, "L9", data3, "M9");
 
             // Populate Filter Settings to WorkSheet
             header = [["Filter Settings"]];
             data = "";
-            AddDataToWorkSheet(WorkSheet, header, "J13", data, "K13");
+            AddDataToWorkSheet(WorkSheet, header, "J14", data, "K14");
             
 
             header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
@@ -2635,12 +2641,12 @@ async function DonwloadExcel_LoadDataPage() {
                      [ChannelList[i].Results.Integral.ZeroPhase],
                      [ChannelList[i].Results.Integral.IsStable],
                    ];
-            AddDataToWorkSheet(WorkSheet, header, "J14", data, "K14");
+            AddDataToWorkSheet(WorkSheet, header, "J15", data, "K15");
 
             // Populate Filter Coefficients to WorkSheet
             header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
             data = [ChannelList[i].Results.Integral.a, ChannelList[i].Results.Integral.b];
-            AddDataToWorkSheet(WorkSheet, header, "J22", data, "K22");
+            AddDataToWorkSheet(WorkSheet, header, "J23", data, "K23");
 
             // All column formatting
             columnConfig = [
@@ -2662,7 +2668,7 @@ async function DonwloadExcel_LoadDataPage() {
             ColumnStyle(WorkSheet, range, columnConfig);
             
             // Make some cells bold and larger fonts size 
-            ['K8', 'L8', 'M8', 'J9', 'J10', 'J11', 'J13', 'J22', 'J23'].forEach(cell => {
+            ['K8', 'L8', 'M8', 'J9', 'J10', 'J11', 'J12', 'J14', 'J23', 'J24'].forEach(cell => {
                 WorkSheet[cell].s = { 
                     ...WorkSheet[cell].s, 
                     font: { bold: true, sz: 14 } 
