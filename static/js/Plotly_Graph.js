@@ -382,9 +382,10 @@ async function Plotly_Graph_Update(ChNum) {
             layout_update.yaxis2.title.text     = "";
 
             // Empty the Statistics
-            document.getElementById( Statictics_Peak_ID ).innerHTML = '';
-            document.getElementById( Statictics_Mean_ID ).innerHTML = '';
-            document.getElementById( Statictics_RMS_ID  ).innerHTML = '';
+            document.getElementById( Statictics_Peak_ID      ).innerHTML = '';
+            document.getElementById( Statictics_Mean_ID      ).innerHTML = '';
+            document.getElementById( Statictics_RMS_ID       ).innerHTML = '';
+            document.getElementById( Statictics_Residual_ID  ).innerHTML = '';
 
             // Show Baseline-Row in InforBar
             document.getElementById(BaseLine_ID).innerHTML = '';
