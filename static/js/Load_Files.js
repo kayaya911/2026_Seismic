@@ -2414,7 +2414,7 @@ async function DonwloadExcel_LoadDataPage() {
     document.getElementById("Header_Download").disabled = true;
 
     // Update the ProgressBar
-    ProgressBar_Update('Please wait -- Downloading SDA_Results.xlsx File', 'black');
+    ProgressBar_Update('Please wait -- Downloading SDA_Results.xlsx File', 'red');
     await sleep(50);
     
     // Start new workbook
@@ -2536,6 +2536,7 @@ async function DonwloadExcel_LoadDataPage() {
             header = [["Filter Settings"]];
             data = "";
             AddDataToWorkSheet(WorkSheet, header, "H13", data, "I13");
+            
 
             header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
             data = [ [ChannelList[i].Results.Filter.BaselineCorrection_String],
@@ -2568,6 +2569,15 @@ async function DonwloadExcel_LoadDataPage() {
             ];
             range = XLSX.utils.decode_range(WorkSheet['!ref']);
             ColumnStyle(WorkSheet, range, columnConfig);
+
+            // Make some cells bold and larger fonts size 
+            ['I8', 'J8', 'H9', 'H10', 'H11', 'H13', 'H22', 'H23'].forEach(cell => {
+                WorkSheet[cell].s = { 
+                    ...WorkSheet[cell].s, 
+                    font: { bold: true, sz: 14 } 
+                };
+            });
+
 
         }
         else if (PageNo == 2) {
@@ -2614,6 +2624,7 @@ async function DonwloadExcel_LoadDataPage() {
             header = [["Filter Settings"]];
             data = "";
             AddDataToWorkSheet(WorkSheet, header, "J13", data, "K13");
+            
 
             header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
             data = [ [ChannelList[i].Results.Integral.BaselineCorrection_String],
@@ -2649,7 +2660,15 @@ async function DonwloadExcel_LoadDataPage() {
             ];
             range = XLSX.utils.decode_range(WorkSheet['!ref']);
             ColumnStyle(WorkSheet, range, columnConfig);
-        
+            
+            // Make some cells bold and larger fonts size 
+            ['K8', 'L8', 'M8', 'J9', 'J10', 'J11', 'J13', 'J22', 'J23'].forEach(cell => {
+                WorkSheet[cell].s = { 
+                    ...WorkSheet[cell].s, 
+                    font: { bold: true, sz: 14 } 
+                };
+            });
+
         }
         else if (PageNo == 3) {
 
@@ -2758,6 +2777,14 @@ async function DonwloadExcel_LoadDataPage() {
                 ];
                 range = XLSX.utils.decode_range(WorkSheet['!ref']);
                 ColumnStyle(WorkSheet, range, columnConfig);
+
+                // Make some cells bold and larger fonts size 
+                ['J15', 'K15', 'L15', 'I6'].forEach(cell => {
+                    WorkSheet[cell].s = { 
+                        ...WorkSheet[cell].s, 
+                        font: { bold: true, sz: 14 } 
+                    };
+                });
 
             }
             else if (Indx == 1) { 
@@ -2877,6 +2904,14 @@ async function DonwloadExcel_LoadDataPage() {
                 ];
                 range = XLSX.utils.decode_range(WorkSheet['!ref']);
                 ColumnStyle(WorkSheet, range, columnConfig);
+
+                // Make some cells bold and larger fonts size 
+                ['M15', 'N15', 'O15', 'L6'].forEach(cell => {
+                    WorkSheet[cell].s = { 
+                        ...WorkSheet[cell].s, 
+                        font: { bold: true, sz: 14 } 
+                    };
+                });
 
             }
             else if ((Indx == 2) || (Indx == 3)) { 
@@ -3026,6 +3061,15 @@ async function DonwloadExcel_LoadDataPage() {
                 ];
                 range = XLSX.utils.decode_range(WorkSheet['!ref']);
                 ColumnStyle(WorkSheet, range, columnConfig);
+
+                // Make some cells bold and larger fonts size 
+                ['Q17', 'R17', 'S17', 'P9', 'P31', 'P40', 'P41'].forEach(cell => {
+                    WorkSheet[cell].s = { 
+                        ...WorkSheet[cell].s, 
+                        font: { bold: true, sz: 14 } 
+                    };
+                });
+
                 
             }
             else if (Indx == 4) { 
@@ -3196,6 +3240,14 @@ async function DonwloadExcel_LoadDataPage() {
                 ];
                 range = XLSX.utils.decode_range(WorkSheet['!ref']);
                 ColumnStyle(WorkSheet, range, columnConfig);
+
+                // Make some cells bold and larger fonts size 
+                ['T17', 'U17', 'V17', 'S9', 'S31', 'S40', 'S41'].forEach(cell => {
+                    WorkSheet[cell].s = { 
+                        ...WorkSheet[cell].s, 
+                        font: { bold: true, sz: 14 } 
+                    };
+                });
                 
             }
             else if (Indx == 5) { 
@@ -3338,7 +3390,13 @@ async function DonwloadExcel_LoadDataPage() {
                 range = XLSX.utils.decode_range(WorkSheet['!ref']);
                 ColumnStyle(WorkSheet, range, columnConfig);
 
-
+                // Make some cells bold and larger fonts size 
+                ['P17', 'Q17', 'R17', 'O9', 'O31', 'O40', 'O41'].forEach(cell => {
+                    WorkSheet[cell].s = { 
+                        ...WorkSheet[cell].s, 
+                        font: { bold: true, sz: 14 } 
+                    };
+                });
             }
 
         }
@@ -3474,6 +3532,7 @@ async function DonwloadExcel_LoadDataPage() {
             header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
             data = [ChannelList[i].Results.ResSpec.FiltPar.a, ChannelList[i].Results.ResSpec.FiltPar.b];
             AddDataToWorkSheet(WorkSheet, header, CEA1, data, CEA2);
+            
 
             // All column formatting
             columnConfig = [
@@ -3485,12 +3544,18 @@ async function DonwloadExcel_LoadDataPage() {
             for (j=0; j<plotCount*NumOfResults; j++) {
                 columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // spectral values 
             }
-            columnConfig.push( { width:  5, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty
-            columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty
-            columnConfig.push( { width: 30, align: { horizontal: 'right',  vertical: 'center' } }  );  // Empty
+            columnConfig.push( { width:  5, align: { horizontal: 'left',  vertical: 'center' } }  );  // Empty
+            columnConfig.push( { width: 30, align: { horizontal: 'left',  vertical: 'center' } }  );  // Empty
+            columnConfig.push( { width: 30, align: { horizontal: 'left',  vertical: 'center' } }  );  // Empty
 
             range = XLSX.utils.decode_range(WorkSheet['!ref']);
             ColumnStyle(WorkSheet, range, columnConfig);
+
+            // Make some cells bold and larger fonts size
+                                                         WorkSheet[CEA1].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            CEA1 = ShiftExcellAddress(CEA1, 0,  1);      WorkSheet[CEA1].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            CEA1 = ShiftExcellAddress(CEA1, 0,-10);      WorkSheet[CEA1].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            CEA1 = ShiftExcellAddress(CEA1, 0, -5);      WorkSheet[CEA1].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
 
         }
         
@@ -3499,12 +3564,12 @@ async function DonwloadExcel_LoadDataPage() {
         
         // Update the progressBar
         // Calculate the Increment for the Progress_Bar 
-        ProgressBar_Update('Please wait -- ' + (i/ChannelList.length*100).toFixed(0).toString() + '% Done', 'black');
+        ProgressBar_Update('Please wait -- ' + (i/ChannelList.length*100).toFixed(0).toString() + '% Done', 'red');
         await sleep(50);
     }
   
     // Inform user on progress (Wait for screen update)
-    ProgressBar_Update("Please wait -- Writing XLSX File", 'black');
+    ProgressBar_Update("Please wait -- Writing XLSX File", 'red');
     await sleep(50);
   
     // Write workBook to XLSX file

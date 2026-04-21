@@ -55,11 +55,11 @@ async function Plotly_Graph_Update(ChNum) {
         traces[0].x             = ChannelList[ChNum].time;
         traces[0].y             = Multiply(res.Data, ChannelList[ChNum].ScaleFactor);
         traces[0].mode          = 'lines',
-        traces[0].marker        = { color: 'red', size: 5, symbol: 'circle' },
+        traces[0].marker        = { color: 'blue', size: 5, symbol: 'circle' },
         traces[0].yaxis       = "y1",
         traces[0].visible       = true;
         traces[0].opacity       = 1.00;
-        traces[0].line          = {color: 'red', width: 1.50, dash: 'solid' };
+        traces[0].line          = {color: 'blue', width: 1.50, dash: 'solid' };
         traces[0].name          = '<b>Raw Data<b>';  // legend title
         traces[0].showlegend    = false;             // Don't show legend
 
@@ -456,7 +456,7 @@ async function Plotly_Graph_Update(ChNum) {
             
             else if (DisplayData == "Hyst"    ) { res  = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Fs,       ChNum );
                                                   res1 = Convert_Data_To_Graph_Unit_SDOF(ChannelList[ChNum].Results.SDOF.Disp,     ChNum );
-                                                  timeData = res1.Data;
+                                                  tD1  = res1.Data;
 
                                                   let xMin = Min(res1.Data).val;
                                                   let xMax = Max(res1.Data).val;
@@ -552,6 +552,9 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[1].name        = '<b>Phase<b>';          // legend title
                 traces[1].showlegend  = true;                   // Show legend 
 
+                layout_update.xaxis.autorange = true;
+                layout_update.yaxis.autorange = true;
+                
                 layout_update.yaxis.title.text      = '<b>Magnitude<b>';
                 layout_update.yaxis2.showticklabels = true; 
                 layout_update.yaxis2.title.text     = res.y2Title;
@@ -577,6 +580,9 @@ async function Plotly_Graph_Update(ChNum) {
                 traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
                 traces[0].name        = '';                      // legend title
                 traces[0].showlegend  = false;                   // Show legend 
+
+                layout_update.xaxis.autorange = true;
+                layout_update.yaxis.autorange = true;
 
                 layout_update.yaxis.title.text      = res.yTitle_FFT; 
                 layout_update.yaxis2.showticklabels = false;
@@ -647,74 +653,66 @@ async function Plotly_Graph_Update(ChNum) {
             else if (DisplayData == "PVel"    ) { res  = Convert_Data_To_Graph_Unit_ResSpec(ChannelList[ChNum].Results.ResSpec.SPv,  ChNum );  }
 
             
-            // Get the status of two checkboxes in the Infor table on Plotly Graph
-            IsFilter_CheckBox_Selected = document.getElementById(FilterResp_ID).checked;
-            IsFFT_CheckBox_Selected    = document.getElementById(FilterFFT_ID).checked;
-
-            if (!IsFilter_CheckBox_Selected && !IsFFT_CheckBox_Selected) {
+            // Plot Spectrum in trace[0]
+            if (plotCount >= 1) {
                 
-                // Plot Spectrum in trace[0]
-                if (plotCount >= 1) {
-                    
-                    traces[0].x           = timeData;
-                    traces[0].y           = res.Data[0];
-                    traces[0].mode        = 'lines+markers',
-                    traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
-                    traces[0].yaxis       = "y1",
-                    traces[0].visible     = true;
-                    traces[0].opacity     = 1.00;
-                    traces[0].line        = {color: 'red', width: 1.50, dash: 'solid' };
-                    traces[0].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_1"].toString();    // legend title
-                    traces[0].showlegend  = true;                    // Show legend
-                }
+                traces[0].x           = timeData;
+                traces[0].y           = res.Data[0];
+                traces[0].mode        = 'lines+markers',
+                traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'red', width: 1.50, dash: 'solid' };
+                traces[0].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_1"].toString();    // legend title
+                traces[0].showlegend  = true;                    // Show legend
+            }
 
-                // Plot Spectrum in tarace[1]
-                if (plotCount >= 2) {
-                    traces[1].x           = timeData;
-                    traces[1].y           = res.Data[1];
-                    traces[1].mode        = 'lines+markers',
-                    traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
-                    traces[1].yaxis       = "y1",
-                    traces[1].visible     = true;
-                    traces[1].opacity     = 1.00;
-                    traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
-                    traces[1].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_2"].toString();  // legend title
-                    traces[1].showlegend  = true;                   // Show legend 
-                }
-                
-                // Plot Spectrum in tarace[2]
-                if (plotCount >= 3) {
-                    traces[2].x           = timeData;
-                    traces[2].y           = res.Data[2];
-                    traces[2].mode        = 'lines+markers',
-                    traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-                    traces[2].yaxis       = "y1",
-                    traces[2].visible     = true;
-                    traces[2].opacity     = 1.00;
-                    traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
-                    traces[2].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_3"].toString();    // legend title
-                    traces[2].showlegend  = true;                   // Show legend 
-                }
+            // Plot Spectrum in tarace[1]
+            if (plotCount >= 2) {
+                traces[1].x           = timeData;
+                traces[1].y           = res.Data[1];
+                traces[1].mode        = 'lines+markers',
+                traces[1].marker      = { color: 'green', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y1",
+                traces[1].visible     = true;
+                traces[1].opacity     = 1.00;
+                traces[1].line        = {color: 'green', width: 1.50, dash: 'solid' };
+                traces[1].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_2"].toString();  // legend title
+                traces[1].showlegend  = true;                   // Show legend 
+            }
+            
+            // Plot Spectrum in tarace[2]
+            if (plotCount >= 3) {
+                traces[2].x           = timeData;
+                traces[2].y           = res.Data[2];
+                traces[2].mode        = 'lines+markers',
+                traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[2].yaxis       = "y1",
+                traces[2].visible     = true;
+                traces[2].opacity     = 1.00;
+                traces[2].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+                traces[2].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_3"].toString();    // legend title
+                traces[2].showlegend  = true;                   // Show legend 
+            }
 
-                // Plot Spectrum in tarace[3]
-                if (plotCount >= 4) {
-                    traces[3].x           = timeData;
-                    traces[3].y           = res.Data[3];
-                    traces[3].mode        = 'lines+markers',
-                    traces[3].marker      = { color: 'orange', size: 5, symbol: 'circle' },
-                    traces[3].yaxis       = "y1",
-                    traces[3].visible     = true;
-                    traces[3].opacity     = 1.00;
-                    traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
-                    traces[3].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_4"].toString();     // legend title
-                    traces[3].showlegend  = true;                   // Show legend 
-                }
+            // Plot Spectrum in tarace[3]
+            if (plotCount >= 4) {
+                traces[3].x           = timeData;
+                traces[3].y           = res.Data[3];
+                traces[3].mode        = 'lines+markers',
+                traces[3].marker      = { color: 'orange', size: 5, symbol: 'circle' },
+                traces[3].yaxis       = "y1",
+                traces[3].visible     = true;
+                traces[3].opacity     = 1.00;
+                traces[3].line        = {color: 'orange', width: 1.50, dash: 'solid' };
+                traces[3].name        = temp + " : " + ChannelList[ChNum].Results.ResSpec[temp + "_4"].toString();     // legend title
+                traces[3].showlegend  = true;                   // Show legend 
+            }
 
-                layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
-                layout_update.yaxis2.showticklabels = false;
-                layout_update.yaxis2.title.text     = "";
-
-            } 
+            layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
+            layout_update.yaxis2.showticklabels = false;
+            layout_update.yaxis2.title.text     = "";
 
             // Show Baseline-Row in InforBar
             document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.ResSpec.FiltPar.BaselineCorrection_String;
@@ -925,7 +923,7 @@ async function Plotly_Info_Table(Channel) {
     let FilterType_ID, FilterRow_ID, BaseLine_ID, BaseLineRow_ID, FilterResp_ID, GraphUnitRow_ID,FilterFFT_ID;
     let SDOF_Row_ID, SDOF_Plot_ID, SDOF_Cell_ID, SDOF_Method_ID, SDOF_Method_Row_ID;
     let Span, input, div1, div2, label, Unit_List, j, Unit_Cell_ID, Unit_Plot_ID, select;
-    let ResSpec_Row_ID, ResSpec_Plot_ID, ResSpec_Cell_ID;
+    let ResSpec_Row_ID, ResSpec_Plot_ID, ResSpec_Cell_ID, Filter_Div_ID1,Filter_Div_ID2;
 
     Statictics_Peak_ID    = "Statictics_Peak_ID_" + Channel.Unique_ID;
     Statictics_Mean_ID    = "Statictics_Mean_ID_" + Channel.Unique_ID;
@@ -950,6 +948,9 @@ async function Plotly_Info_Table(Channel) {
     FilterRow_ID          = "FilterRow_ID_" + Channel.Unique_ID;
     FilterResp_ID         = "FilterResp_ID_" + Channel.Unique_ID;
     FilterFFT_ID          = "FilterFFT_ID_" + Channel.Unique_ID;
+    Filter_Div_ID1        = "Filter_Div_ID1_" + Channel.Unique_ID;
+    Filter_Div_ID2        = "Filter_Div_ID2_" + Channel.Unique_ID;
+
     
     // Create a table and tabelBody
     Tabel = document.createElement('table');
@@ -1109,6 +1110,7 @@ async function Plotly_Info_Table(Channel) {
     label.setAttribute('class', "toggle-label");
     div1 = document.createElement('div');
     div1.setAttribute('class', "Filter_Div");
+    div1.setAttribute('id', Filter_Div_ID1);
     div1.appendChild(Span);
     div1.appendChild(input);
     div1.appendChild(label);
@@ -1126,6 +1128,7 @@ async function Plotly_Info_Table(Channel) {
     label.setAttribute('class', "toggle-label");
     div2 = document.createElement('div');
     div2.setAttribute('class', "Filter_Div");
+    div2.setAttribute('id', Filter_Div_ID2);
     div2.appendChild(Span);
     div2.appendChild(input);
     div2.appendChild(label);
@@ -1217,6 +1220,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "table-row";  // Graph Unit
         Table.rows[7].style.display  = "none";       // Baseline 
         Table.rows[8].style.display  = "none";       // Filter 
+
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+
     }
     else if (PageNo == 1) {
         // Filter Page 
@@ -1228,7 +1235,11 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[5].style.display  = "none";       // ResSpec Display
         Table.rows[6].style.display  = "table-row";  // Graph Unit
         Table.rows[7].style.display  = "table-row";  // Baseline 
-        Table.rows[8].style.display  = "table-row";  // Filter 
+        Table.rows[8].style.display  = "table-row";  // Filter
+        
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+
     }
     else if (PageNo == 2) {
         // Integration page 
@@ -1241,6 +1252,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "table-row";  // Graph Unit
         Table.rows[7].style.display  = "table-row";  // Baseline 
         Table.rows[8].style.display  = "table-row";  // Filter 
+
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+
     }
     else if (PageNo == 3) {
         // SDOF page 
@@ -1253,6 +1268,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "table-row";  // Graph Unit
         Table.rows[7].style.display  = "table-row";  // Baseline 
         Table.rows[8].style.display  = "table-row";  // Filter 
+
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+
     }
     else if (PageNo == 4) {
         // ResSpectrum page 
@@ -1265,6 +1284,9 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "table-row";  // Graph Unit
         Table.rows[7].style.display  = "table-row";  // Baseline 
         Table.rows[8].style.display  = "table-row";  // Filter 
+
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
     }
 
     // Update the graph
