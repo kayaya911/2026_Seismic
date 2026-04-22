@@ -810,7 +810,7 @@ function ResSpec_Parameters() {
     else if (AnalysisMethod == 1) { AnalysisMethod_string = 'Bilinear Hysteretic';    }
     else if (AnalysisMethod == 2) { AnalysisMethod_string = 'Clough Bilinear Model';  }
 
-    // Return SDOF parameters
+    // Return ResSpec parameters
     return {
         IsAnalysisCompleted         : false,
         AnalysisMethod              : AnalysisMethod,
@@ -939,6 +939,106 @@ function ResSpec_TMax_Change() {
 }
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
-// 
+// Strong Motion Parameters ---------------------------------------------------------------------
+function Strong_Motion_Parameters() {
+    
+    
+    
+    
+    // Return StromngMotion Parameters
+    return {
+        IsAnalysisCompleted     : false,
+        Cav                     : undefined,
+        AI                      : undefined,
+        AI_MaxVal               : undefined,
+        T1_a1                   : undefined,
+        T2_ai                   : undefined,
+        Ts                      : undefined,
+        T1_bd                   : undefined,
+        T2_bd                   : undefined,
+        Td                      : undefined,
+        TypeAndUnits            : undefined,
+        DisplayData             : undefined,
+    }
+
+
+}
+function SM_Par_SelectToDisplay() {
+    let i, Indx, SM_Par_Plot_ID;
+
+    for (i=0; i<ChannelList.length; i++) {
+        
+        // skip if this channel is not selected for dislay
+        if (!ChannelList[i].PlotGraph) { continue; }
+
+        // Get the selected index number
+        Indx = document.getElementById('SM_Par_SelectToDisplay').selectedIndex;
+
+        if (Indx == 0) { continue; }
+
+        // Change the index number for this channel 
+        SM_Par_Plot_ID  = "SM_Par_Plot_ID_" + ChannelList[i].Unique_ID;
+        document.getElementById(SM_Par_Plot_ID).selectedIndex = Indx-1;
+
+        Update_Units_infoTable_SM_Par(i);
+
+    }
+}
+function SM_Par_ResultsDisplay(i) {
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let select, opt, OptionsList, Indx;
+    
+    OptionsList = Array.from(document.getElementById('SM_Par_SelectToDisplay').options).map(opt => opt.text);
+    OptionsList.shift(); // removes the fist entry from the list
+
+    select      = document.getElementById("SM_Par_Plot_ID_"  + ChannelList[i].Unique_ID);
+    select.innerText = '';
+    for (let j = 0; j < OptionsList.length; j++) {
+        opt = document.createElement("option");
+        opt.text = OptionsList[j];
+        select.add(opt, null);
+    }
+    select.setAttribute('onchange', 'Update_Units_infoTable_SM_Par('+ i.toString() +')');
+
+    // Read just the Index
+    Indx = document.getElementById('SM_Par_SelectToDisplay').selectedIndex;
+    if (Indx != 0) { select.selectedIndex = Indx-1; }
+}
+async function SM_Par_AnalysisType() {
+    // Declaration of variables
+    let SM_Par_Table1, OptionsList, sel_el, opt, i;
+
+    // Get the table that contains Response Spectrum Analysis Parameters 
+    SM_Par_Table1 = document.getElementById('SM_Par_Parameters_Table');
+
+    // Disable the FilterTable rows if no filtering is selected 
+    SM_Par_Table1.rows[0].style.display  = "table-row";
+    OptionsList                          = ['Arias Intensity', 'Cumulative Absolute Velocity'];
+
+    // Get the selectToDisplay and update its content 
+    sel_el = document.getElementById('SM_Par_SelectToDisplay');
+    sel_el.innerHTML = '';
+
+    // Add empty entry to the begining of the list
+    OptionsList.unshift('');
+
+    for (i=0; i<OptionsList.length; i++) {
+        opt = document.createElement("option");
+        opt.value = OptionsList[i];
+        opt.text = OptionsList[i];
+        sel_el.add(opt, null);
+    }
+
+    // Select the fist item in the list, which is None
+    sel_el.selectedIndex = 0;
+
+    // Update UI (Screen)
+    for (i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i);  }
+}
+
+
 
 

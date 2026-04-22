@@ -744,6 +744,31 @@ async function Plotly_Graph_Update(ChNum) {
         }
 
     }
+    else if (PageNo == 5) {
+
+    }
+    else if (PageNo == 6) {
+        // SM Parameters Page 
+
+        if (ChannelList[ChNum].Results.SM_Parameters.IsAnalysisCompleted) {
+
+
+            timeData    = ChannelList[ChNum].time;
+
+            traces[0].x           = timeData;
+            traces[0].y           = ChannelList[ChNum].Results.SM_Parameters.AI;
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[0].yaxis       = "y1",
+            traces[0].visible     = true;
+            traces[0].opacity     = 1.00;
+            traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+            traces[0].name        = '<b>Arias Intensity<b>';   // legend title
+            traces[0].showlegend  = true;               // Show legend
+
+        }
+
+    }
 
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);
@@ -927,6 +952,7 @@ async function Plotly_Info_Table(Channel) {
     let SDOF_Row_ID, SDOF_Plot_ID, SDOF_Cell_ID, SDOF_Method_ID, SDOF_Method_Row_ID;
     let Span, input, div1, div2, label, Unit_List, j, Unit_Cell_ID, Unit_Plot_ID, select;
     let ResSpec_Row_ID, ResSpec_Plot_ID, ResSpec_Cell_ID, Filter_Div_ID1,Filter_Div_ID2;
+    let SM_Par_Row_ID, SM_Par_Plot_ID, SM_Par_Cell_ID;
 
     Statictics_Peak_ID     = "Statictics_Peak_ID_" + Channel.Unique_ID;
     Statictics_Mean_ID     = "Statictics_Mean_ID_" + Channel.Unique_ID;
@@ -943,6 +969,10 @@ async function Plotly_Info_Table(Channel) {
     ResSpec_Row_ID         = "ResSpec_Row_ID_" + Channel.Unique_ID;
     ResSpec_Plot_ID        = "ResSpec_Plot_ID_" + Channel.Unique_ID;
     ResSpec_Cell_ID        = "ResSpec_Cell_ID_" + Channel.Unique_ID;
+
+    SM_Par_Row_ID          = "SM_Par_Row_ID_" + Channel.Unique_ID;
+    SM_Par_Plot_ID         = "SM_Par_Plot_ID_" + Channel.Unique_ID;
+    SM_Par_Cell_ID         = "SM_Par_Cell_ID_" + Channel.Unique_ID;
 
     SDOF_Method_ID         = "SDOF_Method_ID_" + Channel.Unique_ID;
     SDOF_Method_Row_ID     = "SDOF_Method_Row_ID_" + Channel.Unique_ID;
@@ -1012,7 +1042,8 @@ async function Plotly_Info_Table(Channel) {
     cell.innerHTML = Channel.Residual.toPrecision(4);
     cell.setAttribute('id', Statictics_Residual_ID);
 
-    
+
+
     // Create a new row for SDOF Analysis Method
     row = Tabel.insertRow(-1);
     row.setAttribute('id', 'Row_AnalysisMethod_'+Channel.Unique_ID);
@@ -1070,6 +1101,29 @@ async function Plotly_Info_Table(Channel) {
     cell = row.insertCell(1);
     cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
     cell.setAttribute('id', ResSpec_Cell_ID);
+    cell.appendChild(select);
+
+
+
+    // Create a new row for SM_Parameters-List
+    row = Tabel.insertRow(-1);
+    row.setAttribute('id', 'Row_SM_Par_Display_'+Channel.Unique_ID);
+    row.setAttribute('id', SM_Par_Row_ID);
+    row.style.display = "none";
+
+    cell = row.insertCell(0);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Left');
+    cell.innerHTML = "Display";
+
+    select = document.createElement('select');
+    select.setAttribute("id", SM_Par_Plot_ID);
+    select.setAttribute('class', 'form-custom');
+    select.setAttribute('onchange', '');
+    select.selectedIndex = 0;
+
+    cell = row.insertCell(1);
+    cell.setAttribute('class', 'Plotly_Stat_Body_Td_Right');
+    cell.setAttribute('id', SM_Par_Cell_ID);
     cell.appendChild(select);
 
 
@@ -1233,9 +1287,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[4].style.display  = "none";       // Analysis Method
         Table.rows[5].style.display  = "none";       // SDOF Display
         Table.rows[6].style.display  = "none";       // ResSpec Display
-        Table.rows[7].style.display  = "table-row";  // Graph Unit
-        Table.rows[8].style.display  = "none";       // Baseline 
-        Table.rows[9].style.display  = "none";       // Filter 
+        Table.rows[7].style.display  = "none";       // SM_Par Display
+        Table.rows[8].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "none";       // Baseline 
+        Table.rows[10].style.display = "none";       // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
@@ -1250,9 +1305,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[4].style.display  = "none";       // Analysis Method
         Table.rows[5].style.display  = "none";       // SDOF Display
         Table.rows[6].style.display  = "none";       // ResSpec Display
-        Table.rows[7].style.display  = "table-row";  // Graph Unit
-        Table.rows[8].style.display  = "table-row";  // Baseline 
-        Table.rows[9].style.display  = "table-row";  // Filter
+        Table.rows[7].style.display  = "none";       // SM_Par Display
+        Table.rows[8].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "table-row";  // Baseline 
+        Table.rows[10].style.display = "table-row";  // Filter
         
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
@@ -1267,9 +1323,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[4].style.display  = "none";       // Analysis Method
         Table.rows[5].style.display  = "none";       // SDOF Display
         Table.rows[6].style.display  = "none";       // ResSpec Display
-        Table.rows[7].style.display  = "table-row";  // Graph Unit
-        Table.rows[8].style.display  = "table-row";  // Baseline 
-        Table.rows[9].style.display  = "table-row";  // Filter 
+        Table.rows[7].style.display  = "none";       // SM_Par Display
+        Table.rows[8].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "table-row";  // Baseline 
+        Table.rows[10].style.display = "table-row";  // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
@@ -1284,9 +1341,10 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[4].style.display  = "table-row";  // Analysis Method
         Table.rows[5].style.display  = "table-row";  // SDOF Display
         Table.rows[6].style.display  = "none";       // ResSpec Display
-        Table.rows[7].style.display  = "table-row";  // Graph Unit
-        Table.rows[8].style.display  = "table-row";  // Baseline 
-        Table.rows[9].style.display  = "table-row";  // Filter 
+        Table.rows[7].style.display  = "none";       // SM_Par Display
+        Table.rows[8].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "table-row";  // Baseline 
+        Table.rows[10].style.display = "table-row";  // Filter 
 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
@@ -1294,19 +1352,41 @@ function Plotly_Clear_Graph(ChNum) {
     }
     else if (PageNo == 4) {
         // ResSpectrum page 
-        Table.rows[0].style.display  = "none";  // Peak
-        Table.rows[1].style.display  = "none";  // Mean
-        Table.rows[2].style.display  = "none";  // RMS
+        Table.rows[0].style.display  = "none";       // Peak
+        Table.rows[1].style.display  = "none";       // Mean
+        Table.rows[2].style.display  = "none";       // RMS
         Table.rows[3].style.display  = "none";       // Residual
         Table.rows[4].style.display  = "table-row";  // Analysis Method
         Table.rows[5].style.display  = "none";       // SDOF Display
         Table.rows[6].style.display  = "table-row";  // ResSpec Display
-        Table.rows[7].style.display  = "table-row";  // Graph Unit
-        Table.rows[8].style.display  = "table-row";  // Baseline 
-        Table.rows[9].style.display  = "table-row";  // Filter 
-
+        Table.rows[7].style.display  = "none";       // SM_Par Display
+        Table.rows[8].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "table-row";  // Baseline 
+        Table.rows[10].style.display = "table-row";  // Filter 
+         
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+    }
+    else if (PageNo == 5) {
+        // Spectrum page 
+
+    }
+    else if (PageNo == 6) {
+        // ResSpectrum page 
+        Table.rows[0].style.display  = "none";       // Peak
+        Table.rows[1].style.display  = "none";       // Mean
+        Table.rows[2].style.display  = "none";       // RMS
+        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[4].style.display  = "none";       // Analysis Method
+        Table.rows[5].style.display  = "none";       // SDOF Display
+        Table.rows[6].style.display  = "none";       // ResSpec Display
+        Table.rows[7].style.display  = "table-row";  // SM_Par Display
+        Table.rows[8].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "table-row";  // Baseline 
+        Table.rows[10].style.display = "table-row";  // Filter 
+         
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
     }
 
     // Update the graph

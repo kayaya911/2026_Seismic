@@ -911,5 +911,70 @@ function Update_Units_infoTable_ResSpec(i) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
+function Update_Units_infoTable_SM_Par(i) {
 
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let II, Units_SelectElement, Ind, Type, DisplayData;
+    let SM_Par_Plot_ID, Unit_Cell_ID;
+
+    // Defaults
+    Units_SelectElement = Select_Element(List_Units(8).Units);                    
+    Type                = 2;  
+    DisplayData         = 'Disp';
+
+    // ResSpec_ID
+    SM_Par_Plot_ID = "SM_Par_Plot_ID_"  + ChannelList[i].Unique_ID;
+    Unit_Cell_ID   = "Unit_Cell_ID_"    + ChannelList[i].Unique_ID;
+
+    II   = document.getElementById(SM_Par_Plot_ID).selectedIndex;            // Index of the SM_Par_ResultsDisplay in InfoTable
+    
+    if (II == -1) { return; }
+
+    if      (II == 0) { Units_SelectElement = Select_Element(List_Units(4).Units);   Type=1;    DisplayData='Vel';  } // Arias Intensity ( velocity unit)
+    else if (II == 1) { Units_SelectElement = Select_Element(List_Units(4).Units);   Type=1;    DisplayData='Vel';  } // CAV  ( velocity unit)
+    
+
+    // Assign select-element to cell-element in table
+    document.getElementById(Unit_Cell_ID).innerHTML = "";
+    document.getElementById(Unit_Cell_ID).appendChild(Units_SelectElement);
+
+    // Index number of the Unit on the Data-Page (PageNo=0)
+    Ind = document.getElementById("Unit_ID_" + ChannelList[i].Unique_ID).selectedIndex;
+
+    // Measurment-Index of the user-selected Display-and-Unit on InfoTable
+    ChannelList[i].Results.SM_Parameters.TypeAndUnits = TypeAndUnit(List_Units(Type, false).UnitNum[Ind], false).TypeAndUnit;
+    ChannelList[i].Results.SM_Parameters.DisplayData  = DisplayData;
+
+    // Update Graph
+    Plotly_Graph_Update(i);
+
+    // Creates new Select-Element for Plotly Info-table (Graph-Unit List)
+    function Select_Element(Unit_List) {
+        
+        // Decleration of variables
+        let j, opt, select, ID;
+
+        ID = 'Unit_Plot_ID_' + ChannelList[i].Unique_ID;
+
+        // Create select element and populate it 
+        select = document.createElement('select');
+        select.setAttribute('id', ID);
+        select.setAttribute('class', 'form-select form-select-sm');
+        select.setAttribute('onchange', 'Plotly_Graph_Update(' + ChannelList_UniqueID(ChannelList[i].Unique_ID) + ')');
+        
+        // Options for the select element 
+        for (j = 0; j < Unit_List.length; j++) {
+            opt = document.createElement("option");
+            opt.value = Unit_List[j];
+            opt.text = Unit_List[j];
+            select.add(opt, null);
+        }
+        select.selectedIndex = document.getElementById(ID).selectedIndex;
+        return select;
+    }
+
+}
 

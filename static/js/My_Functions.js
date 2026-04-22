@@ -49,6 +49,7 @@ function OnLoad() {
     Filter_Type_Change();
     SDOF_AnalysisType();
     ResSpec_AnalysisType();
+    SM_Par_AnalysisType();
 
     // Load_Data item from Analysis_Menu is selected 
     AnalysisMenu_Selection(document.getElementById("MainMenu_LoadData"));
@@ -89,6 +90,7 @@ async function AnalysisMenu_Selection(a) {
     document.getElementById("Parameters_SDOF").style.display = "none";
     document.getElementById("Parameters_ResSpec").style.display = "none";
     document.getElementById("Parameters_ResSpec2").style.display = "none";
+    document.getElementById("Parameters_SM_Par").style.display = "none";
     document.getElementById("Parameters_Newmark").style.display = "none";
     document.getElementById("Parameters_Output_Units").style.display = "none";
 
@@ -98,23 +100,27 @@ async function AnalysisMenu_Selection(a) {
 
     // Then show only the relevant ones based on selection
     if (a.id == "MainMenu_LoadData") {
+        // Load Data
         document.getElementById('Run_Button_Div').style.display = 'none';
         document.getElementById("Table_Channel_Div").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Data";
         PageNo = 0;
     }
     else if (a.id == "MainMenu_Filter") {
+        // Filter 
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Filter";
         PageNo = 1;
     }
     else if (a.id == "MainMenu_Integral") {
+        // Integration
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_Integration").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Integral";
         PageNo = 2;
     }
     else if (a.id == "MainMenu_SDOF") {
+        // SDOF
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_SDOF").style.display   = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  SDOF";
@@ -126,12 +132,28 @@ async function AnalysisMenu_Selection(a) {
         PageNo = 3;
     }
     else if (a.id == "MainMenu_ResSpec") {
+        // Response Spectrum
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_ResSpec").style.display = "flex";
         document.getElementById("Parameters_ResSpec2").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Response Spec";
         
         PageNo = 4;
+    }
+    else if (a.id == "MainMenu_Spectrum") {
+        // Spectrum
+        document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Spectrum";
+        
+        PageNo = 5;
+    }
+    else if (a.id == "MainMenu_SM_Parameters") {
+        // SM Parameters
+        document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById("Parameters_SM_Par").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  SM Paremeters";
+        
+        PageNo = 6;
     }
     else if ((a.id == "MainMenu_Settings") || (a.id == "Header_Settings")) {
         document.getElementById("Parameters_Newmark").style.display = "flex";
@@ -151,6 +173,8 @@ async function Anlysis_Button() {
     else if ( PageNo == 2) { await Channel_Integral();          } // Integral Page
     else if ( PageNo == 3) { await Channel_SDOF();              } // SDOF Page
     else if ( PageNo == 4) { await Channel_ResponseSpectrum();  } // Response Spectrum Page
+    else if ( PageNo == 5) { await Channel_Spectrum();          } // Spectrum Page
+    else if ( PageNo == 6) { await Channel_Parameters();        } // Strong Motion Parameters
 }
 //-----------------------------------------------------------------------------------------------
 function Channel_Click(checkbox) {

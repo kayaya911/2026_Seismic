@@ -3,6 +3,119 @@
 
 
 //-----------------------------------------------------------------------------------------------
+function Arias(data, delt, g) {
+    // Computes the Arias Intensity as defined by Arias (1970).
+    // The unit of Arias Intensity is m/s, provided that data[] has units of m/s².
+    //
+    // Parameters:
+    //   data : 1D array of acceleration values (m/s²)
+    //   delt : Sampling interval in seconds (default: 1)
+    //      g : Gravitational acceleration in m/s² (default: 9.80665)
+    //
+    // Returns:
+    //   Array [AI, AI_MaxVal, T1, T2, Td] where:
+    //     AI        : Cumulative Arias Intensity array (m/s)
+    //     AI_MaxVal : Maximum (final) value of the Arias Intensity
+    //     T1        : Time at which 5% of AI_MaxVal is exceeded (s)
+    //     T2        : Time at which 95% of AI_MaxVal is exceeded (s)
+    //     Ts        : Significant duration T2 - T1 (s)
+    //
+    // Examples:
+    //   Arias(acc, 0.01)           → [AI, AI_MaxVal, T1, T2, Td]  (g = 9.80665)
+    //   Arias(acc, 0.01, 9.80665)  → [AI, AI_MaxVal, T1, T2, Td]
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 22.Apr.2026
+
+    // Check default values of input arguments
+    if (delt == null) { delt = 1;       }
+    if (   g == null) {    g = 9.80665; }
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (delt <= 0)            { throw new Error("delt (time interval) cannot be equal or less than zero."); }
+    if (!Array.isArray(data)) { throw new Error("data[] must be an array."); }
+
+    // Calculate Arias Intensity
+    const AI        = Multiply(Cumtrapz(Pow(data, 2), delt), (Math.PI / 2 / g));
+    const AI_MaxVal = Max(AI).val;
+
+    const A1 = 0.05 * AI_MaxVal;
+    const A2 = 0.95 * AI_MaxVal;
+
+    let flag1 = true;
+    let flag2 = false;
+    let T1    = 0;
+    let T2    = 0;
+
+    for (let i = 0; i < AI.length; i++) {
+        const v = AI[i];
+        if (flag1 && v >= A1) { T1 = i * delt; T2 = T1; flag1 = false;  flag2 = true;  }
+        if (flag2 && v >= A2) { T2 = i * delt;                          flag2 = false; }
+        if (!flag1 && !flag2) { break; } // Both thresholds found — exit early
+    }
+
+    const Ts = T2 - T1;
+
+    return [AI, AI_MaxVal, T1, T2, Ts];
+}
+//-----------------------------------------------------------------------------------------------
+function BracketedDuration(data, delt, th) {
+
+    // Computes the bracketed duration of an acceleration (or general) time series,
+    // defined as the time between the first and last exceedance of a threshold |th|.
+    //
+    // Parameters:
+    //   data : 1D array of values (e.g. acceleration)
+    //   delt : Sampling interval in seconds (default: 0.01)
+    //     th : Threshold level (same units as data; default: 0.05)
+    //          Exceedance is tested on |data[i]|, so th should be positive.
+    //
+    // Returns: [T1, T2, Td]
+    //   T1 : Time of the first exceedance of |th| (s)
+    //   T2 : Time of the last  exceedance of |th| (s)
+    //   Td : Bracketed duration T2 − T1 (s)
+    //        Returns 0 if the threshold is never exceeded.
+    //
+    // Examples:
+    //   BracketedDuration(acc, 0.01, 0.05)   → [T1, T2, Td]  (th = 0.05 g)
+    //   BracketedDuration(acc, 0.005, 0.10)  → [T1, T2, Td]  (th = 0.10 g)
+    //
+    // Reference:
+    //   Bolt, B.A. (1969). Duration of strong ground motion.
+    //   Proc. 4th World Conf. Earthquake Eng., Santiago, Chile.
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 22.Apr.2026
+
+    // Check default values of input arguments
+    if (delt == null) { delt = 0.01; }
+    if (th   == null) { th   = 0.05; }
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (!Array.isArray(data)) { throw new Error("data[] must be an array.");                                }
+    if (delt <= 0)            { throw new Error("delt (time interval) cannot be equal or less than zero."); }
+    if (th   <= 0)            { throw new Error("th (threshold) must be greater than zero.");               }
+
+    let T1 = 0;
+    let T2 = 0;
+
+    // Forward scan — find T1 (first exceedance)
+    let found = false;
+    for (let i = 0; i < data.length; i++) {
+        if (Math.abs(data[i]) >= th) { T1 = i * delt; found = true; break; }
+    }
+
+    // Reverse scan — find T2 (last exceedance)
+    if (found) {
+        for (let i = data.length - 1; i >= 0; i--) {
+            if (Math.abs(data[i]) >= th) { T2 = i * delt; break; }
+        }
+    }
+
+    const Td = T2 - T1;
+    return [T1, T2, Td];
+}
+//-----------------------------------------------------------------------------------------------
 function Bessel_Analog_Prototype(n) {
     // BESSELAP  Bessel analog lowpass filter prototype.
     // [Z,P,K] = BESSELAP(N) returns the zeros, poles, and gain
@@ -824,6 +937,35 @@ function Butterworth_LowPass(N, fc, FSamp) {
     };
 }
 //-----------------------------------------------------------------------------------------------
+function Cav(Y, delt) {
+    // Computes the Cumulative Absolute Velocity (CAV) of an acceleration time series.
+    // CAV = ∫|a(t)| dt, evaluated via the trapezoidal rule over uniform spacing delt.
+    //
+    // Parameters:
+    //   Y    : 1D array of acceleration values
+    //   delt : Sampling interval in seconds (default: 1)
+    //
+    // Returns:
+    //   1D array of cumulative absolute velocity values, same length as Y.
+    //   The first element is always 0.
+    //
+    // Examples:
+    //   Cav([0.1, -0.3, 0.2, -0.4], 0.01)   → cumulative |a| integral at each time step
+    //   Cav(acc, 0.005)                     → CAV array with delt = 0.005 s
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 22.Apr.2026
+
+    // Check default values of input arguments
+    if (delt == null) { delt = 1; }
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (delt <= 0)         { throw new Error("delt (time interval) cannot be equal or less than zero."); }
+    if (!Array.isArray(Y)) { throw new Error("Y[] must be an array."); }
+
+    return Cumtrapz(Abs(Y), delt);
+}
+//-----------------------------------------------------------------------------------------------
 async function Channel_Filter() {
 
     // Apply digital filtering to selected channels with baseline correction and statistics
@@ -1579,6 +1721,145 @@ async function Channel_ResponseSpectrum() {
         } else {
             ProgressBar_Update( ResSpec_Par.AnalysisMethod_string + ' -- ' + (perc).toString() + '% completed!', 'black');
         }
+    }
+
+}
+//-----------------------------------------------------------------------------------------------
+async function Channel_Spectrum() {
+    console.log('Spectrum')
+
+}
+//-----------------------------------------------------------------------------------------------
+async function Channel_Parameters() {
+    console.log('SM Parameters')
+
+
+    // Disable CALCULATE Button during processing (if applicable)
+    // Prevents user from triggering multiple simultaneous Response Spectrum operations
+    document.getElementById("Run_Button").disabled = true;
+    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    ProgressBar_Update( 'Computing SM Parameters...', 'red');
+    await sleep(5);
+
+    // Declaration of variables 
+    let i, FiltPar, SM_Par, Ug;
+    let AI, AI_MaxVal, T1_ai, T2_ai, T1_bd, T2_bd, Ts, Td, CAV;
+
+
+    // Loop over each channel
+    for (i=0; i<ChannelList.length; i++) {
+
+        // STEP 1: Get Filter-Parameters and ResSpectrum-Parameters
+        FiltPar     = Filter_Parameters();
+        SM_Par      = Strong_Motion_Parameters();
+
+        // STEP 2: Skip this Channel if it is not selected for analysis
+        if (!ChannelList[i].Selected) {
+            // Update Graph
+            await Plotly_Graph_Update(i);
+            
+            // Update Userinterface
+            //UX_Update(i);
+            
+            continue; 
+        }
+
+        // STEP 3: Skip if not an acceleration channel
+        if (ChannelList[i].Type != 0) { 
+            // Update Graph
+            await Plotly_Graph_Update(i);
+            
+            // Update Userinterface
+            //UX_Update(i);
+            
+            continue;       
+        }
+
+        // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
+
+        // STEP 5: Skip this Channel if filter is unstable
+        if (FiltPar.ErrorMessage != undefined) { continue; }
+
+        // STEP 6: Get the rawdata
+        Ug = Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor);
+
+        // STEP 7: Apply Baseline correction and filtering 
+        Ug = BaselineAndFilter(Ug, FiltPar);
+
+        // STEP 8: Arias intensity
+        [AI, AI_MaxVal, T1_ai, T2_ai, Ts] = Arias(Ug, ChannelList[i].delt, 9.81);
+
+        // STEP 9: Bracketed Duration
+        [T1_bd, T2_bd, Td] = BracketedDuration(Ug, ChannelList[i].delt, 0.05);
+
+        // STEp 10: Cumulative Absolute Velocity
+        CAV = Cav(Ug, ChannelList[i].delt);
+
+        SM_Par.AI           = AI;
+        SM_Par.AI_MaxVal    = AI_MaxVal;
+        SM_Par.T1_ai        = T1_ai;
+        SM_Par.T2_ai        = T2_ai;
+        SM_Par.Ts           = Ts;
+
+        SM_Par.T1_bd        = T1_bd;
+        SM_Par.T2_bd        = T2_bd;
+        SM_Par.Td           = Td;
+
+        SM_Par.Cav          = CAV;
+
+
+        // STEP 11: Store Filter Parameters
+        SM_Par.FiltPar = FiltPar;
+
+        // STEP 12: Flag Successfully Completion
+        SM_Par.IsAnalysisCompleted = true;
+
+        // STEP 13: Store Results 
+        ChannelList[i].Results.SM_Parameters = SM_Par;
+
+        // STEP 15: Update select element in InfoTable
+        SM_Par_ResultsDisplay(i);
+
+        // STEP 16: Update InfoTable
+        Update_Units_infoTable_SM_Par(i);
+
+        // STEP 17: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        await Plotly_Graph_Update(i);
+
+        // STEP 18:
+        await sleep(5);
+
+        console.log(i)
+    }
+ 
+
+    // Enable CALCULATE Button
+    document.getElementById("Run_Button").disabled = false;
+    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+
+
+    // Helper functions
+    // Baseline correction and filtering 
+    function BaselineAndFilter(FilteredData, FiltPar) {
+        // Apply baseline Correction and Filtering 
+
+        // Apply Detrend if applicable
+        if (FiltPar.BaselineCorrection != 0) { 
+            if      (FiltPar.BaselineCorrection == 1) { FilteredData = Detrend(FilteredData, 0); } // Remove mean
+            else if (FiltPar.BaselineCorrection == 2) { FilteredData = Detrend(FilteredData, 1); } // Remove linear trend
+            else if (FiltPar.BaselineCorrection == 3) { FilteredData = Detrend(FilteredData, 2); } // Remove quadratic trend
+            else if (FiltPar.BaselineCorrection == 4) { FilteredData = Detrend(FilteredData, 3); } // Remove cubic trend
+        }
+
+        // Apply filter
+        if (FiltPar.FilterName !=0) {
+            if (FiltPar.ZeroPhase) { FilteredData = FiltFilt(FiltPar.b,   FiltPar.a,   FilteredData).y; } // Zero-phase filtering (Forward and backward)
+            else                   { FilteredData = Filter(  FiltPar.b,   FiltPar.a,   FilteredData).y; } // Single-pass filtering
+        }
+        // Return Filtered data 
+        return FilteredData;
+
     }
 
 }
@@ -4737,6 +5018,52 @@ function Hessenberg(data) {
     }
 }
 //-----------------------------------------------------------------------------------------------
+function HousnerSpectralIntensity(data, delt, ksi, T) {
+    // Computes the Housner Spectral Intensity as defined by Housner (1952).
+    // SI = (1/2.4) ∫[0.1, 2.5] SVp(T, ksi) dT
+    // where SVp is the pseudo-spectral velocity at damping ratio ksi.
+    // The integral is evaluated numerically via the trapezoidal rule (Trapz).
+    //
+    // Parameters:
+    //   data : 1D array of ground acceleration values (units consistent with desired output)
+    //   delt : Sampling interval of data in seconds (default: 0.01)
+    //   ksi  : Damping ratio, 0 ≤ ksi < 1 (default: 0.05, i.e. 5%)
+    //   T    : 1D array of natural periods in seconds over which to integrate (default: 0.1 to 2.5 s -- 50 period points)
+    //          A finer period grid improves quadrature accuracy.
+    //
+    // Returns:
+    //   Scalar: Housner Spectral Intensity (same length units as data × seconds)
+    //
+    // Examples:
+    //   SpecIntensity(acc, 0.01)               → SI at 5% damping, default T grid
+    //   SpecIntensity(acc, 0.01, 0.05)         → SI at 5% damping, default T grid
+    //   SpecIntensity(acc, 0.01, 0.05, T)      → SI at 5% damping, custom T grid
+    //
+    // Reference:
+    //   Housner, G.W. (1952). Spectrum intensities of strong-motion earthquakes.
+    //   Proc. Symp. Earthquake and Blast Effects on Structures, EERI, 20–36.
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 22.Apr.2026
+
+    // Check default values of input arguments
+    if (delt == null) { delt = 0.01; }
+    if (ksi  == null) { ksi  = 0.05; }
+    if (T    == null) { T    = LinSpace(0.1, 2.5, 50); }
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (delt <= 0)               { throw new Error("delt (time interval) cannot be equal or less than zero."); }
+    if ((ksi < 0) || (ksi >= 1)) { throw new Error("ksi (damping ratio) cannot be less than zero or greater than or equal to 1."); }
+    if (!Array.isArray(data))    { throw new Error("data[] must be an array."); }
+    if (!Array.isArray(T))       { throw new Error("T[] must be an array."); }
+
+    // Calculate Response Spectrum — only SPv (Pseudo-spectral velocity) is needed
+    const [, , , , , SPv]= SDOF_ResponseSpectrum(data, delt, ksi, T);
+
+    // Return Spectral Intensity: area under SV curve divided by the period range (2.4 s)
+    return Trapz(SPv, T) / 2.4;
+}
+//-----------------------------------------------------------------------------------------------
 function Poly(x) {
     // Compute polynomial coefficients from roots in x array
     // Converts an array of roots (real or complex) into polynomial coefficients
@@ -6547,6 +6874,13 @@ function SDOF_ResponseSpectrum(Ug, delt, ksi, T) {
     //        Total (absolute) acceleration = ü(t) + Ug(t)
     //   Sa : Spectral acceleration  — peak |acc(t)|      for each period in T (array)
     //        Relative acceleration ü(t) only (without Ug contribution)
+    //   SPa : Pseudo-spectral acceleration — SD · ω²            for each period in T (array)
+    //         SPa = SD · (2π/T)²  ≈ SA for lightly damped systems (ksi ≤ 0.20)
+    //         Differs from SA in that it does not account for the absolute acceleration
+    //         directly; it is derived purely from displacement via the pseudo relationship.
+    //   SPv : Pseudo-spectral velocity     — SD · ω             for each period in T (array)
+    //         SPv = SD · (2π/T)  ≈ SV for lightly damped systems (ksi ≤ 0.20)
+    //         Useful for estimating input energy and constructing tripartite spectra.
     //
     // Note:
     //   Energy arrays (Ek, Ed, Es, Ei) computed internally by SDOF_PieceWiseLin
@@ -6830,6 +7164,55 @@ function Statistics(data, SF) {
         RMS   :  Rms(Temp)              // Root mean square
     }
 
+}
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
+function Trapz(Y, delt) {
+    // Computes the approximate integral of Y via the trapezoidal rule.
+    // Supports two calling modes:
+    //   (1) Uniform spacing: delt is a scalar time step.
+    //       Uses the efficient formula: (Sum(Y) - (Y[0] + Y[n-1]) / 2) * delt
+    //   (2) Non-uniform spacing: delt is a 1D coordinate array (same length as Y).
+    //       Evaluates ∑ (Y[i-1] + Y[i]) / 2 * (delt[i] - delt[i-1])
+    //
+    // Parameters:
+    //   Y    : 1D array of values to integrate
+    //   delt : Scalar spacing (default: 1), or 1D array of coordinates (same length as Y)
+    //
+    // Returns:
+    //   Scalar: approximate integral of Y
+    //
+    // Examples:
+    //   Trapz([1, 2, 3, 4])                    → 7.5       (delt = 1)
+    //   Trapz([1, 2, 3, 4], 0.5)               → 3.75      (uniform delt = 0.5)
+    //   Trapz([1, 2, 3, 4], [0, 1, 2.5, 4])   → 9.25      (non-uniform coordinates)
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 22.Apr.2026
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (!Array.isArray(Y)) { throw new Error("Y[] must be an array."); }
+
+    if (Array.isArray(delt)) {
+        // Non-uniform spacing: delt[] is a 1D coordinate array
+        if (delt.length === 0)       { throw new Error("delt[] must not be empty."); }
+        if (Array.isArray(delt[0]))  { throw new Error("delt[] must be a 1D array."); }
+        if (Y.length !== delt.length){ throw new Error("Dimensions of Y[] and delt[] arrays are inconsistent."); }
+
+        let result = 0;
+        for (let i = 1; i < Y.length; i++) {
+            result += ((Y[i - 1] + Y[i]) / 2) * (delt[i] - delt[i - 1]);
+        }
+        return result;
+
+    } else {
+        // Uniform spacing: delt is a scalar
+        if (delt == null) { delt = 1; }
+        if (delt <= 0)    { throw new Error("delt (time interval) cannot be equal or less than zero."); }
+
+        const n = Y.length;
+        return (Sum(Y) - (Y[0] + Y[n - 1]) / 2) * delt;
+    }
 }
 //-----------------------------------------------------------------------------------------------
 function UnwrapPhase(phase) {
