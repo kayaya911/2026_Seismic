@@ -1731,8 +1731,6 @@ async function Channel_Spectrum() {
 }
 //-----------------------------------------------------------------------------------------------
 async function Channel_Parameters() {
-    console.log('SM Parameters')
-
 
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
@@ -1744,7 +1742,7 @@ async function Channel_Parameters() {
     // Declaration of variables 
     let i, FiltPar, SM_Par, Ug;
     let AI, AI_MaxVal, T1_ai, T2_ai, T1_bd, T2_bd, Ts, Td, CAV;
-
+    let Or_Data, temp, perc;
 
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) {
@@ -1787,13 +1785,17 @@ async function Channel_Parameters() {
         // STEP 7: Apply Baseline correction and filtering 
         Ug = BaselineAndFilter(Ug, FiltPar);
 
-        // STEP 8: Arias intensity
-        [AI, AI_MaxVal, T1_ai, T2_ai, Ts] = Arias(Ug, ChannelList[i].delt, 9.81);
+        // STEp 8: Convert constants to proper units        
+        Or_Data = TypeAndUnit(ChannelList[i].TypeAndUnits);              // data using Measurment-index
+        temp    = Convert_Units_Data([1],  1, Or_Data.Unit,   false);    // from m/s2 to Or_Data.Unit
 
-        // STEP 9: Bracketed Duration
-        [T1_bd, T2_bd, Td] = BracketedDuration(Ug, ChannelList[i].delt, 0.05);
+        // STEP 9: Arias intensity
+        [AI, AI_MaxVal, T1_ai, T2_ai, Ts] = Arias(Ug, ChannelList[i].delt, (9.81*temp.Data[0])  );
 
-        // STEp 10: Cumulative Absolute Velocity
+        // STEP 10: Bracketed Duration
+        [T1_bd, T2_bd, Td] = BracketedDuration(Ug, ChannelList[i].delt, (SM_Par.BracketedDuration*9.81*temp.Data[0]) );
+
+        // STEp 11: Cumulative Absolute Velocity
         CAV = Cav(Ug, ChannelList[i].delt);
 
         SM_Par.AI           = AI;
@@ -1806,16 +1808,16 @@ async function Channel_Parameters() {
         SM_Par.T2_bd        = T2_bd;
         SM_Par.Td           = Td;
 
-        SM_Par.Cav          = CAV;
+        SM_Par.CAV          = CAV;
 
 
-        // STEP 11: Store Filter Parameters
+        // STEP 12: Store Filter Parameters
         SM_Par.FiltPar = FiltPar;
 
-        // STEP 12: Flag Successfully Completion
+        // STEP 13: Flag Successfully Completion
         SM_Par.IsAnalysisCompleted = true;
 
-        // STEP 13: Store Results 
+        // STEP 14: Store Results 
         ChannelList[i].Results.SM_Parameters = SM_Par;
 
         // STEP 15: Update select element in InfoTable
@@ -1827,12 +1829,17 @@ async function Channel_Parameters() {
         // STEP 17: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 18:
-        await sleep(5);
+        // STEP 18: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
+        if (perc != 100) {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
+        }
 
-        console.log(i)
+        // STEP 19:
+        await sleep(5);
     }
- 
 
     // Enable CALCULATE Button
     document.getElementById("Run_Button").disabled = false;

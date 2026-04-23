@@ -942,13 +942,15 @@ function ResSpec_TMax_Change() {
 // Strong Motion Parameters ---------------------------------------------------------------------
 function Strong_Motion_Parameters() {
     
+    let BracketedDuration;
     
-    
+    BracketedDuration = Number(document.getElementById('BracketedDuration').value);
     
     // Return StromngMotion Parameters
     return {
         IsAnalysisCompleted     : false,
-        Cav                     : undefined,
+        BracketedDuration       : BracketedDuration,
+        CAV                     : undefined,
         AI                      : undefined,
         AI_MaxVal               : undefined,
         T1_a1                   : undefined,
@@ -1038,7 +1040,9 @@ async function SM_Par_AnalysisType() {
     // Update UI (Screen)
     for (i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i);  }
 }
-
+function SM_Par_BracketedDuration_Change() {
+    
+}
 
 
 

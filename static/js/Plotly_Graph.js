@@ -14,7 +14,7 @@ async function Plotly_Graph_Update(ChNum) {
     let traces, layout_update, res, res_RawData, timeData, res_FilteredData, FilterInfo;
     let Indx, Indx_Acc, Indx_Vel, Indx_Disp, yTitle;
     let IsFilter_CheckBox_Selected, IsFFT_CheckBox_Selected, DisplayData;
-    let plotCount, temp;
+    let plotCount, temp, temp1, Table, T1, T2;
     let res1=[], res2=[], res3=[], tD, LS1, LS2, LS3, LS4, LT1='', LT2='', LT3='', LT4='', tD1, tD2, tD3, tD4;
 
     let PlotArea_ID            = "PlotArea_ID_"        + ChannelList[ChNum].Unique_ID;
@@ -752,19 +752,72 @@ async function Plotly_Graph_Update(ChNum) {
 
         if (ChannelList[ChNum].Results.SM_Parameters.IsAnalysisCompleted) {
 
-
+            DisplayData = ChannelList[ChNum].Results.SM_Parameters.DisplayData;
             timeData    = ChannelList[ChNum].time;
 
+            if      (DisplayData == "AI"   ) { res  = Convert_Data_To_Graph_Unit_SM_Par(ChannelList[ChNum].Results.SM_Parameters.AI,    ChNum );   }
+            else if (DisplayData == "CAV"  ) { res  = Convert_Data_To_Graph_Unit_SM_Par(ChannelList[ChNum].Results.SM_Parameters.CAV,   ChNum );   }
+            
+            //
             traces[0].x           = timeData;
-            traces[0].y           = ChannelList[ChNum].Results.SM_Parameters.AI;
+            traces[0].y           = res.Data;
             traces[0].mode        = 'lines',
             traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
             traces[0].yaxis       = "y1",
             traces[0].visible     = true;
             traces[0].opacity     = 1.00;
             traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
-            traces[0].name        = '<b>Arias Intensity<b>';   // legend title
-            traces[0].showlegend  = true;               // Show legend
+            traces[0].name        = '<b>'+ res.leg +'<b>';   // legend title
+            traces[0].showlegend  = false;                   // Show legend
+
+            
+            if (DisplayData == "AI"   ) {
+                T1 = ChannelList[ChNum].Results.SM_Parameters.T1_ai;   
+                T2 = ChannelList[ChNum].Results.SM_Parameters.T2_ai;
+                
+                // T1
+                traces[1].x           = [T1, T1];
+                traces[1].y           = [0, res.Data.at(-1)];
+                traces[1].mode        = 'lines',
+                traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
+                traces[1].yaxis       = "y1",
+                traces[1].visible     = true;
+                traces[1].opacity     = 0.75;
+                traces[1].line        = {color: 'red', width: 1.00, dash: 'solid', dash: 'dash', };
+                traces[1].name        = '<b>T1='+T1.toFixed(2)+'s<b>';   // legend title
+                traces[1].showlegend  = true;                   // Show legend
+
+                // T2
+                traces[2].x           = [T2, T2];
+                traces[2].y           = [0, res.Data.at(-1)];
+                traces[2].mode        = 'lines',
+                traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
+                traces[2].yaxis       = "y1",
+                traces[2].visible     = true;
+                traces[2].opacity     = 0.75;
+                traces[2].line        = {color: 'red', width: 1.00, dash: 'solid', dash: 'dash', };
+                traces[2].name        = '<b>T2='+T2.toFixed(2)+'s<b>';   // legend title
+                traces[2].showlegend  = true;                   // Show legend
+            }
+
+            layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
+            layout_update.yaxis2.showticklabels = false;
+            layout_update.yaxis2.title.text     = "";
+
+            // Show Baseline-Row in InforBar
+            document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.SM_Parameters.FiltPar.BaselineCorrection_String;
+
+            // Show Filter_ID-Row in InfoBar
+            FilterInfo  = ChannelList[ChNum].Results.SM_Parameters.FiltPar.FilterName_String;
+            FilterInfo += "<br>" + ChannelList[ChNum].Results.SM_Parameters.FiltPar.FilterType_String;
+            FilterInfo += " " + ChannelList[ChNum].Results.SM_Parameters.FiltPar.FilterBand;
+            FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.SM_Parameters.FiltPar.ZeroPhase;
+            document.getElementById(FilterType_ID).innerHTML = FilterInfo;
+            
+            //
+            Table = document.getElementById('Plotly_Stat_Table_' + ChannelList[ChNum].Unique_ID);
+            Table.rows[3].cells[0].innerHTML = res.leg;
+            Table.rows[3].cells[1].innerHTML = res.T_duration;
 
         }
 
@@ -1270,13 +1323,15 @@ function Plotly_Clear_Graph(ChNum) {
         traces[i].yaxis       = "y1",
         traces[i].visible     = false;
         traces[i].opacity     = 0.35;
-        traces[i].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+        traces[i].line        = {color: 'blue', width: 1.50, dash: 'solid',dash: 'solid' };
         traces[i].name        = '<b>Raw Data<b>';   // legend title
         traces[i].showlegend  = false;              // Show legend
     }
 
     // Get the Infor Table 
     Table = document.getElementById('Plotly_Stat_Table_' + ChannelList[ChNum].Unique_ID);
+
+    Table.rows[3].cells[0].innerHTML = 'Residual';
 
     if (PageNo == 0) {
         // Load Data Page 
@@ -1376,7 +1431,7 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[0].style.display  = "none";       // Peak
         Table.rows[1].style.display  = "none";       // Mean
         Table.rows[2].style.display  = "none";       // RMS
-        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[3].style.display  = "table-row";  // Significant Duration or Bracketed Duration
         Table.rows[4].style.display  = "none";       // Analysis Method
         Table.rows[5].style.display  = "none";       // SDOF Display
         Table.rows[6].style.display  = "none";       // ResSpec Display
@@ -1385,8 +1440,9 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[9].style.display  = "table-row";  // Baseline 
         Table.rows[10].style.display = "table-row";  // Filter 
          
-        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
-        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        
     }
 
     // Update the graph

@@ -707,6 +707,48 @@ function Convert_Data_To_Graph_Unit_ResSpec(Data, ChNum) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
+function Convert_Data_To_Graph_Unit_SM_Par(Data, ChNum) {
+    
+    let Or_Data, LU, Ind, Indx, temp, ss, arr, leg, T_duration;
+
+    // SDOF-data using Measurment-index
+    Or_Data = TypeAndUnit(ChannelList[ChNum].Results.SM_Parameters.TypeAndUnits); 
+
+    // List of Units of the SDOF-data using Type-Number
+    LU = List_Units(Or_Data.Type, false);
+
+    // Indexnumber of User-sepecified Unit on the Plotly Graph
+    Ind = document.getElementById("Unit_Plot_ID_" + ChannelList[ChNum].Unique_ID).selectedIndex;
+
+    // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
+    temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+
+    if      (ChannelList[ChNum].Results.SM_Parameters.DisplayData == 'AI'  )   { Or_Data.Type_String = 'Arias Intensity';  leg = 'Significant Duration, s';  T_duration = ChannelList[ChNum].Results.SM_Parameters.Ts.toFixed(2); }
+    else if (ChannelList[ChNum].Results.SM_Parameters.DisplayData == 'CAV' )   { Or_Data.Type_String = 'CAV';              leg = 'Bracketed Duration, s';    T_duration = ChannelList[ChNum].Results.SM_Parameters.Td.toFixed(2); }
+
+    // Original statistical values are already scaled by Scale Factor of the channel 
+    // Therefore, we just need to conver the units.
+    if (ChannelList[ChNum].Results.SM_Parameters.IsAnalysisCompleted) {
+        ss    = Statistics(temp.Data);
+    } else {
+        ss = { Peak:'', Mean:'', RMS:'' };
+    }
+
+    //  temp
+    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']<b>';
+    temp.leg         = leg;
+    temp.T_duration  = T_duration;
+    temp.yTitle_FFT  = '<b>Magnitude<b>';
+    temp.y2Title     = '<b>Phase<b>';
+
+    temp.Peak        = ss.Peak;
+    temp.Mean        = ss.Mean;
+    temp.RMS         = ss.RMS;
+    
+    return temp;
+
+}
+//-------------------------------------------------------------------------------------------------------------
 function Update_Units_infoTable(i) {
 
     // retrun if no graph to plot
@@ -933,8 +975,8 @@ function Update_Units_infoTable_SM_Par(i) {
     
     if (II == -1) { return; }
 
-    if      (II == 0) { Units_SelectElement = Select_Element(List_Units(4).Units);   Type=1;    DisplayData='Vel';  } // Arias Intensity ( velocity unit)
-    else if (II == 1) { Units_SelectElement = Select_Element(List_Units(4).Units);   Type=1;    DisplayData='Vel';  } // CAV  ( velocity unit)
+    if      (II == 0) { Units_SelectElement = Select_Element(List_Units(4).Units);   Type=1;    DisplayData='AI';   } // Arias Intensity ( velocity unit)
+    else if (II == 1) { Units_SelectElement = Select_Element(List_Units(4).Units);   Type=1;    DisplayData='CAV';  } // CAV  ( velocity unit)
     
 
     // Assign select-element to cell-element in table
