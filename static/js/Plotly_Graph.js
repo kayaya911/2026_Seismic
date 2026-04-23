@@ -772,32 +772,20 @@ async function Plotly_Graph_Update(ChNum) {
 
             
             if (DisplayData == "AI"   ) {
+
                 T1 = ChannelList[ChNum].Results.SM_Parameters.T1_ai;   
                 T2 = ChannelList[ChNum].Results.SM_Parameters.T2_ai;
                 
-                // T1
-                traces[1].x           = [T1, T1];
-                traces[1].y           = [0, res.Data.at(-1)];
-                traces[1].mode        = 'lines',
-                traces[1].marker      = { color: 'red', size: 5, symbol: 'circle' },
-                traces[1].yaxis       = "y1",
-                traces[1].visible     = true;
-                traces[1].opacity     = 0.75;
-                traces[1].line        = {color: 'red', width: 1.00, dash: 'solid', dash: 'dash', };
-                traces[1].name        = '<b>T1='+T1.toFixed(2)+'s<b>';   // legend title
-                traces[1].showlegend  = true;                   // Show legend
+                // update shapes 
+                layout_update.shapes[0].x0 = T1;
+                layout_update.shapes[0].x1 = T1;
+                layout_update.shapes[0].y0 = 0;
+                layout_update.shapes[0].y1 = 1;
 
-                // T2
-                traces[2].x           = [T2, T2];
-                traces[2].y           = [0, res.Data.at(-1)];
-                traces[2].mode        = 'lines',
-                traces[2].marker      = { color: 'red', size: 5, symbol: 'circle' },
-                traces[2].yaxis       = "y1",
-                traces[2].visible     = true;
-                traces[2].opacity     = 0.75;
-                traces[2].line        = {color: 'red', width: 1.00, dash: 'solid', dash: 'dash', };
-                traces[2].name        = '<b>T2='+T2.toFixed(2)+'s<b>';   // legend title
-                traces[2].showlegend  = true;                   // Show legend
+                layout_update.shapes[1].x0 = T2;
+                layout_update.shapes[1].x1 = T2;
+                layout_update.shapes[1].y0 = 0;
+                layout_update.shapes[1].y1 = 1;
             }
 
             layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
@@ -963,7 +951,9 @@ async function Plotly_NewGraph(Div_ID, Channel) {
         legend          : { x: 0.99, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#f8f4f4', bordercolor: '#6c6a6a', borderwidth: 1.5, },
         autosize        : true,
         margin          : {t: 20, r:20, b:5, l:5},
-        shapes          : [],
+        shapes          : [ { type: 'line',  x0: 0, x1: 0,  y0: 0, y1: 0,  line: { color: 'red', width: 1.5, dash: 'dash' }, yref: 'paper', layer: 'below'},
+                            { type: 'line',  x0: 0, x1: 0,  y0: 0, y1: 0,  line: { color: 'red', width: 1.5, dash: 'dash' }, yref: 'paper', layer: 'below'},
+                        ],
     };
 
     config = {
@@ -1313,6 +1303,16 @@ function Plotly_Clear_Graph(ChNum) {
     layout_update = document.getElementById(PlotArea_ID).layout;
     layout_update.xaxis.autorange = true;
     layout_update.yaxis.autorange = true;
+
+    // Delete shapes
+    layout_update.shapes[0].x0 = 0;
+    layout_update.shapes[0].x1 = 0;
+    layout_update.shapes[0].y0 = 0;
+    layout_update.shapes[0].y1 = 0;
+    layout_update.shapes[1].x0 = 0;
+    layout_update.shapes[1].x1 = 0;
+    layout_update.shapes[1].y0 = 0;
+    layout_update.shapes[1].y1 = 0;
 
     // Delete all traces
     for (i=0; i<traces.length; i++) {
