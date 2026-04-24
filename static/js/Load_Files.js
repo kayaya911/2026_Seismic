@@ -3568,11 +3568,14 @@ async function DonwloadExcel_LoadDataPage() {
 
         }
         else if (PageNo == 6) {
+
+            temp = TypeAndUnit(ChannelList[i].TypeAndUnits)
+
             // Populate Time-RawData-AriasIntensity-CAV to WorkSheet
             header = [  "Time (s)",
                         "Raw Data (" + ChannelList[i].UnitString + ")",
-                        "Arias Intensity (" + ChannelList[i].UnitString + ")",
-                        "CAV (" + ChannelList[i].UnitString + ")",
+                        "Arias Intensity (" + temp.IntegrationUnits.FirstIntegral.Unit_String + ")",
+                        "CAV (" + temp.IntegrationUnits.FirstIntegral.Unit_String + ")",
                     ];
             data =  [   ChannelList[i].time,  
                         Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor),
@@ -3586,15 +3589,15 @@ async function DonwloadExcel_LoadDataPage() {
             data = "";
             AddDataToWorkSheet(WorkSheet, header, "F1", data, "G1");
 
-            header = [  ["Peak Ground Acceleration ("],
-                        ["Root Mean Square ("],
-                        ["Maximum Arias Intensity ("],
+            header = [  ["Peak Ground Acceleration (" + ChannelList[i].UnitString + ")" ],
+                        ["Root Mean Square ("         + ChannelList[i].UnitString + ")" ],
+                        ["Maximum Arias Intensity (" + temp.IntegrationUnits.FirstIntegral.Unit_String + ")" ],
                         ["Significant Duration (s)"],
                         ["Bracketed Duration (s)"],
-                        ["Effective pseudo-spectral acceleration ("],
-                        ["Effective pseudo-spectral velocity ("],
-                        ["Housner Spectral Intensity ("],
-                        ["Katayama Spectral Intensity ("],
+                        ["Effective pseudo-spectral acceleration (" + ChannelList[i].UnitString + ")" ],
+                        ["Effective pseudo-spectral velocity ("     + temp.IntegrationUnits.FirstIntegral.Unit_String  + ")" ],
+                        ["Housner Spectral Intensity ("             + temp.IntegrationUnits.FirstIntegral.Unit_String + ")" ],
+                        ["Katayama Spectral Intensity ("            + temp.IntegrationUnits.FirstIntegral.Unit_String + ")" ],
                     ];   
 
             data   = [ [ChannelList[i].Peak.toPrecision(2)],
@@ -3637,7 +3640,7 @@ async function DonwloadExcel_LoadDataPage() {
                 { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2:  Arias Intensity
                 { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  CAV
                 { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  Empty
-                { width: 40, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Key
+                { width: 45, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Key
                 { width: 20, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Value
             ];
 
