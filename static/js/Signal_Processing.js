@@ -1741,7 +1741,7 @@ async function Channel_Parameters() {
 
     // Declaration of variables 
     let i, FiltPar, SM_Par, Ug;
-    let AI, AI_MaxVal, T1_ai, T2_ai, T1_bd, T2_bd, Ts, Td, CAV;
+    let AI, AI_MaxVal, T1_ai, T2_ai, T1_bd, T2_bd, Ts, Td, CAV, SPa, SPv, SPv2, T;
     let Or_Data, temp, perc;
 
     // Loop over each channel
@@ -1785,9 +1785,9 @@ async function Channel_Parameters() {
         // STEP 7: Apply Baseline correction and filtering 
         Ug = BaselineAndFilter(Ug, FiltPar);
 
-        // STEp 8: Convert constants to proper units        
+        // STEP 8: Convert constants to proper units        
         Or_Data = TypeAndUnit(ChannelList[i].TypeAndUnits);              // data using Measurment-index
-        temp    = Convert_Units_Data([1],  1, Or_Data.Unit,   false);    // from m/s2 to Or_Data.Unit
+        temp    = Convert_Units_Data([1],  1,  Or_Data.Unit,  false);    // from m/s2 to Or_Data.Unit
 
         // STEP 9: Arias intensity
         [AI, AI_MaxVal, T1_ai, T2_ai, Ts] = Arias(Ug, ChannelList[i].delt, (9.81*temp.Data[0])  );
@@ -1795,41 +1795,49 @@ async function Channel_Parameters() {
         // STEP 10: Bracketed Duration
         [T1_bd, T2_bd, Td] = BracketedDuration(Ug, ChannelList[i].delt, (SM_Par.BracketedDuration*9.81*temp.Data[0]) );
 
-        // STEp 11: Cumulative Absolute Velocity
+        // STEP 11: Cumulative Absolute Velocity
         CAV = Cav(Ug, ChannelList[i].delt);
 
+        // STEP 12: Effective Peak Acceleration  
+        T = Concat(Concat(LinSpace(0.1, 0.5, 20), LinSpace(0.5, 2.0, 20)), LinSpace(2.0, 2.5, 8));  // T spans from 0.1 second to 2.5 seconds
+        T = [...new Set(T)];                                                                        // Temoves duplicates due to multiple concatenation 
+        [, , , , SPa, SPv ] = SDOF_ResponseSpectrum(Ug, ChannelList[i].delt,   0.05,   T);           // Computes Response spectrum over period rang from 0.1 to 2.5 seconds with 5% damping 
+        [, , , , ,    SPv2] = SDOF_ResponseSpectrum(Ug, ChannelList[i].delt,   0.20,   T);           // Computes Response spectrum over period rang from 0.1 to 2.5 seconds with 20% damping 
+
+        // STEP 13: Collect computed SM parameters
         SM_Par.AI           = AI;
         SM_Par.AI_MaxVal    = AI_MaxVal;
         SM_Par.T1_ai        = T1_ai;
         SM_Par.T2_ai        = T2_ai;
         SM_Par.Ts           = Ts;
-
         SM_Par.T1_bd        = T1_bd;
         SM_Par.T2_bd        = T2_bd;
         SM_Par.Td           = Td;
-
         SM_Par.CAV          = CAV;
+        SM_Par.EPa          = Mean(SPa.slice( 0, 20)) / 2.50;   // average pseudo-spectral acceleration over the period range of 0.1 to 0.5 seconds divided by the 2.5 ---- 5% damping
+        SM_Par.EPv          = Mean(SPv.slice(19, 39)) / 2.50;   // average pseudo-spectral velocity over the period range of 0.5 to 2.0 seconds divided by the 2.5  ---- 5% damping
+        SM_Par.HSI          = Trapz(SPv,  T) / 2.4;             // Housner Spectral Intensity as the area under SPv curve divided by the period range (2.4 s)
+        SM_Par.kSI          = Trapz(SPv2, T) / 2.4;             // Katayama Spectral Intensity as the area under SPv2 curve divided by the period range (2.4 s)
 
-
-        // STEP 12: Store Filter Parameters
+        // STEP 14: Store Filter Parameters
         SM_Par.FiltPar = FiltPar;
 
-        // STEP 13: Flag Successfully Completion
+        // STEP 15: Flag Successfully Completion
         SM_Par.IsAnalysisCompleted = true;
 
-        // STEP 14: Store Results 
+        // STEP 16: Store Results 
         ChannelList[i].Results.SM_Parameters = SM_Par;
 
-        // STEP 15: Update select element in InfoTable
+        // STEP 17: Update select element in InfoTable
         SM_Par_ResultsDisplay(i);
 
-        // STEP 16: Update InfoTable
+        // STEP 18: Update InfoTable
         Update_Units_infoTable_SM_Par(i);
 
-        // STEP 17: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        // STEP 19: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         await Plotly_Graph_Update(i);
 
-        // STEP 18: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        // STEP 20: Update Visualization - Refresh Plotly graph to show Integrated waveforms
         perc = ((i+1)/ChannelList.length*100).toFixed(0); 
         if (perc != 100) {
             ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
@@ -1837,7 +1845,7 @@ async function Channel_Parameters() {
             ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
         }
 
-        // STEP 19:
+        // STEP 21:
         await sleep(5);
     }
 
@@ -5067,7 +5075,7 @@ function HousnerSpectralIntensity(data, delt, ksi, T) {
     // Calculate Response Spectrum — only SPv (Pseudo-spectral velocity) is needed
     const [, , , , , SPv]= SDOF_ResponseSpectrum(data, delt, ksi, T);
 
-    // Return Spectral Intensity: area under SV curve divided by the period range (2.4 s)
+    // Return Housner Spectral Intensity: area under SPv curve divided by the period range (2.4 s)
     return Trapz(SPv, T) / 2.4;
 }
 //-----------------------------------------------------------------------------------------------

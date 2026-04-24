@@ -959,6 +959,10 @@ function Strong_Motion_Parameters() {
         T1_bd                   : undefined,
         T2_bd                   : undefined,
         Td                      : undefined,
+        EPa                     : undefined,
+        EPv                     : undefined,
+        HSI                     : undefined,
+        kSI                     : undefined,
         TypeAndUnits            : undefined,
         DisplayData             : undefined,
     }
