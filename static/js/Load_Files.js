@@ -3564,7 +3564,91 @@ async function DonwloadExcel_LoadDataPage() {
             CEA1 = ShiftExcellAddress(CEA1, 0, -5);      WorkSheet[CEA1].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
 
         }
-        
+        else if (PageNo == 5) { 
+
+        }
+        else if (PageNo == 6) {
+            // Populate Time-RawData-AriasIntensity-CAV to WorkSheet
+            header = [  "Time (s)",
+                        "Raw Data (" + ChannelList[i].UnitString + ")",
+                        "Arias Intensity (" + ChannelList[i].UnitString + ")",
+                        "CAV (" + ChannelList[i].UnitString + ")",
+                    ];
+            data =  [   ChannelList[i].time,  
+                        Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor),
+                        ChannelList[i].Results.SM_Parameters.AI,
+                        ChannelList[i].Results.SM_Parameters.CAV,
+                    ];
+            AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
+
+            // Populate SM Parameters to WorkSheet
+            header = [["Strong Motion Parameters"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, "F1", data, "G1");
+
+            header = [  ["Peak Ground Acceleration ("],
+                        ["Root Mean Square ("],
+                        ["Maximum Arias Intensity ("],
+                        ["Significant Duration (s)"],
+                        ["Bracketed Duration (s)"],
+                        ["Effective pseudo-spectral acceleration ("],
+                        ["Effective pseudo-spectral velocity ("],
+                        ["Housner Spectral Intensity ("],
+                        ["Katayama Spectral Intensity ("],
+                    ];   
+
+            data   = [ [ChannelList[i].Peak.toPrecision(2)],
+                       [ChannelList[i].RMS.toPrecision(2)],
+                       [ChannelList[i].Results.SM_Parameters.AI_MaxVal.toPrecision(2)], 
+                       [ChannelList[i].Results.SM_Parameters.Ts.toPrecision(2)],  
+                       [ChannelList[i].Results.SM_Parameters.Td.toPrecision(2)],
+                       [ChannelList[i].Results.SM_Parameters.EPa.toPrecision(2)],
+                       [ChannelList[i].Results.SM_Parameters.EPv.toPrecision(2)],
+                       [ChannelList[i].Results.SM_Parameters.HSI.toPrecision(2)],
+                       [ChannelList[i].Results.SM_Parameters.kSI.toPrecision(2)],
+                    ];
+            AddDataToWorkSheet(WorkSheet, header, "F2", data, "G2");
+
+            // Populate Filter Settings to WorkSheet
+            header = [["Filter Settings"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, "F12", data, "G12");
+
+            header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
+            data = [[ChannelList[i].Results.SM_Parameters.FiltPar.BaselineCorrection_String],
+                    [ChannelList[i].Results.SM_Parameters.FiltPar.FilterName_String],
+                    [ChannelList[i].Results.SM_Parameters.FiltPar.FilterType_String],
+                    [ChannelList[i].Results.SM_Parameters.FiltPar.FilterOrder],
+                    [ChannelList[i].Results.SM_Parameters.FiltPar.FilterBand],
+                    [ChannelList[i].Results.SM_Parameters.FiltPar.ZeroPhase],
+                    [ChannelList[i].Results.SM_Parameters.FiltPar.IsStable],
+                ];
+            AddDataToWorkSheet(WorkSheet, header, "F13", data, "G13");
+
+            // Populate Filter Coefficients to WorkSheet
+            header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
+            data = [ChannelList[i].Results.SM_Parameters.FiltPar.a, ChannelList[i].Results.SM_Parameters.FiltPar.b];
+            AddDataToWorkSheet(WorkSheet, header, "F21", data, "G21");
+
+            // All column formatting
+            columnConfig = [
+                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 0:  Time (s)
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 1:  Raw Data 
+                { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2:  Arias Intensity
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  CAV
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  Empty
+                { width: 40, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Key
+                { width: 20, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Value
+            ];
+
+            range = XLSX.utils.decode_range(WorkSheet['!ref']);
+            ColumnStyle(WorkSheet, range, columnConfig);
+
+            WorkSheet["F12"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["F21"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["F22"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+        }
+
         // Add the workSheet to WorkBook
         XLSX.utils.book_append_sheet(WorkBook, WorkSheet, (i+1).toString());
         

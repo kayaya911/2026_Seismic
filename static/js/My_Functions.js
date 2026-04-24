@@ -794,8 +794,9 @@ async function Toggle_Sidebar_Checkbox_For_PlotGraph(chb) {
     }
     
     // Update infoTable if PageNo==3
-    if (PageNo == 3 ) { SDOF_ResultsDisplay(ChNum);    Update_Units_infoTable(ChNum); }
+    if (PageNo == 3 ) { SDOF_ResultsDisplay(ChNum);    Update_Units_infoTable(ChNum);         }
     if (PageNo == 4 ) { ResSpec_ResultsDisplay(ChNum); Update_Units_infoTable_ResSpec(ChNum); }
+    if (PageNo == 6 ) { SM_Par_ResultsDisplay(ChNum);  Update_Units_infoTable_SM_Par(ChNum);  }
 
     // Update Graph
     Plotly_Graph_Update(ChNum);

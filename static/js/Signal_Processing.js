@@ -1757,7 +1757,7 @@ async function Channel_Parameters() {
             await Plotly_Graph_Update(i);
             
             // Update Userinterface
-            //UX_Update(i);
+            UX_Update(i);
             
             continue; 
         }
@@ -1768,7 +1768,7 @@ async function Channel_Parameters() {
             await Plotly_Graph_Update(i);
             
             // Update Userinterface
-            //UX_Update(i);
+            UX_Update(i);
             
             continue;       
         }
@@ -1799,8 +1799,8 @@ async function Channel_Parameters() {
         CAV = Cav(Ug, ChannelList[i].delt);
 
         // STEP 12: Effective Peak Acceleration  
-        T = Concat(Concat(LinSpace(0.1, 0.5, 20), LinSpace(0.5, 2.0, 20)), LinSpace(2.0, 2.5, 8));  // T spans from 0.1 second to 2.5 seconds
-        T = [...new Set(T)];                                                                        // Temoves duplicates due to multiple concatenation 
+        T = Concat(Concat(LinSpace(0.1, 0.5, 20), LinSpace(0.5, 2.0, 20)), LinSpace(2.0, 2.5, 8));   // T spans from 0.1 second to 2.5 seconds
+        T = [...new Set(T)];                                                                         // Temoves duplicates due to multiple concatenation 
         [, , , , SPa, SPv ] = SDOF_ResponseSpectrum(Ug, ChannelList[i].delt,   0.05,   T);           // Computes Response spectrum over period rang from 0.1 to 2.5 seconds with 5% damping 
         [, , , , ,    SPv2] = SDOF_ResponseSpectrum(Ug, ChannelList[i].delt,   0.20,   T);           // Computes Response spectrum over period rang from 0.1 to 2.5 seconds with 20% damping 
 
@@ -1838,12 +1838,7 @@ async function Channel_Parameters() {
         await Plotly_Graph_Update(i);
 
         // STEP 20: Update Visualization - Refresh Plotly graph to show Integrated waveforms
-        perc = ((i+1)/ChannelList.length*100).toFixed(0); 
-        if (perc != 100) {
-            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
-        } else {
-            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
-        }
+        UX_Update(i);
 
         // STEP 21:
         await sleep(5);
@@ -1875,6 +1870,18 @@ async function Channel_Parameters() {
         // Return Filtered data 
         return FilteredData;
 
+    }
+    async function UX_Update(i) {
+        
+        let perc;
+
+        perc = ((i+1)/ChannelList.length*100).toFixed(0);
+
+        if (perc != 100) {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
+        }
     }
 
 }
