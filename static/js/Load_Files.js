@@ -2479,6 +2479,9 @@ async function DonwloadExcel_LoadDataPage() {
         WorkSheet = StartNewWorkSheet();
       
         if (PageNo == 0) {
+            // File name 
+            FileName = "SDA_Results_Rawdata.xlsx";
+
             // Populate Time-RawData-FilteredData to WorkSheet
             header = ["Time (s)", "Raw Data (" + ChannelList[i].UnitString + ")"];
             data = Transpose([ChannelList[i].time,  Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor)]);
@@ -2503,6 +2506,8 @@ async function DonwloadExcel_LoadDataPage() {
 
         }
         else if (PageNo == 1) {
+            // File name 
+            FileName = "SDA_Results_Filter.xlsx";
 
             // Populate Time-RawData-FilteredData to WorkSheet
             header = [["Time (s)", "Raw Data (" + ChannelList[i].UnitString + ")", "Filtered Data (" + ChannelList[i].UnitString + ")"]];
@@ -2587,6 +2592,8 @@ async function DonwloadExcel_LoadDataPage() {
 
         }
         else if (PageNo == 2) {
+            // File name 
+            FileName = "SDA_Results_Integral.xlsx";
 
             // Integral Units
             temp = TypeAndUnit(ChannelList[i].TypeAndUnits);
@@ -2677,6 +2684,8 @@ async function DonwloadExcel_LoadDataPage() {
 
         }
         else if (PageNo == 3) {
+            // File name 
+            FileName = "SDA_Results_SDOF.xlsx";
 
             // Skip if this channels has no SDOF results
             if (ChannelList[i].Results.SDOF                     == []    ) { continue; }
@@ -3407,6 +3416,8 @@ async function DonwloadExcel_LoadDataPage() {
 
         }
         else if (PageNo == 4) {
+            // File name 
+            FileName = "SDA_Results_ResponseSpectrum.xlsx";
 
             Indx = ChannelList[i].Results.ResSpec.AnalysisMethod;
 
@@ -3565,9 +3576,12 @@ async function DonwloadExcel_LoadDataPage() {
 
         }
         else if (PageNo == 5) { 
-
+            // File name 
+            FileName = "SDA_Results_Spectrum.xlsx";
         }
         else if (PageNo == 6) {
+            // File name 
+            FileName = "SDA_Results_SM_Parameters.xlsx";
 
             temp = TypeAndUnit(ChannelList[i].TypeAndUnits)
 
