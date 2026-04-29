@@ -437,7 +437,7 @@
                         </div>
 
                         <!-- Strong Motion Parameters -->
-                         <div class="Parameters" id="Parameters_SM_Par">
+                        <div class="Parameters" id="Parameters_SM_Par">
                             <label><b>Strong Motion Parameters</b></label>
                             <br>
                             <table class="table-sm Parameters-Table" id="SM_Par_Parameters_Table">
@@ -457,7 +457,58 @@
                                     </tr>
                                 </tbody>
                             </table>
-                         </div>
+                        </div>
+
+                        <!-- Spectrum Parameters -->
+                        <div class="Parameters" id="Parameters_Spectrum">
+                            <table class="table-sm Parameters-Table" id="Spectrum_Parameters_Table">
+                                <tbody class="table-group-divider overflow-y-scroll">
+                                    
+                                    <tr>
+                                        <td>
+                                            Select to display
+                                        </td>
+                                        <td>
+                                            <select class="form-custom" id="Spectrum_SelectToDisplay" onchange="Spectrum_SelectToDisplay()">
+                                                <option value=""></option>
+                                                <option value="">Fourier Amplitude Spectrum</option>
+                                                <option value="">Power Spectrum</option>
+                                                <option value="">Spectral Density Spectrum</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td> <b>Spectral Density Spectrum Parameters</b> </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td>Number of Window Segments</td>
+                                        <td><input title="Number of Window Segments" id="NumberOfWindowSegments" type="number" onfocus="this.oldValue = this.value;" onchange="Spectrum_NumberOfWindowsSegment_Change(this)" value="8" step="1"/></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Overlap Ratio</td>
+                                        <td><input title="Overlap Ratio" id="OverlapRatio" type="number" onfocus="this.oldValue = this.value;" onchange="Spectrum_OverlapRatio_Change(this)" value="0.25" step="0.01"/></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            Smoothing Window Type
+                                        </td>
+                                        <td>
+                                            <select class="form-custom" id="Spectrum_SmoothingWindow" onchange="Spectrum_SmoothingWindow()">
+                                                <option value="">Hamming</option>
+                                                <option value="">Rectangular</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+
+
 
                         <!-- SETTINGS -->
                         <!-- Newmark Integration Settings -->

@@ -2,6 +2,79 @@
 "use strict";
 
 
+function Blackman(M) {
+    // Returns a Blackman Window of M-pont
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (M <= 0) {throw new Error("Number of points in window cannot be equal or less than zero.");}
+
+    var i, a, h;
+
+    if (M==1) {return new Array(M).fill(1);}
+
+    h = new Array(M).fill(0);
+    for (i = 0; i < M; i++) {
+        a = 2 * Math.PI * i / (M - 1);
+
+        h[i] = 0.42 - 0.5 * Math.cos(a) + 0.08 * Math.cos(2 * a);
+    }
+    h[0] = 0;
+    h[M - 1] = 0;
+    return h;
+}
+
+function GaussWin(M, alpha) {
+    // Returns a Gaussian Window of M-point
+    // alpha is width factor, and it is specified as a positive real scalar.
+    // alpha is inversely proportional to the width of the window
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (M <= 0)    {throw new Error("Number of points in window cannot be equal or less than zero.");}
+    if (alpha < 0) {throw new Error("alpha cannot be less than zero.");}
+
+    var sigma, v;
+
+    sigma =  (M - 1) / 2 / alpha;
+    v     = -(M - 1) / 2 - 1;
+
+    return new Array(M).fill().map(() => {v++; return Math.exp(-Math.pow(v, 2) / 2 / sigma / sigma); } );
+}
+
+function Hamming(M) {
+    // Returns a Hamming Window of M-point
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (M <= 0) {throw new Error("Number of points in window cannot be equal or less than zero.");}
+
+    return new Array(M).fill().map((v,i) => 0.54 - 0.46 * Math.cos(2 * Math.PI * i / (M - 1)) );
+}
+
+function Hann(M) {
+    // Returns a hanning Window of M-point
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (M <= 0) {throw new Error("Number of points in window cannot be equal or less than zero.");}
+
+    return new Array(M).fill().map((v,i) => 0.5 * (1 - Math.cos(2 * Math.PI * i / (M - 1))) );
+}
+
+function Triang(M) {
+    // Returns a triangular Window of M-point
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (M <= 0) {throw new Error("Number of points in window cannot be equal or less than zero.");}
+
+    return new Array(M).fill().map((v,i) =>  1 - Math.abs(2 * (i - 0.5 * (M - 1)) / (M + 1)) );
+}
+
+function Rectwin(M) {
+    // Reruns a Rectangular window of M-point
+    return new Array(M).fill(1);
+}
+
+
+
+
 //-----------------------------------------------------------------------------------------------
 function Arias(data, delt, g) {
     // Computes the Arias Intensity as defined by Arias (1970).
@@ -1588,7 +1661,7 @@ async function Channel_ResponseSpectrum() {
                 Sa.unshift(0);
                 SV.unshift(0);
                 SD.unshift(0);
-                SPa.unshift(0);
+                SPa.unshift(Max(Abs(Ug)).val);
                 SPv.unshift(0);
 
                 // Store results for each ksi value 
@@ -1726,8 +1799,143 @@ async function Channel_ResponseSpectrum() {
 }
 //-----------------------------------------------------------------------------------------------
 async function Channel_Spectrum() {
-    console.log('Spectrum')
+    
+     // Disable CALCULATE Button during processing (if applicable)
+    // Prevents user from triggering multiple simultaneous Response Spectrum operations
+    document.getElementById("Run_Button").disabled = true;
+    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    ProgressBar_Update( 'Computing Spectrum...', 'red');
+    await sleep(5);
 
+    // Declaration of variables 
+    let i, FiltPar, SpectrumPar, Ug;
+    let Mag_fft, Angle_fft, PSD, f;
+    let RWL, OVS, NFFT, WinOption, OneSided;
+
+    for (i=0; i<ChannelList.length; i++) {
+
+        // STEP 1: Get Filter-Parameters and ResSpectrum-Parameters
+        FiltPar     = Filter_Parameters();
+        SpectrumPar = Spectrum_Parameters();
+
+        // STEP 2: Skip this Channel if it is not selected for analysis
+        if (!ChannelList[i].Selected) {
+            // Update Graph
+            await Plotly_Graph_Update(i);
+            
+            // Update Userinterface
+            //UX_Update(i);
+            
+            continue; 
+        }
+
+        // STEP 3: Skip if not an acceleration channel
+        if (ChannelList[i].Type != 0) { 
+            // Update Graph
+            await Plotly_Graph_Update(i);
+            
+            // Update Userinterface
+            //UX_Update(i);
+            
+            continue;       
+        }
+
+        // STEP 4: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        FiltPar = Filter_Is_Stable(ChannelList[i], FiltPar);
+
+        // STEP 5: Skip this Channel if filter is unstable
+        if (FiltPar.ErrorMessage != undefined) { continue; }
+
+        // STEP 6: Get the rawdata
+        Ug = Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor);
+
+        // STEP 7: Apply Baseline correction and filtering 
+        Ug = BaselineAndFilter(Ug, FiltPar);
+
+        // STEP 8: FFT of Ug
+        [Mag_fft, Angle_fft, f] = FourierSpec(Ug,  ChannelList[i].FSamp);
+
+        // STEP 9: Power Spectral Density
+        RWL       = Math.max(2, Math.floor(ChannelList[i].data.length / SpectrumPar.NumberOfWindowSegments));
+        OVS       = Math.floor(RWL * SpectrumPar.OverlapRatio);
+        NFFT      = Mag_fft.length;
+        WinOption = true;
+        OneSided  = true;
+        [PSD, ]   = PowerSpectralDensity(Ug, RWL, OVS, ChannelList[i].FSamp, NFFT, WinOption, OneSided);
+
+        // STEP 9: Collect computed Spectrum Values
+        SpectrumPar.FFT           = Mag_fft;                                    // Fourier Amplitude 
+        SpectrumPar.FFTAngle      = Angle_fft;                                  // Phase angle 
+        SpectrumPar.Freq_vector   = f;                                          // Frequency Vector
+        SpectrumPar.PowerSpectrum = Multiply(Pow(Mag_fft, 2), Mag_fft.length);  // Power spectrum Abs(Re^2 + Im^2)^2 / N
+        SpectrumPar.PSD           = PSD;
+
+        // STEP 10: Store Filter Parameters
+        SpectrumPar.FiltPar = FiltPar;
+
+        // STEP 11: Flag Successfully Completion
+        SpectrumPar.IsAnalysisCompleted = true;
+
+        // STEP 12: Store Results 
+        ChannelList[i].Results.Spectrum = SpectrumPar;
+
+        // STEP 13: Update select element in InfoTable
+        Spectrum_ResultsDisplay(i);
+
+        // STEP 14: Update InfoTable
+        Update_Units_infoTable_Spectrum(i);
+
+        // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        await Plotly_Graph_Update(i);
+
+        // STEP 16: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+        UX_Update(i);
+
+        // STEP 17:
+        await sleep(5);
+
+    }
+
+    // Enable CALCULATE Button
+    document.getElementById("Run_Button").disabled = false;
+    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+
+
+    // Helper functions
+    // Baseline correction and filtering 
+    function BaselineAndFilter(FilteredData, FiltPar) {
+        // Apply baseline Correction and Filtering 
+
+        // Apply Detrend if applicable
+        if (FiltPar.BaselineCorrection != 0) { 
+            if      (FiltPar.BaselineCorrection == 1) { FilteredData = Detrend(FilteredData, 0); } // Remove mean
+            else if (FiltPar.BaselineCorrection == 2) { FilteredData = Detrend(FilteredData, 1); } // Remove linear trend
+            else if (FiltPar.BaselineCorrection == 3) { FilteredData = Detrend(FilteredData, 2); } // Remove quadratic trend
+            else if (FiltPar.BaselineCorrection == 4) { FilteredData = Detrend(FilteredData, 3); } // Remove cubic trend
+        }
+
+        // Apply filter
+        if (FiltPar.FilterName !=0) {
+            if (FiltPar.ZeroPhase) { FilteredData = FiltFilt(FiltPar.b,   FiltPar.a,   FilteredData).y; } // Zero-phase filtering (Forward and backward)
+            else                   { FilteredData = Filter(  FiltPar.b,   FiltPar.a,   FilteredData).y; } // Single-pass filtering
+        }
+        // Return Filtered data 
+        return FilteredData;
+
+    }
+    async function UX_Update(i) {
+        
+        let perc;
+
+        perc = ((i+1)/ChannelList.length*100).toFixed(0);
+
+        if (perc != 100) {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
+        }
+    }
+    
 }
 //-----------------------------------------------------------------------------------------------
 async function Channel_Parameters() {
@@ -5397,6 +5605,297 @@ function PolyFit(X, Y, N, Opt) {
         return result;
     }
 
+}
+//-----------------------------------------------------------------------------------------------
+function PowerSpectralDensity_(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) {
+    // This function calculates Power Spectral Density (PSD) for 1D data[] array.
+    //
+    // The periodogram is not a consistent estimator of the true power spectral density of a wide-sense stationary
+    // process. Welch’s technique to reduce the variance of the periodogram breaks the time series into segments,
+    // usually overlapping.
+    //
+    // Welch’s method computes a modified periodogram (power-spectrum) for each segment and then averages these
+    // estimates to produce the estimate of the power spectral density. Because the process is wide-sense stationary
+    // and Welch’s method uses PSD estimates of different segments of the time series, the modified periodograms
+    // represent approximately uncorrelated estimates of the true PSD and averaging reduces the variability.
+    //
+    // The segments are typically multiplied by a window function, such as a Hamming window, so that Welch’s method
+    // amounts to averaging modified periodograms. Because the segments usually overlap, data values at the beginning
+    // and end of the segment tapered by the window in one segment, occur away from the ends of adjacent segments.
+    // This guards against the loss of information caused by windowing.
+    //
+    // This method (Welch's method) relies on the averaging the periodograms of each segment to reduce the variance of
+    // the Power Spectrum estimator.  K-independent average reduces the variance by a factor of K as long as the
+    // averaged segments are independent. Resolution of the PSD increases as the length of the window increases.
+    //
+    // The power spectral density (PSD) indicates the strength of the energy as a function of frequency.
+    // In other words, it shows at which frequencies energy variations are strong and at which frequencies they are weak.
+    // The unit of PSD is energy per bandwidth and energy can be obtained within a specific frequency range by
+    // integrating PSD within that frequency range.
+    //
+    // If data[] array is in units of "g", then the PSD is in units of (g•s)²/Hz
+    //
+    // The integral of the PSD over a frequency interval gives the mean-square value of the content of the signal
+    // within the frequency interval. (This is known as Parseval’s Theorem.)
+    //
+    //  Input:
+    //      Data      : 1D array of data.
+    //      RWL       : Number of samples in each data-segment
+    //      OVS       : Number of samples that two data segments are overlapped
+    //      FSamp     : Sampling frequency in Hz.
+    //      NFFT      : Number of discrete Fourier Transform points in FFT estimate for each data segment
+    //      WinOption : true/false (true: Hamming window,  false: No Windowing)
+    //                  Each data-segment will be multiplied by a window function before FFT.
+    //                  WinOption == true will run Pwelch algorithm with Hamming window,
+    //                  WinOption == false will run Pbartlett algorithm with Rectangular window
+    //      OneSided  : 1-sided or 2-sided spectrum
+    //                  0 returns one-sided spectrum :::  1 returns two-sided spectrum
+    //
+    //  Output:
+    //      PSD     : Averaged Power Spectral Density Spectrum
+    //        fq    : Frequency vector over which the power spectral density is calculated
+    //
+    //  by Dr. Yavuz Kaya, P.Eng.;
+    //  Created on      18.Mar.2017
+
+    // Check default values of input arguments
+    if (RWL       == null) { RWL       = Math.max(2, Math.floor(data.length / 8.00)); };
+    if (OVS       == null) { OVS       = Math.floor(RWL * 0.25); };
+    if (FSamp     == null) { FSamp     = 1; };
+    if (NFFT      == null) { NFFT      = NextPow2(RWL); };
+    if (WinOption == null) { WinOption = true; };
+    if (OneSided  == null) { OneSided  = true; };
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if ((OneSided != true) && (OneSided != false)) {throw new Error("OneSided argument must be either true or false."); }
+    if ((RWL <= 0) || (RWL > data.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)) {
+        {throw new Error("Input arguments are inconsistent (RWL <= 0) || (RWL > data.Length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)");};
+    }
+    if (!Array.isArray(data))  {throw new Error("data[] must be 1D array.");};
+
+    //
+    let PSD, DW, Win, SF, K, a1, a2, Re, Im, df, fq;
+
+    // Pre-allocate
+    PSD = new Array(NFFT).fill(0);
+
+    // Calculate initial parameters
+    DW = RWL - OVS;
+
+    // Create a window function of RWL-point and normalize it
+    if (WinOption) { Win = Hamming(RWL); } else { Win = Rectwin(RWL); }
+    Win = Divide(Win, Sum(Win));
+
+    // Scale Factor for the PSD normalization
+    // Units of PSD is "Hertz" because it is scaled by the sampling frequency to obtain the PSD
+    SF = Sum(Pow(Win, 2)) * FSamp
+
+    K = 0;
+    a1 = 0;
+    a2 = RWL - 1;
+
+    while (a2 < data.length) {
+        // Extract the segment of the data[] array starting from Index a1 to Index a2
+        Re = GetRange(data, a1, a2);
+
+        // Skip one iteration in the for-loop if data[] array contains NaN
+        if (IsContainNaN(Re)) { a1 += DW; a2 += DW; continue; }
+
+        // Fourier Amplitude Spectrum (FAS) of the windowed-segment
+        [Re, Im] = FFT(Multiply(Re, Win), null, NFFT);
+
+        // Magnitude and Phase of the FAS
+        [Re, ] = FFT_MagPhase(Re, Im);
+
+        // Continue adding the Power Spectrum
+        PSD = PSD.map((v, i) => v + Re[i] * Re[i] );
+
+        // Update the Indexes
+        a1 += DW;
+        a2 += DW;
+        K++;
+    }
+
+    // Normalization of the averaged Power Spectrum to calculate PSD
+    // Units of PSD is Hertz because it is scaled by the sampling frequency to obtain the psd
+    PSD = Divide(PSD, (SF * K));
+
+    // Frequency vector
+    df = FSamp / NFFT;
+    fq = LinSpace(0, (NFFT-1)*df, NFFT);
+
+    if (OneSided) {
+        // Return one-sided spectrum
+        PSD = PSD.map((v, i) => v * 2);
+
+        if (NFFT % 2 == 0) {
+            // NFFT is even
+            PSD[0]      /= 2;
+            PSD[NFFT/2] /= 2;
+            return [Truncate(PSD, NFFT/2+1), Truncate(fq, NFFT/2+1)];
+        }
+        else {
+            // NFFT is odd
+            PSD[0]          /= 2;
+            return [Truncate(PSD, (NFFT+1)/2), Truncate(fq, (NFFT+1)/2)];
+        }
+    }
+    return [PSD, fq];
+}
+//-----------------------------------------------------------------------------------------------
+function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) {
+    // Estimates the Power Spectral Density (PSD) of a 1D time series using Welch's
+    // method (overlapping, windowed periodogram averaging). The time series is divided
+    // into overlapping segments, each segment is optionally multiplied by a window
+    // function and transformed via FFT, and the resulting periodograms are averaged to
+    // reduce variance. The final result is normalised by the sampling frequency so that
+    // the area under the one-sided PSD equals the mean-square value of the signal
+    // (Parseval's theorem).
+    //
+    // Parameters:
+    //   data      : 1D array of time-series values (any consistent physical unit)
+    //   RWL       : Segment length in samples (default: floor(N/8), min 2)
+    //               Longer segments → finer frequency resolution, higher variance
+    //               Shorter segments → coarser resolution, lower variance
+    //   OVS       : Overlap between adjacent segments in samples (default: floor(RWL*0.25))
+    //               Must satisfy 0 ≤ OVS < RWL
+    //   FSamp     : Sampling frequency in Hz (default: 1)
+    //   NFFT      : FFT length per segment (default: NextPow2(RWL))
+    //               Must satisfy NFFT ≥ RWL
+    //   WinOption : true  → apply Hamming window to each segment  (Welch's method)
+    //               false → apply rectangular window              (Bartlett's method)
+    //               (default: true)
+    //   OneSided  : true  → return one-sided PSD from 0 to FSamp/2  (default)
+    //               false → return two-sided PSD from 0 to FSamp
+    //
+    // Returns: [PSD, f]
+    //   PSD : Power Spectral Density array (units²/Hz)
+    //         If data[] is in units of g, PSD is in g²/Hz
+    //   f   : Frequency vector in Hz corresponding to PSD bins
+    //
+    // Algorithm (Welch's method):
+    //   1. Divide data[] into overlapping segments of length RWL with step DW = RWL - OVS
+    //   2. Multiply each segment by a normalised window function Win[]
+    //   3. Compute the FFT of each windowed segment
+    //   4. Accumulate the squared magnitude: PSD += |FFT|²
+    //   5. Average by the number of valid segments K
+    //   6. Normalise by the window power and sampling frequency:
+    //        PSD = PSD / (sum(Win²) · FSamp · K)
+    //   7. For one-sided output, double all bins except DC and Nyquist
+    //
+    // Notes:
+    //   - Segments containing NaN are silently skipped
+    //   - The integral ∫ PSD(f) df equals the mean-square value of data[]
+    //     (Parseval's theorem)
+    //
+    // Examples:
+    //   PowerSpectralDensity(acc, 256, 64, 100)
+    //         → [PSD, f]  (Hamming window, one-sided, NFFT = NextPow2(256) = 256)
+    //   PowerSpectralDensity(acc, 512, 128, 200, 512, false, false)
+    //         → [PSD, f]  (rectangular window, two-sided)
+    //
+    // Reference:
+    //   Welch, P.D. (1967). The use of fast Fourier transform for the estimation of
+    //   power spectra: A method based on time averaging over short, modified
+    //   periodograms. IEEE Trans. Audio Electroacoust., AU-15(2), 70–73.
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 28.Apr.2026
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (!Array.isArray(data)) { throw new Error("data[] must be a 1D array."); }
+
+    // Check default values of input arguments
+    if (RWL       == null) { RWL       = Math.max(2, Math.floor(data.length / 8)); }
+    if (OVS       == null) { OVS       = Math.floor(RWL * 0.25);                   }
+    if (FSamp     == null) { FSamp     = 1;                                         }
+    if (NFFT      == null) { NFFT      = NextPow2(RWL);                             }
+    if (WinOption == null) { WinOption = true;                                      }
+    if (OneSided  == null) { OneSided  = true;                                      }
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if ((OneSided !== true) && (OneSided !== false))   { throw new Error("OneSided argument must be either true or false.");                                                                           }
+    if (RWL <= 0)                                      { throw new Error("RWL (segment length) must be greater than zero.");                                                                          }
+    if (RWL > data.length)                             { throw new Error("RWL (segment length) cannot exceed the length of data[].");                                                                 }
+    if (RWL > NFFT)                                    { throw new Error("RWL (segment length) cannot exceed NFFT.");                                                                                 }
+    if (OVS < 0)                                       { throw new Error("OVS (overlap) cannot be less than zero.");                                                                                  }
+    if (OVS >= RWL)                                    { throw new Error("OVS (overlap) must be less than RWL (segment length).");                                                                    }
+    if (NFFT < 2)                                      { throw new Error("NFFT must be at least 2.");                                                                                                 }
+    if (FSamp <= 0)                                    { throw new Error("FSamp (sampling frequency) must be greater than zero.");                                                                    }
+    if ((WinOption !== true) && (WinOption !== false)) { throw new Error("WinOption must be either true (Hamming window) or false (rectangular window).");                                           }
+
+    let Re, Im, Mag, df, f;
+
+    // Initialise PSD accumulator
+    let PSD = new Array(NFFT).fill(0);
+
+    // Step advancement between successive segments
+    const DW = RWL - OVS;
+
+    // Build and normalise window function
+    // Normalising by sum(Win) makes the window energy-preserving for amplitude spectra;
+    // the subsequent division by sum(Win²)·FSamp converts to a proper PSD.
+    let Win;
+    if (WinOption) { Win = Hamming(RWL); } else { Win = Rectwin(RWL); }
+    Win = Divide(Win, Sum(Win));
+
+    // Scale factor for PSD normalisation: SF = sum(Win²) · FSamp
+    const SF = Sum(Pow(Win, 2)) * FSamp;
+
+    // Accumulate windowed periodograms over all valid segments
+    let K  = 0;        // number of valid (non-NaN) segments processed
+    let a1 = 0;        // start index of current segment
+    let a2 = RWL - 1;  // end index of current segment
+
+    while (a2 < data.length) {
+
+        // Extract segment
+        Re = GetRange(data, a1, a2);
+
+        // Skip segments that contain NaN values
+        if (IsContainNaN(Re)) { a1 += DW; a2 += DW; continue; }
+
+        // Multiply with the Windowing function, if applicable
+        if (WinOption) { for (let i = 0; i < Re.length; i++) { Re[i] *= Win[i]; } }
+
+        // Apply window and compute FFT
+        [Re, Im] = FFT(Re, null, NFFT); 
+
+        // Accumulate squared magnitude in-place (avoids creating a temporary array)
+        [Mag] = FFT_MagPhase(Re, Im);
+        for (let i = 0; i < NFFT; i++) { PSD[i] += Mag[i] * Mag[i]; }
+
+        a1 += DW;
+        a2 += DW;
+        K++;
+    }
+
+    // Normalise: average over K segments and apply PSD scaling
+    PSD = Divide(PSD, SF * K);
+
+    // Build frequency vector
+    df = FSamp / NFFT;
+    f  = LinSpace(0, (NFFT - 1) * df, NFFT);
+
+    // Convert to one-sided PSD if requested
+    if (OneSided) {
+
+        // Double all bins (will undo DC and Nyquist below)
+        PSD = Multiply(PSD, 2);
+
+        if (IsEven(NFFT)) {
+            // Even NFFT: Nyquist bin exists at index NFFT/2
+            PSD[0]        /= 2;   // DC bin — not doubled
+            PSD[NFFT / 2] /= 2;   // Nyquist bin — not doubled
+            return [Truncate(PSD, NFFT / 2 + 1), Truncate(f, NFFT / 2 + 1)];
+        } else {
+            // Odd NFFT: no exact Nyquist bin
+            PSD[0] /= 2;          // DC bin — not doubled
+            return [Truncate(PSD, (NFFT + 1) / 2), Truncate(f, (NFFT + 1) / 2)];
+        }
+    }
+
+    return [PSD, f];
 }
 //-----------------------------------------------------------------------------------------------
 function SDOF_FreeVib(f, ksi, delt, InDisp, InVel, Duration) {

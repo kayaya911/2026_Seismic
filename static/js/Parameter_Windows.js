@@ -939,6 +939,56 @@ function ResSpec_TMax_Change() {
 }
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
+// Spectrum Parameters --------------------------------------------------------------------------
+function  Spectrum_Parameters() {
+    
+    let NumberOfWindowSegments, OverlapRatio, Spectrum_SmoothingWindow;
+    
+    NumberOfWindowSegments   = Number(document.getElementById('NumberOfWindowSegments').value);
+    OverlapRatio             = Number(document.getElementById('OverlapRatio').value);
+    Spectrum_SmoothingWindow = document.getElementById('Spectrum_SmoothingWindow').selectedIndex;
+
+    // Return Spectrum Parameters
+    return {
+        IsAnalysisCompleted      : false,
+        NumberOfWindowSegments   : NumberOfWindowSegments,
+        OverlapRatio             : OverlapRatio,
+        Spectrum_SmoothingWindow : Spectrum_SmoothingWindow,
+        FFT                      : undefined,
+        PowerSpectrum            : undefined,
+        PSD                      : undefined,
+        Freq_vector              : undefined,
+        TypeAndUnits             : undefined,
+        DisplayData              : undefined,
+    }
+
+}
+function Spectrum_ResultsDisplay(i) {
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let select, opt, OptionsList, Indx;
+    
+    OptionsList = Array.from(document.getElementById('Spectrum_SelectToDisplay').options).map(opt => opt.text);
+    OptionsList.shift(); // removes the fist entry from the list
+
+    select      = document.getElementById("Spectrum_Plot_ID_"  + ChannelList[i].Unique_ID);
+    select.innerText = '';
+    for (let j = 0; j < OptionsList.length; j++) {
+        opt = document.createElement("option");
+        opt.text = OptionsList[j];
+        select.add(opt, null);
+    }
+    select.setAttribute('onchange', 'Update_Units_infoTable_Spectrum('+ i.toString() +')');
+
+    // Read just the Index
+    Indx = document.getElementById('Spectrum_SelectToDisplay').selectedIndex;
+    if (Indx != 0) { select.selectedIndex = Indx-1; }
+}
+
+//-----------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------
 // Strong Motion Parameters ---------------------------------------------------------------------
 function Strong_Motion_Parameters() {
     

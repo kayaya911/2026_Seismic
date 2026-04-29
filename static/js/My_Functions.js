@@ -8,7 +8,7 @@
 // Declaration of global variable
 let ChannelList        = [];
 let PageNo             = 0;
-let MaxPlotly_Graphs   = 8;  // This variable should not be less than 8
+let MaxPlotly_Graphs   = 15;  // This variable should not be less than 8
 let Current_Plotly_Num = 0;
 
 //-----------------------------------------------------------------------------------------------
@@ -90,6 +90,7 @@ async function AnalysisMenu_Selection(a) {
     document.getElementById("Parameters_SDOF").style.display = "none";
     document.getElementById("Parameters_ResSpec").style.display = "none";
     document.getElementById("Parameters_ResSpec2").style.display = "none";
+    document.getElementById("Parameters_Spectrum").style.display = "none";
     document.getElementById("Parameters_SM_Par").style.display = "none";
     document.getElementById("Parameters_Newmark").style.display = "none";
     document.getElementById("Parameters_Output_Units").style.display = "none";
@@ -143,6 +144,7 @@ async function AnalysisMenu_Selection(a) {
     else if (a.id == "MainMenu_Spectrum") {
         // Spectrum
         document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById("Parameters_Spectrum").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Spectrum";
         
         PageNo = 5;
