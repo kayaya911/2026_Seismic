@@ -1856,9 +1856,9 @@ async function Channel_Spectrum() {
         [Mag_fft, Angle_fft, f] = FourierSpec(Ug,  ChannelList[i].FSamp);
 
         // STEP 9: Power Spectral Density
-        RWL       = Math.max(2, Math.floor(ChannelList[i].data.length / SpectrumPar.NumberOfWindowSegments));
+        RWL       = Math.max(2, Math.floor(ChannelList[i].data.length / SpectrumPar.NumberOfWindowSegments)); 
         OVS       = Math.floor(RWL * SpectrumPar.OverlapRatio);
-        NFFT      = Mag_fft.length;
+        NFFT      = Ug.length;
         WinOption = true;
         OneSided  = true;
         [PSD, ]   = PowerSpectralDensity(Ug, RWL, OVS, ChannelList[i].FSamp, NFFT, WinOption, OneSided);
@@ -5607,142 +5607,6 @@ function PolyFit(X, Y, N, Opt) {
 
 }
 //-----------------------------------------------------------------------------------------------
-function PowerSpectralDensity_(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) {
-    // This function calculates Power Spectral Density (PSD) for 1D data[] array.
-    //
-    // The periodogram is not a consistent estimator of the true power spectral density of a wide-sense stationary
-    // process. Welch’s technique to reduce the variance of the periodogram breaks the time series into segments,
-    // usually overlapping.
-    //
-    // Welch’s method computes a modified periodogram (power-spectrum) for each segment and then averages these
-    // estimates to produce the estimate of the power spectral density. Because the process is wide-sense stationary
-    // and Welch’s method uses PSD estimates of different segments of the time series, the modified periodograms
-    // represent approximately uncorrelated estimates of the true PSD and averaging reduces the variability.
-    //
-    // The segments are typically multiplied by a window function, such as a Hamming window, so that Welch’s method
-    // amounts to averaging modified periodograms. Because the segments usually overlap, data values at the beginning
-    // and end of the segment tapered by the window in one segment, occur away from the ends of adjacent segments.
-    // This guards against the loss of information caused by windowing.
-    //
-    // This method (Welch's method) relies on the averaging the periodograms of each segment to reduce the variance of
-    // the Power Spectrum estimator.  K-independent average reduces the variance by a factor of K as long as the
-    // averaged segments are independent. Resolution of the PSD increases as the length of the window increases.
-    //
-    // The power spectral density (PSD) indicates the strength of the energy as a function of frequency.
-    // In other words, it shows at which frequencies energy variations are strong and at which frequencies they are weak.
-    // The unit of PSD is energy per bandwidth and energy can be obtained within a specific frequency range by
-    // integrating PSD within that frequency range.
-    //
-    // If data[] array is in units of "g", then the PSD is in units of (g•s)²/Hz
-    //
-    // The integral of the PSD over a frequency interval gives the mean-square value of the content of the signal
-    // within the frequency interval. (This is known as Parseval’s Theorem.)
-    //
-    //  Input:
-    //      Data      : 1D array of data.
-    //      RWL       : Number of samples in each data-segment
-    //      OVS       : Number of samples that two data segments are overlapped
-    //      FSamp     : Sampling frequency in Hz.
-    //      NFFT      : Number of discrete Fourier Transform points in FFT estimate for each data segment
-    //      WinOption : true/false (true: Hamming window,  false: No Windowing)
-    //                  Each data-segment will be multiplied by a window function before FFT.
-    //                  WinOption == true will run Pwelch algorithm with Hamming window,
-    //                  WinOption == false will run Pbartlett algorithm with Rectangular window
-    //      OneSided  : 1-sided or 2-sided spectrum
-    //                  0 returns one-sided spectrum :::  1 returns two-sided spectrum
-    //
-    //  Output:
-    //      PSD     : Averaged Power Spectral Density Spectrum
-    //        fq    : Frequency vector over which the power spectral density is calculated
-    //
-    //  by Dr. Yavuz Kaya, P.Eng.;
-    //  Created on      18.Mar.2017
-
-    // Check default values of input arguments
-    if (RWL       == null) { RWL       = Math.max(2, Math.floor(data.length / 8.00)); };
-    if (OVS       == null) { OVS       = Math.floor(RWL * 0.25); };
-    if (FSamp     == null) { FSamp     = 1; };
-    if (NFFT      == null) { NFFT      = NextPow2(RWL); };
-    if (WinOption == null) { WinOption = true; };
-    if (OneSided  == null) { OneSided  = true; };
-
-    // Check if the input arguments are correct; otherwise, throw an error.
-    if ((OneSided != true) && (OneSided != false)) {throw new Error("OneSided argument must be either true or false."); }
-    if ((RWL <= 0) || (RWL > data.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)) {
-        {throw new Error("Input arguments are inconsistent (RWL <= 0) || (RWL > data.Length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)");};
-    }
-    if (!Array.isArray(data))  {throw new Error("data[] must be 1D array.");};
-
-    //
-    let PSD, DW, Win, SF, K, a1, a2, Re, Im, df, fq;
-
-    // Pre-allocate
-    PSD = new Array(NFFT).fill(0);
-
-    // Calculate initial parameters
-    DW = RWL - OVS;
-
-    // Create a window function of RWL-point and normalize it
-    if (WinOption) { Win = Hamming(RWL); } else { Win = Rectwin(RWL); }
-    Win = Divide(Win, Sum(Win));
-
-    // Scale Factor for the PSD normalization
-    // Units of PSD is "Hertz" because it is scaled by the sampling frequency to obtain the PSD
-    SF = Sum(Pow(Win, 2)) * FSamp
-
-    K = 0;
-    a1 = 0;
-    a2 = RWL - 1;
-
-    while (a2 < data.length) {
-        // Extract the segment of the data[] array starting from Index a1 to Index a2
-        Re = GetRange(data, a1, a2);
-
-        // Skip one iteration in the for-loop if data[] array contains NaN
-        if (IsContainNaN(Re)) { a1 += DW; a2 += DW; continue; }
-
-        // Fourier Amplitude Spectrum (FAS) of the windowed-segment
-        [Re, Im] = FFT(Multiply(Re, Win), null, NFFT);
-
-        // Magnitude and Phase of the FAS
-        [Re, ] = FFT_MagPhase(Re, Im);
-
-        // Continue adding the Power Spectrum
-        PSD = PSD.map((v, i) => v + Re[i] * Re[i] );
-
-        // Update the Indexes
-        a1 += DW;
-        a2 += DW;
-        K++;
-    }
-
-    // Normalization of the averaged Power Spectrum to calculate PSD
-    // Units of PSD is Hertz because it is scaled by the sampling frequency to obtain the psd
-    PSD = Divide(PSD, (SF * K));
-
-    // Frequency vector
-    df = FSamp / NFFT;
-    fq = LinSpace(0, (NFFT-1)*df, NFFT);
-
-    if (OneSided) {
-        // Return one-sided spectrum
-        PSD = PSD.map((v, i) => v * 2);
-
-        if (NFFT % 2 == 0) {
-            // NFFT is even
-            PSD[0]      /= 2;
-            PSD[NFFT/2] /= 2;
-            return [Truncate(PSD, NFFT/2+1), Truncate(fq, NFFT/2+1)];
-        }
-        else {
-            // NFFT is odd
-            PSD[0]          /= 2;
-            return [Truncate(PSD, (NFFT+1)/2), Truncate(fq, (NFFT+1)/2)];
-        }
-    }
-    return [PSD, fq];
-}
-//-----------------------------------------------------------------------------------------------
 function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) {
     // Estimates the Power Spectral Density (PSD) of a 1D time series using Welch's
     // method (overlapping, windowed periodogram averaging). The time series is divided
@@ -5832,12 +5696,10 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) 
     // Step advancement between successive segments
     const DW = RWL - OVS;
 
-    // Build and normalise window function
-    // Normalising by sum(Win) makes the window energy-preserving for amplitude spectra;
-    // the subsequent division by sum(Win²)·FSamp converts to a proper PSD.
+    // Build window function
+    // The subsequent division by sum(Win²)·FSamp converts to a proper PSD.
     let Win;
     if (WinOption) { Win = Hamming(RWL); } else { Win = Rectwin(RWL); }
-    Win = Divide(Win, Sum(Win));
 
     // Scale factor for PSD normalisation: SF = sum(Win²) · FSamp
     const SF = Sum(Pow(Win, 2)) * FSamp;
@@ -5862,8 +5724,7 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) 
         [Re, Im] = FFT(Re, null, NFFT); 
 
         // Accumulate squared magnitude in-place (avoids creating a temporary array)
-        [Mag] = FFT_MagPhase(Re, Im);
-        for (let i = 0; i < NFFT; i++) { PSD[i] += Mag[i] * Mag[i]; }
+        for (let i = 0; i < NFFT; i++) { PSD[i] += Re[i]*Re[i] + Im[i]*Im[i]; } 
 
         a1 += DW;
         a2 += DW;

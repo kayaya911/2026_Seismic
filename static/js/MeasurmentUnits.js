@@ -751,7 +751,7 @@ function Convert_Data_To_Graph_Unit_SM_Par(Data, ChNum) {
 //-------------------------------------------------------------------------------------------------------------
 function Convert_Data_To_Graph_Unit_Spectrum(Data, ChNum) {
     
-    let Or_Data, LU, Ind, Indx, temp, ss, arr, leg, T_duration;
+    let Or_Data, LU, Ind, Indx, temp, ss, arr, leg, T_duration, aaa;
 
     // SDOF-data using Measurment-index
     Or_Data = TypeAndUnit(ChannelList[ChNum].Results.SM_Parameters.TypeAndUnits); 
@@ -765,9 +765,9 @@ function Convert_Data_To_Graph_Unit_Spectrum(Data, ChNum) {
     // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
     temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
 
-    if      (ChannelList[ChNum].Results.Spectrum.DisplayData == 'FFT' )   { Or_Data.Type_String = 'Fourier Amplitude';   }
-    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'POW' )   { Or_Data.Type_String = 'Power Spectrum';      }
-    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'PSD' )   { Or_Data.Type_String = 'Spectral Density';    }
+    if      (ChannelList[ChNum].Results.Spectrum.DisplayData == 'FFT' )   { Or_Data.Type_String = 'Fourier Amplitude'; aaa = '';       }
+    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'POW' )   { Or_Data.Type_String = 'Power Spectrum';    aaa = '²'       }
+    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'PSD' )   { Or_Data.Type_String = 'Spectral Density';  aaa = '² / Hz'  }
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
@@ -778,7 +778,7 @@ function Convert_Data_To_Graph_Unit_Spectrum(Data, ChNum) {
     }
 
     //  temp
-    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']<b>';
+    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']' +aaa+'<b>';
 
     temp.Peak        = ss.Peak;
     temp.Mean        = ss.Mean;

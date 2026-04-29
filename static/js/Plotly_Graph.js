@@ -754,7 +754,7 @@ async function Plotly_Graph_Update(ChNum) {
             if      (DisplayData == "FFT"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.FFT,             ChNum );   }
             else if (DisplayData == "POW"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.PowerSpectrum,   ChNum );   }
             else if (DisplayData == "PSD"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.PSD,             ChNum );   }
-
+            
             //
             traces[0].x           = ChannelList[ChNum].Results.Spectrum.Freq_vector;
             traces[0].y           = res.Data;

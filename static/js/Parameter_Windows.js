@@ -986,7 +986,59 @@ function Spectrum_ResultsDisplay(i) {
     Indx = document.getElementById('Spectrum_SelectToDisplay').selectedIndex;
     if (Indx != 0) { select.selectedIndex = Indx-1; }
 }
+function Spectrum_SelectToDisplay() {
 
+    let i, Indx, Spectrum_Plot_ID;
+
+    for (i=0; i<ChannelList.length; i++) {
+        
+        // skip if this channel is not selected for dislay
+        if (!ChannelList[i].PlotGraph) { continue; }
+
+        // Get the selected index number
+        Indx = document.getElementById('Spectrum_SelectToDisplay').selectedIndex;
+
+        if (Indx == 0) { continue; }
+
+        // Change the index number for this channel 
+        Spectrum_Plot_ID  = "Spectrum_Plot_ID_" + ChannelList[i].Unique_ID;
+        document.getElementById(Spectrum_Plot_ID).selectedIndex = Indx-1;
+
+        Update_Units_infoTable_Spectrum(i);
+    }
+}
+function Spectrum_NumberOfWindowsSegment_Change() {
+    // Declaration of variables
+    let x  = document.getElementById('NumberOfWindowSegments');
+
+    if (Number(x.value) <= 0) { 
+        document.getElementById('NumberOfWindowSegments').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Number of Window Segments must be greater than 0 !', 'red');
+    }
+    else {
+        document.getElementById('NumberOfWindowSegments').value        = String(Number(x.value));
+        document.getElementById('NumberOfWindowSegments').defaultValue = String(Number(x.value));
+        ProgressBar_Update('', 'black');
+    }
+}
+function Spectrum_OverlapRatio_Change() {
+    // Declaration of variables
+    let x  = document.getElementById('OverlapRatio');
+
+    if (Number(x.value) <= 0) { 
+        document.getElementById('OverlapRatio').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Overlap Ratios must be greater than 0 !', 'red');
+    }
+    else if (Number(x.value) >= 1) { 
+        document.getElementById('OverlapRatio').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Overlap Ratios must be less than 1 !', 'red');
+    }
+    else {
+        document.getElementById('OverlapRatio').value        = String(Number(x.value));
+        document.getElementById('OverlapRatio').defaultValue = String(Number(x.value));
+        ProgressBar_Update('', 'black');
+    }
+}
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
 // Strong Motion Parameters ---------------------------------------------------------------------
@@ -1095,7 +1147,18 @@ async function SM_Par_AnalysisType() {
     for (i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i);  }
 }
 function SM_Par_BracketedDuration_Change() {
-    
+    // Declaration of variables
+    let x  = document.getElementById('BracketedDuration');
+
+    if (Number(x.value) <= 0) { 
+        document.getElementById('BracketedDuration').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Bracketed Duration must be greater than 0 !', 'red');
+    }
+    else {
+        document.getElementById('BracketedDuration').value        = String(Number(x.value));
+        document.getElementById('BracketedDuration').defaultValue = String(Number(x.value));
+        ProgressBar_Update('', 'black');
+    }
 }
 
 
