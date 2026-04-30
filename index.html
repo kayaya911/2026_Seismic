@@ -474,6 +474,7 @@
                                                 <option value="">Fourier Amplitude Spectrum</option>
                                                 <option value="">Power Spectrum</option>
                                                 <option value="">Spectral Density Spectrum</option>
+                                                <option value="">Spectrogram</option>
                                             </select>
                                         </td>
                                     </tr>
@@ -483,8 +484,8 @@
                                     </tr>
                                     
                                     <tr>
-                                        <td>Number of Window Segments</td>
-                                        <td><input title="Number of Window Segments" id="NumberOfWindowSegments" type="number" onfocus="this.oldValue = this.value;" onchange="Spectrum_NumberOfWindowsSegment_Change()" value="8" step="1"/></td>
+                                        <td>Window Length (s)</td>
+                                        <td><input title="Window Segment Length in seconds" id="WindowLength" type="number" onfocus="this.oldValue = this.value;" onchange="Spectrum_WindowsLength_Change()" value="15" step="0.5"/></td>
                                     </tr>
 
                                     <tr>

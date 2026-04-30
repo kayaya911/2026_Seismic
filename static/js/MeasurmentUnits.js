@@ -765,9 +765,10 @@ function Convert_Data_To_Graph_Unit_Spectrum(Data, ChNum) {
     // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
     temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
 
-    if      (ChannelList[ChNum].Results.Spectrum.DisplayData == 'FFT' )   { Or_Data.Type_String = 'Fourier Amplitude'; aaa = '';       }
-    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'POW' )   { Or_Data.Type_String = 'Power Spectrum';    aaa = '²'       }
-    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'PSD' )   { Or_Data.Type_String = 'Spectral Density';  aaa = '² / Hz'  }
+    if      (ChannelList[ChNum].Results.Spectrum.DisplayData == 'FFT' )   { Or_Data.Type_String = 'Fourier Amplitude'; aaa = '';        }
+    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'POW' )   { Or_Data.Type_String = 'Power Spectrum';    aaa = ' ²'       }
+    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'PSD' )   { Or_Data.Type_String = 'Spectral Density';  aaa = ' ² / Hz'  }
+    else if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'HET' )   { Or_Data.Type_String = 'Spectrogram';       aaa = ' ²'       }
 
     // Original statistical values are already scaled by Scale Factor of the channel 
     // Therefore, we just need to conver the units.
@@ -778,7 +779,9 @@ function Convert_Data_To_Graph_Unit_Spectrum(Data, ChNum) {
     }
 
     //  temp
-    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']' +aaa+'<b>';
+    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [ ' + temp.Unit  + ' ]' +aaa+'<b>';
+
+    if (ChannelList[ChNum].Results.Spectrum.DisplayData == 'HET' )   { temp.yTitle      = '<b>Frequency (Hz)<b>'; }
 
     temp.Peak        = ss.Peak;
     temp.Mean        = ss.Mean;
@@ -1081,9 +1084,10 @@ function Update_Units_infoTable_Spectrum(i) {
     
     if (II == -1) { return; }
 
-    if      (II == 0) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='FFT';   } // Fourier Amplitude Spectrum ( velocity unit)
-    else if (II == 1) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='POW';   } // Power Spectrum             ( velocity unit)
-    else if (II == 2) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='PSD';   } // Spectral Density Spectrum  ( velocity unit)
+    if      (II == 0) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='FFT';   } // Fourier Amplitude Spectrum
+    else if (II == 1) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='POW';   } // Power Spectrum
+    else if (II == 2) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='PSD';   } // Spectral Density Spectrum
+    else if (II == 3) { Units_SelectElement = Select_Element(List_Units(ChannelList[i].Unit).Units);   Type = ChannelList[i].Type;    DisplayData='HET';   } // Spectrogram
     
 
     // Assign select-element to cell-element in table

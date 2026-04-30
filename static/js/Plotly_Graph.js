@@ -754,18 +754,41 @@ async function Plotly_Graph_Update(ChNum) {
             if      (DisplayData == "FFT"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.FFT,             ChNum );   }
             else if (DisplayData == "POW"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.PowerSpectrum,   ChNum );   }
             else if (DisplayData == "PSD"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.PSD,             ChNum );   }
+            else if (DisplayData == "HET"  ) { res  = Convert_Data_To_Graph_Unit_Spectrum(ChannelList[ChNum].Results.Spectrum.Spectrogram,     ChNum );   }
             
-            //
-            traces[0].x           = ChannelList[ChNum].Results.Spectrum.Freq_vector;
-            traces[0].y           = res.Data;
-            traces[0].mode        = 'lines',
-            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
-            traces[0].yaxis       = "y1",
-            traces[0].visible     = true;
-            traces[0].opacity     = 1.00;
-            traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
-            traces[0].name        = '<b>'+ res.leg +'<b>';   // legend title
-            traces[0].showlegend  = false;                   // Show legend
+            if (["FFT", "POW", "PSD"].includes(DisplayData)) {
+                traces[0].x           = ChannelList[ChNum].Results.Spectrum.Freq_vector;
+                traces[0].y           = res.Data;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+                traces[0].name        = '<b>'+ res.leg +'<b>';   // legend title
+                traces[0].showlegend  = false;                   // Show legend
+            }
+            else if (["HET"].includes(DisplayData)) { 
+                // Heat map  ( time-frequency graph)
+
+                const z = ChannelList[ChNum].Results.Spectrum.Freq_vector.map((_, fi) => ChannelList[ChNum].Results.Spectrum.tVec.map((_, ti) => res.Data[ti][fi]));
+                
+                traces[0].type        = 'heatmap';
+                traces[0].colorscale  = 'Bluered';
+                traces[0].x           = ChannelList[ChNum].Results.Spectrum.tVec;
+                traces[0].y           = ChannelList[ChNum].Results.Spectrum.Freq_vector;
+                traces[0].z           = z;
+                traces[0].mode        = 'lines',
+                traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+                traces[0].yaxis       = "y1",
+                traces[0].visible     = true;
+                traces[0].opacity     = 1.00;
+                traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+                traces[0].name        = '<b>'+ res.leg +'<b>';   // legend title
+                traces[0].showlegend  = false;                   // Show legend
+
+            }
+            
 
             layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
             layout_update.yaxis2.showticklabels = false;

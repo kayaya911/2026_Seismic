@@ -942,21 +942,23 @@ function ResSpec_TMax_Change() {
 // Spectrum Parameters --------------------------------------------------------------------------
 function  Spectrum_Parameters() {
     
-    let NumberOfWindowSegments, OverlapRatio, Spectrum_SmoothingWindow;
+    let WindowLength, OverlapRatio, Spectrum_SmoothingWindow;
     
-    NumberOfWindowSegments   = Number(document.getElementById('NumberOfWindowSegments').value);
+    WindowLength             = Number(document.getElementById('WindowLength').value);
     OverlapRatio             = Number(document.getElementById('OverlapRatio').value);
     Spectrum_SmoothingWindow = document.getElementById('Spectrum_SmoothingWindow').selectedIndex;
 
     // Return Spectrum Parameters
     return {
         IsAnalysisCompleted      : false,
-        NumberOfWindowSegments   : NumberOfWindowSegments,
+        WindowLength             : WindowLength,
         OverlapRatio             : OverlapRatio,
         Spectrum_SmoothingWindow : Spectrum_SmoothingWindow,
         FFT                      : undefined,
         PowerSpectrum            : undefined,
         PSD                      : undefined,
+        Spectrogram              : undefined,
+        tVec                     : undefined,
         Freq_vector              : undefined,
         TypeAndUnits             : undefined,
         DisplayData              : undefined,
@@ -1007,17 +1009,17 @@ function Spectrum_SelectToDisplay() {
         Update_Units_infoTable_Spectrum(i);
     }
 }
-function Spectrum_NumberOfWindowsSegment_Change() {
+function Spectrum_WindowsLength_Change() {
     // Declaration of variables
-    let x  = document.getElementById('NumberOfWindowSegments');
+    let x  = document.getElementById('WindowLength');
 
     if (Number(x.value) <= 0) { 
-        document.getElementById('NumberOfWindowSegments').value = x.oldValue; 
+        document.getElementById('WindowLength').value = x.oldValue; 
         ProgressBar_Update('Invalid value - Number of Window Segments must be greater than 0 !', 'red');
     }
     else {
-        document.getElementById('NumberOfWindowSegments').value        = String(Number(x.value));
-        document.getElementById('NumberOfWindowSegments').defaultValue = String(Number(x.value));
+        document.getElementById('WindowLength').value        = String(Number(x.value));
+        document.getElementById('WindowLength').defaultValue = String(Number(x.value));
         ProgressBar_Update('', 'black');
     }
 }

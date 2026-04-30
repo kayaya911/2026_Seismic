@@ -1856,20 +1856,22 @@ async function Channel_Spectrum() {
         [Mag_fft, Angle_fft, f] = FourierSpec(Ug,  ChannelList[i].FSamp);
         
         // STEP 9: Power Spectral Density
-        RWL                         = Math.max(2, Math.floor(ChannelList[i].data.length / SpectrumPar.NumberOfWindowSegments)); 
-        OVS                         = Math.floor(RWL * SpectrumPar.OverlapRatio);
-        NFFT                        = Ug.length;
-        WinOption                   = true;
-        OneSided                    = true;
-        ReturnSpectrogram           = true;
+        RWL                         = Math.max(2, Math.floor(ChannelList[i].FSamp * SpectrumPar.WindowLength));  // Length of running window in samples
+        OVS                         = Math.floor(RWL * SpectrumPar.OverlapRatio);                                // Length of overlap in samples 
+        NFFT                        = Ug.length;                                                                 // Length of Fourier Transform
+        WinOption                   = true;                                                                      // Smooting of segmented data --   true or false 
+        OneSided                    = true;                                                                      // Return onSided or twoSided spectrum --   true or false 
+        ReturnSpectrogram           = true;                                                                      // true or false to return Spectrogram
         [PSD, , spectrogram, tVec]  = PowerSpectralDensity(Ug, RWL, OVS, ChannelList[i].FSamp, NFFT, WinOption, OneSided, ReturnSpectrogram);
 
         // STEP 9: Collect computed Spectrum Values
-        SpectrumPar.FFT           = Mag_fft;                                    // Fourier Amplitude 
-        SpectrumPar.FFTAngle      = Angle_fft;                                  // Phase angle 
-        SpectrumPar.Freq_vector   = f;                                          // Frequency Vector
-        SpectrumPar.PowerSpectrum = Multiply(Pow(Mag_fft, 2), Mag_fft.length);  // Power spectrum Abs(Re^2 + Im^2)^2 / N
-        SpectrumPar.PSD           = PSD;
+        SpectrumPar.FFT             = Mag_fft;                                    // Fourier Amplitude 
+        SpectrumPar.FFTAngle        = Angle_fft;                                  // Phase angle 
+        SpectrumPar.Freq_vector     = f;                                          // Frequency Vector
+        SpectrumPar.PowerSpectrum   = Multiply(Pow(Mag_fft, 2), Mag_fft.length);  // Power spectrum Abs(Re^2 + Im^2)^2 / N
+        SpectrumPar.PSD             = PSD;                                        // Power Spectral Density
+        SpectrumPar.Spectrogram     = spectrogram;                                // Spectrogram  (Time vs Frequency)
+        SpectrumPar.tVec            = tVec;                                       // Time vector for Spectrogram
 
         // STEP 10: Store Filter Parameters
         SpectrumPar.FiltPar = FiltPar;
@@ -1931,9 +1933,9 @@ async function Channel_Spectrum() {
         perc = ((i+1)/ChannelList.length*100).toFixed(0);
 
         if (perc != 100) {
-            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
+            ProgressBar_Update( 'Spectrum -- ' + (perc).toString() + '% completed!', 'red');
         } else {
-            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
+            ProgressBar_Update( 'Spectrum -- ' + (perc).toString() + '% completed!', 'black');
         }
     }
     
