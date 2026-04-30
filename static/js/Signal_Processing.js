@@ -1809,8 +1809,8 @@ async function Channel_Spectrum() {
 
     // Declaration of variables 
     let i, FiltPar, SpectrumPar, Ug;
-    let Mag_fft, Angle_fft, PSD, f;
-    let RWL, OVS, NFFT, WinOption, OneSided;
+    let Mag_fft, Angle_fft, PSD, f, spectrogram, tVec;
+    let RWL, OVS, NFFT, WinOption, OneSided, ReturnSpectrogram;
 
     for (i=0; i<ChannelList.length; i++) {
 
@@ -1854,14 +1854,15 @@ async function Channel_Spectrum() {
 
         // STEP 8: FFT of Ug
         [Mag_fft, Angle_fft, f] = FourierSpec(Ug,  ChannelList[i].FSamp);
-
+        
         // STEP 9: Power Spectral Density
-        RWL       = Math.max(2, Math.floor(ChannelList[i].data.length / SpectrumPar.NumberOfWindowSegments)); 
-        OVS       = Math.floor(RWL * SpectrumPar.OverlapRatio);
-        NFFT      = Ug.length;
-        WinOption = true;
-        OneSided  = true;
-        [PSD, ]   = PowerSpectralDensity(Ug, RWL, OVS, ChannelList[i].FSamp, NFFT, WinOption, OneSided);
+        RWL                         = Math.max(2, Math.floor(ChannelList[i].data.length / SpectrumPar.NumberOfWindowSegments)); 
+        OVS                         = Math.floor(RWL * SpectrumPar.OverlapRatio);
+        NFFT                        = Ug.length;
+        WinOption                   = true;
+        OneSided                    = true;
+        ReturnSpectrogram           = true;
+        [PSD, , spectrogram, tVec]  = PowerSpectralDensity(Ug, RWL, OVS, ChannelList[i].FSamp, NFFT, WinOption, OneSided, ReturnSpectrogram);
 
         // STEP 9: Collect computed Spectrum Values
         SpectrumPar.FFT           = Mag_fft;                                    // Fourier Amplitude 
@@ -5607,7 +5608,7 @@ function PolyFit(X, Y, N, Opt) {
 
 }
 //-----------------------------------------------------------------------------------------------
-function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) {
+function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided, ReturnSpectrogram) {
     // Estimates the Power Spectral Density (PSD) of a 1D time series using Welch's
     // method (overlapping, windowed periodogram averaging). The time series is divided
     // into overlapping segments, each segment is optionally multiplied by a window
@@ -5617,25 +5618,36 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) 
     // (Parseval's theorem).
     //
     // Parameters:
-    //   data      : 1D array of time-series values (any consistent physical unit)
-    //   RWL       : Segment length in samples (default: floor(N/8), min 2)
-    //               Longer segments → finer frequency resolution, higher variance
-    //               Shorter segments → coarser resolution, lower variance
-    //   OVS       : Overlap between adjacent segments in samples (default: floor(RWL*0.25))
-    //               Must satisfy 0 ≤ OVS < RWL
-    //   FSamp     : Sampling frequency in Hz (default: 1)
-    //   NFFT      : FFT length per segment (default: NextPow2(RWL))
-    //               Must satisfy NFFT ≥ RWL
-    //   WinOption : true  → apply Hamming window to each segment  (Welch's method)
-    //               false → apply rectangular window              (Bartlett's method)
-    //               (default: true)
-    //   OneSided  : true  → return one-sided PSD from 0 to FSamp/2  (default)
-    //               false → return two-sided PSD from 0 to FSamp
+    //   data               : 1D array of time-series values (any consistent physical unit)
+    //   RWL                : Segment length in samples (default: floor(N/8), min 2)
+    //                        Longer segments → finer frequency resolution, higher variance
+    //                        Shorter segments → coarser resolution, lower variance
+    //   OVS                : Overlap between adjacent segments in samples (default: floor(RWL*0.25))
+    //                        Must satisfy 0 ≤ OVS < RWL
+    //   FSamp              : Sampling frequency in Hz (default: 1)
+    //   NFFT               : FFT length per segment (default: NextPow2(RWL))
+    //                        Must satisfy NFFT ≥ RWL
+    //   WinOption          : true  → apply Hamming window to each segment  (Welch's method)
+    //                        false → apply rectangular window              (Bartlett's method)
+    //                        (default: true)
+    //   OneSided           : true  → return one-sided PSD from 0 to FSamp/2  (default)
+    //                        false → return two-sided PSD from 0 to FSamp
+    //   ReturnSpectrogram  : true  → also return the spectrogram as a 2D array (K × nFreq),
+    //                                where each row is the normalised power spectrum of one segment
+    //                        false → return only [PSD, f]  (default)
     //
     // Returns: [PSD, f]
-    //   PSD : Power Spectral Density array (units²/Hz)
-    //         If data[] is in units of g, PSD is in g²/Hz
-    //   f   : Frequency vector in Hz corresponding to PSD bins
+    //   PSD            : Power Spectral Density array (units²/Hz)
+    //                    If data[] is in units of g, PSD is in g²/Hz
+    //   f              : Frequency vector in Hz corresponding to PSD bins
+    //   
+    //   spectrogram    : 2D array of size [K × nFreq] (only returned when ReturnSpectrogram = true)
+    //                    Each row contains the spectrum of one segment, normalised by
+    //                    sum(Win²), in units²/bin. Unlike PSD, rows are not averaged — they
+    //                    preserve time resolution across the signal.
+    //   tVec           : 1D array of length K containing the centre time of each segment (in seconds).
+    //                    tVec[k] = (k · DW + RWL/2) / FSamp,  k = 0, 1, ..., K-1
+    //                    Only returned when ReturnSpectrogram = true.
     //
     // Algorithm (Welch's method):
     //   1. Divide data[] into overlapping segments of length RWL with step DW = RWL - OVS
@@ -5670,28 +5682,32 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) 
     if (!Array.isArray(data)) { throw new Error("data[] must be a 1D array."); }
 
     // Check default values of input arguments
-    if (RWL       == null) { RWL       = Math.max(2, Math.floor(data.length / 8)); }
-    if (OVS       == null) { OVS       = Math.floor(RWL * 0.25);                   }
-    if (FSamp     == null) { FSamp     = 1;                                         }
-    if (NFFT      == null) { NFFT      = NextPow2(RWL);                             }
-    if (WinOption == null) { WinOption = true;                                      }
-    if (OneSided  == null) { OneSided  = true;                                      }
+    if (RWL                == null) { RWL       = Math.max(2, Math.floor(data.length / 8)); }
+    if (OVS                == null) { OVS       = Math.floor(RWL * 0.25);                   }
+    if (FSamp              == null) { FSamp     = 1;                                        }
+    if (NFFT               == null) { NFFT      = NextPow2(RWL);                            }
+    if (WinOption          == null) { WinOption = true;                                     }
+    if (OneSided           == null) { OneSided  = true;                                     }
+    if (ReturnSpectrogram  == null) { ReturnSpectrogram  = false;                           }
 
     // Check if the input arguments are correct; otherwise, throw an error.
-    if ((OneSided !== true) && (OneSided !== false))   { throw new Error("OneSided argument must be either true or false.");                                                                           }
-    if (RWL <= 0)                                      { throw new Error("RWL (segment length) must be greater than zero.");                                                                          }
-    if (RWL > data.length)                             { throw new Error("RWL (segment length) cannot exceed the length of data[].");                                                                 }
-    if (RWL > NFFT)                                    { throw new Error("RWL (segment length) cannot exceed NFFT.");                                                                                 }
-    if (OVS < 0)                                       { throw new Error("OVS (overlap) cannot be less than zero.");                                                                                  }
-    if (OVS >= RWL)                                    { throw new Error("OVS (overlap) must be less than RWL (segment length).");                                                                    }
-    if (NFFT < 2)                                      { throw new Error("NFFT must be at least 2.");                                                                                                 }
-    if (FSamp <= 0)                                    { throw new Error("FSamp (sampling frequency) must be greater than zero.");                                                                    }
-    if ((WinOption !== true) && (WinOption !== false)) { throw new Error("WinOption must be either true (Hamming window) or false (rectangular window).");                                           }
+    if ((ReturnSpectrogram !== true) && (ReturnSpectrogram !== false))  { throw new Error("ReturnSpectrogram argument must be either true or false.");                       }
+    if ((OneSided !== true) && (OneSided !== false))                    { throw new Error("OneSided argument must be either true or false.");                                }
+    if (RWL <= 0)                                                       { throw new Error("RWL (segment length) must be greater than zero.");                                }
+    if (RWL > data.length)                                              { throw new Error("RWL (segment length) cannot exceed the length of data[].");                       }
+    if (RWL > NFFT)                                                     { throw new Error("RWL (segment length) cannot exceed NFFT.");                                       }
+    if (OVS < 0)                                                        {  throw new Error("OVS (overlap) cannot be less than zero.");                                       }
+    if (OVS >= RWL)                                                     { throw new Error("OVS (overlap) must be less than RWL (segment length).");                          }
+    if (NFFT < 2)                                                       { throw new Error("NFFT must be at least 2.");                                                       }
+    if (FSamp <= 0)                                                     { throw new Error("FSamp (sampling frequency) must be greater than zero.");                          }
+    if ((WinOption !== true) && (WinOption !== false))                  { throw new Error("WinOption must be either true (Hamming window) or false (rectangular window).");  }
 
     let Re, Im, Mag, df, f;
 
     // Initialise PSD accumulator
-    let PSD = new Array(NFFT).fill(0);
+    let PSD        = new Array(NFFT).fill(0);
+    let col        = new Array(NFFT).fill(0);
+    let spectrogram = [];
 
     // Step advancement between successive segments
     const DW = RWL - OVS;
@@ -5701,17 +5717,22 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) 
     let Win;
     if (WinOption) { Win = Hamming(RWL); } else { Win = Rectwin(RWL); }
 
-    // Scale factor for PSD normalisation: SF = sum(Win²) · FSamp
-    const SF = Sum(Pow(Win, 2)) * FSamp;
+    // Scale factor for PSD and spectrogram normalisation
+    const SF_psd  = Sum(Pow(Win, 2)) * FSamp;    // PSD normalization  (units²/Hz)
+    const SF_spec = Sum(Pow(Win, 2));            // Spectrogram normalisation (units²/bin)
 
     // Accumulate windowed periodograms over all valid segments
-    let K  = 0;        // number of valid (non-NaN) segments processed
-    let a1 = 0;        // start index of current segment
-    let a2 = RWL - 1;  // end index of current segment
+    let K    = 0;            // number of valid (non-NaN) segments processed
+    let a1   = 0;            // start index of current segment
+    let a2   = RWL - 1;      // end index of current segment
+    let tVec = [];           // time vector for spectrogram
+    let dInc = DW / FSamp;   // increment for time vector
+
+    tVec[0]  = RWL / 2 / FSamp; // Initial value 
 
     while (a2 < data.length) {
 
-        // Extract segment
+        // Extract segment of data
         Re = GetRange(data, a1, a2);
 
         // Skip segments that contain NaN values
@@ -5724,38 +5745,56 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided) 
         [Re, Im] = FFT(Re, null, NFFT); 
 
         // Accumulate squared magnitude in-place (avoids creating a temporary array)
-        for (let i = 0; i < NFFT; i++) { PSD[i] += Re[i]*Re[i] + Im[i]*Im[i]; } 
+        for (let i = 0; i < NFFT; i++)  {
+            
+            col[i]  = Re[i]*Re[i] + Im[i]*Im[i];  // Compute power spectrum of the segmented-data
+            PSD[i] += col[i];                     // Accumulate into Power Spectral Density 
+            
+        }
 
+        // Store each power spectrum
+        if (ReturnSpectrogram) { 
+            spectrogram.push(Divide(col, SF_spec));   // normalize per segment
+            tVec.push( tVec.at(-1) + dInc  );         // centre time of this segment
+        }      
+        
         a1 += DW;
         a2 += DW;
         K++;
     }
 
+    // Remove the last element in tVec
+    tVec.pop();
+
+    // If all data-segments contain NaN, K remains 0; therefore, guard against it
+    if (K === 0) { throw new Error("No valid segments found (all segments contain NaN)."); }
+
     // Normalise: average over K segments and apply PSD scaling
-    PSD = Divide(PSD, SF * K);
+    PSD = Divide(PSD, SF_psd * K);
 
     // Build frequency vector
     df = FSamp / NFFT;
     f  = LinSpace(0, (NFFT - 1) * df, NFFT);
 
-    // Convert to one-sided PSD if requested
+    // One-sided conversion (number of bins)
+    const nFreq = IsEven(NFFT) ? NFFT / 2 + 1 : (NFFT + 1) / 2;
+
     if (OneSided) {
+        // Convert to one-sided spectrum and return
 
-        // Double all bins (will undo DC and Nyquist below)
-        PSD = Multiply(PSD, 2);
+        PSD      = Multiply(PSD, 2);                // Double all bins (will undo DC and Nyquist below)
+        PSD[0]  /= 2;                               // DC bin — not doubled
+        if (IsEven(NFFT)) { PSD[NFFT / 2] /= 2; }   // Nyquist bin — not doubled
+        
+        // Unlike PSD values, the spectrogram values are typically presented as-is without doubling
+        if (ReturnSpectrogram) { spectrogram = spectrogram.map(row => { return Truncate(row, nFreq); }); } 
 
-        if (IsEven(NFFT)) {
-            // Even NFFT: Nyquist bin exists at index NFFT/2
-            PSD[0]        /= 2;   // DC bin — not doubled
-            PSD[NFFT / 2] /= 2;   // Nyquist bin — not doubled
-            return [Truncate(PSD, NFFT / 2 + 1), Truncate(f, NFFT / 2 + 1)];
-        } else {
-            // Odd NFFT: no exact Nyquist bin
-            PSD[0] /= 2;          // DC bin — not doubled
-            return [Truncate(PSD, (NFFT + 1) / 2), Truncate(f, (NFFT + 1) / 2)];
-        }
+        PSD = Truncate(PSD, nFreq);
+        f   = Truncate(f,   nFreq);
     }
-
+    
+    // Return two-sided spectrum
+    if (ReturnSpectrogram) { return [PSD, f, spectrogram, tVec]; }
     return [PSD, f];
 }
 //-----------------------------------------------------------------------------------------------

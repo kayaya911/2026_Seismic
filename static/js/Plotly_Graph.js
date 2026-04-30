@@ -1381,6 +1381,7 @@ function Plotly_Clear_Graph(ChNum) {
 
     // Delete all traces
     for (i=0; i<traces.length; i++) {
+        traces[i].type        = 'scatter';
         traces[i].x           = [];
         traces[i].y           = [];
         traces[i].mode        = 'lines',
