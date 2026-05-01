@@ -942,18 +942,21 @@ function ResSpec_TMax_Change() {
 // Spectrum Parameters --------------------------------------------------------------------------
 function  Spectrum_Parameters() {
     
-    let WindowLength, OverlapRatio, Spectrum_SmoothingWindow;
+    let WindowLength, OverlapRatio, SmoothingWindow, SmoothingWindow_string;
     
-    WindowLength             = Number(document.getElementById('WindowLength').value);
-    OverlapRatio             = Number(document.getElementById('OverlapRatio').value);
-    Spectrum_SmoothingWindow = document.getElementById('Spectrum_SmoothingWindow').selectedIndex;
+    WindowLength      = Number(document.getElementById('WindowLength').value);
+    OverlapRatio      = Number(document.getElementById('OverlapRatio').value);
+    SmoothingWindow   = document.getElementById('Spectrum_SmoothingWindow').selectedIndex;
+
+    if (SmoothingWindow ==0) { SmoothingWindow_string = "Hamming"; } else { SmoothingWindow_string = "Rectangular"; }
 
     // Return Spectrum Parameters
     return {
         IsAnalysisCompleted      : false,
         WindowLength             : WindowLength,
         OverlapRatio             : OverlapRatio,
-        Spectrum_SmoothingWindow : Spectrum_SmoothingWindow,
+        SmoothingWindow          : SmoothingWindow,
+        SmoothingWindow_string   : SmoothingWindow_string,
         FFT                      : undefined,
         PowerSpectrum            : undefined,
         PSD                      : undefined,

@@ -3578,6 +3578,93 @@ async function DonwloadExcel_LoadDataPage() {
         else if (PageNo == 5) { 
             // File name 
             FileName = "SDA_Results_Spectrum.xlsx";
+
+            // Populate Time-RawData-AriasIntensity-CAV to WorkSheet
+            header = [  "Time (s)",
+                        "Raw Data (" + ChannelList[i].UnitString + ")",
+                    ];
+            data =  [   ChannelList[i].time,  
+                        Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor),
+                    ];
+            AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
+
+
+            // Populate Time-RawData-AriasIntensity-CAV to WorkSheet
+            header = [  "Frequency (Hz)",
+                        "Fourier Amplitude (" + ChannelList[i].UnitString + ")",
+                        "Phase (rad)",
+                        "Power Spectrum (" + ChannelList[i].UnitString + ")",
+                        "PSD  (" + ChannelList[i].UnitString + ")² / Hz",
+                    ];
+            data =  [   ChannelList[i].Results.Spectrum.Freq_vector,  
+                        ChannelList[i].Results.Spectrum.FFT,
+                        ChannelList[i].Results.Spectrum.FFTAngle,
+                        ChannelList[i].Results.Spectrum.PowerSpectrum,
+                        ChannelList[i].Results.Spectrum.PSD,
+                    ];
+            AddDataToWorkSheet(WorkSheet, [header], "D1", Transpose(data), "D2");
+
+            // Populate FileName, ChannelNumber, Duration (s), Data Type, Data Unit, Scale Factor, Orientation and Sampling Frequency
+            header = [["File Name"],             ["Channel Number"],     ["Duration (s)"],          ["Scale Factor"],             ["Orientation"],              ["Sampling Frequency (Hz)"]];   
+            data   = [[ChannelList[i].FileName], [ChannelList[i].ChNum], [ChannelList[i].Duration], [ChannelList[i].ScaleFactor], [ChannelList[i].Orientation], [ChannelList[i].FSamp]];
+            AddDataToWorkSheet(WorkSheet, header, "J1", data, "K1");
+            
+            // Populate Filter Settings to WorkSheet
+            header = [["Spectrum Settings"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, "J8", data, "K8");
+            
+
+            header = [["Window Length (s)"],                          ["Overlap Ratio"],                               ["Smoothing Window Type"]                                 ];   
+            data   = [[ChannelList[i].Results.Spectrum.WindowLength], [ChannelList[i].Results.Spectrum.OverlapRatio],  [ChannelList[i].Results.Spectrum.SmoothingWindow_string]  ];
+            AddDataToWorkSheet(WorkSheet, header, "J9", data, "K9");
+            
+            // Populate Filter Settings to WorkSheet
+            header = [["Filter Settings"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, "J13", data, "K13");
+
+            header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
+            data = [[ChannelList[i].Results.Spectrum.FiltPar.BaselineCorrection_String],
+                    [ChannelList[i].Results.Spectrum.FiltPar.FilterName_String],
+                    [ChannelList[i].Results.Spectrum.FiltPar.FilterType_String],
+                    [ChannelList[i].Results.Spectrum.FiltPar.FilterOrder],
+                    [ChannelList[i].Results.Spectrum.FiltPar.FilterBand],
+                    [ChannelList[i].Results.Spectrum.FiltPar.ZeroPhase],
+                    [ChannelList[i].Results.Spectrum.FiltPar.IsStable],
+                ];
+            AddDataToWorkSheet(WorkSheet, header, "J14", data, "K14");
+
+            // Populate Filter Coefficients to WorkSheet
+            header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
+            data = [ChannelList[i].Results.Spectrum.FiltPar.a, ChannelList[i].Results.Spectrum.FiltPar.b];
+            AddDataToWorkSheet(WorkSheet, header, "J22", data, "K22");
+
+            // All column formatting
+            columnConfig = [
+                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Time (s)
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Raw Data 
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Empty
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Frequency
+                { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Fourier Amplitude 
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Phase
+                { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Power Spectrum
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Power Spectral Density
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Empty
+                { width: 35, align: { horizontal: 'left',   vertical: 'center' } },  // 
+                { width: 25, align: { horizontal: 'left',   vertical: 'center' } },  // 
+            ];
+
+            range = XLSX.utils.decode_range(WorkSheet['!ref']);
+            ColumnStyle(WorkSheet, range, columnConfig);
+
+            WorkSheet["J8" ].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J13"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J22"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J23"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+
+            
+
         }
         else if (PageNo == 6) {
             // File name 
@@ -3598,10 +3685,15 @@ async function DonwloadExcel_LoadDataPage() {
                     ];
             AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
 
+            // Populate FileName, ChannelNumber, Duration (s), Data Type, Data Unit, Scale Factor, Orientation and Sampling Frequency
+            header = [["File Name"],             ["Channel Number"],     ["Duration (s)"],          ["Scale Factor"],             ["Orientation"],              ["Sampling Frequency (Hz)"]];   
+            data   = [[ChannelList[i].FileName], [ChannelList[i].ChNum], [ChannelList[i].Duration], [ChannelList[i].ScaleFactor], [ChannelList[i].Orientation], [ChannelList[i].FSamp]];
+            AddDataToWorkSheet(WorkSheet, header, "F1", data, "G1");
+
             // Populate SM Parameters to WorkSheet
             header = [["Strong Motion Parameters"]];
             data = "";
-            AddDataToWorkSheet(WorkSheet, header, "F1", data, "G1");
+            AddDataToWorkSheet(WorkSheet, header, "F8", data, "G8");
 
             header = [  ["Peak Ground Acceleration (" + ChannelList[i].UnitString + ")" ],
                         ["Root Mean Square ("         + ChannelList[i].UnitString + ")" ],
@@ -3624,12 +3716,12 @@ async function DonwloadExcel_LoadDataPage() {
                        [ChannelList[i].Results.SM_Parameters.HSI.toPrecision(2)],
                        [ChannelList[i].Results.SM_Parameters.kSI.toPrecision(2)],
                     ];
-            AddDataToWorkSheet(WorkSheet, header, "F2", data, "G2");
+            AddDataToWorkSheet(WorkSheet, header, "F9", data, "G9");
 
             // Populate Filter Settings to WorkSheet
             header = [["Filter Settings"]];
             data = "";
-            AddDataToWorkSheet(WorkSheet, header, "F12", data, "G12");
+            AddDataToWorkSheet(WorkSheet, header, "F19", data, "G19");
 
             header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
             data = [[ChannelList[i].Results.SM_Parameters.FiltPar.BaselineCorrection_String],
@@ -3640,30 +3732,31 @@ async function DonwloadExcel_LoadDataPage() {
                     [ChannelList[i].Results.SM_Parameters.FiltPar.ZeroPhase],
                     [ChannelList[i].Results.SM_Parameters.FiltPar.IsStable],
                 ];
-            AddDataToWorkSheet(WorkSheet, header, "F13", data, "G13");
+            AddDataToWorkSheet(WorkSheet, header, "F20", data, "G20");
 
             // Populate Filter Coefficients to WorkSheet
             header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
             data = [ChannelList[i].Results.SM_Parameters.FiltPar.a, ChannelList[i].Results.SM_Parameters.FiltPar.b];
-            AddDataToWorkSheet(WorkSheet, header, "F21", data, "G21");
+            AddDataToWorkSheet(WorkSheet, header, "F28", data, "G28");
 
             // All column formatting
             columnConfig = [
-                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Col 0:  Time (s)
-                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Col 1:  Raw Data 
-                { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Col 2:  Arias Intensity
-                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  CAV
-                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Col 3:  Empty
-                { width: 45, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Key
-                { width: 20, align: { horizontal: 'left',   vertical: 'center' } },  // Col 4:  SM Parameter Value
+                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Time (s)
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Raw Data 
+                { width: 30, align: { horizontal: 'right',  vertical: 'center' } },  // Arias Intensity
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // CAV
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Empty
+                { width: 45, align: { horizontal: 'left',   vertical: 'center' } },  // SM Parameter Key
+                { width: 20, align: { horizontal: 'left',   vertical: 'center' } },  // SM Parameter Value
             ];
 
             range = XLSX.utils.decode_range(WorkSheet['!ref']);
             ColumnStyle(WorkSheet, range, columnConfig);
 
-            WorkSheet["F12"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
-            WorkSheet["F21"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
-            WorkSheet["F22"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["F8" ].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["F19"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["F28"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["F29"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
         }
 
         // Add the workSheet to WorkBook
