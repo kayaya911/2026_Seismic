@@ -57,7 +57,7 @@ async function Plotly_Graph_Update(ChNum) {
         traces[0].y             = Multiply(res.Data, ChannelList[ChNum].ScaleFactor);
         traces[0].mode          = 'lines',
         traces[0].marker        = { color: 'blue', size: 5, symbol: 'circle' },
-        traces[0].yaxis       = "y1",
+        traces[0].yaxis         = "y1",
         traces[0].visible       = true;
         traces[0].opacity       = 1.00;
         traces[0].line          = {color: 'blue', width: 1.50, dash: 'solid' };
@@ -65,7 +65,7 @@ async function Plotly_Graph_Update(ChNum) {
         traces[0].showlegend    = false;             // Don't show legend
 
         // Update y-axis of Plotly Graph
-        layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
+        layout_update.yaxis.title.text      = res.yTitle;
         layout_update.yaxis2.showticklabels = false;
         layout_update.yaxis2.title.text     = "";
 
@@ -73,7 +73,6 @@ async function Plotly_Graph_Update(ChNum) {
         document.getElementById( Statictics_Peak_ID ).innerHTML = res.Peak.toPrecision(4);
         document.getElementById( Statictics_Mean_ID ).innerHTML = res.Mean.toPrecision(4);
         document.getElementById( Statictics_RMS_ID  ).innerHTML = res.RMS.toPrecision(4);
-
 
         // Asign select-element to cell-element in table
         document.getElementById(Unit_Cell_ID).innerHTML = "";
@@ -875,6 +874,8 @@ async function Plotly_Graph_Update(ChNum) {
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);
 
+
+
 }
 //-------------------------------------------------------------------------------------------------------------
 async function Plotly_Create_Graph(Container_Id, Channel) {
@@ -1005,8 +1006,8 @@ async function Plotly_NewGraph(Div_ID, Channel) {
     layout = {
         title           : { text: GraphTitle, font: {size: 10 }, x: 0.5, xanchor: 'center', y: 0.98, yanchor: 'top'},
         xaxis           : { zeroline: false, automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: xLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true },
-        yaxis           : { zeroline: true,  automargin: true, tickfont: { size: 15 }, tickformat: '.2e', linecolor: 'black', linewidth: 1, mirror: true, title: {text: yLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, rangemode: 'tozero' },
-        yaxis2          : { zeroline: true,  automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false, matches: "y", rangemode: 'tozero'},
+        yaxis           : { zeroline: true,  automargin: true, tickfont: { size: 15 }, tickformat: '.2e', linecolor: 'black', linewidth: 1, mirror: true, title: {text: yLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, rangemode: 'normal' },
+        yaxis2          : { zeroline: true,  automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false, matches: "y", rangemode: 'normal'},
         plot_bgcolor    : '#ffffff', 
         paper_bgcolor   : '#ffffff',
         legend          : { x: 0.99, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#f8f4f4', bordercolor: '#6c6a6a', borderwidth: 1.5, },
@@ -1389,8 +1390,9 @@ function Plotly_Clear_Graph(ChNum) {
 
     // Get the existing layout in the PlotArea_ID
     layout_update = document.getElementById(PlotArea_ID).layout;
-    layout_update.xaxis.autorange = true;
-    layout_update.yaxis.autorange = true;
+    layout_update.xaxis.autorange  = true;
+    layout_update.yaxis.autorange  = true;
+    layout_update.yaxis2.autorange = true;
 
     // Delete shapes
     layout_update.shapes[0].x0 = 0;

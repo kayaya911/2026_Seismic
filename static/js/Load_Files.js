@@ -525,7 +525,7 @@ async function Add_To_Table(Channel) {
         // Increase the number of Plotly-elememnts are in panel2
         Current_Plotly_Num++;
     }
-
+    
     // Checkbox for analysis - TRUE --------------------------------------------------------------------------------
     document.getElementById('FileTreeView_Checkbox_' + Channel.Unique_ID).checked = true;
 

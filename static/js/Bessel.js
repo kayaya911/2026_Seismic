@@ -901,48 +901,40 @@ function Eig(A, Option = {}) {
     // Wrapper: Compute eigenvalues and/or eigenvectors of A
     //
     // Parameters:
-    //   A       : Square matrix (real or complex 2D array)
-    //   Option  : {
-    //     tol        : convergence tolerance                                            (default: 1e-10)
-    //     vectors    : compute eigenvectors?                                            (default: true)
-    //     subset     : [iLo, iHi] inclusive 0-based index range after magnitude sort
-    //                  e.g. [0, 4] returns the 5 smallest-magnitude eigenvalues         (default: all)
-    //     algorithm  : 'auto'|'qr'|'divide-conquer'|'lanczos'|'arnoldi'                 (default: 'auto')
-    //     maxIter    : max iterations                                                   (default: 1000)
-    //     checkInput : validate A on entry?                                             (default: true)
-    //   }
+    //     A          : Square matrix (real or complex 2D array)
+    //     Option     : {
+    //          checkInput      : validate A on entry?                                             (default: true)
+    //          returnVectors   : compute eigenvectors?                                            (default: true)
+    //          subset          : [iLo, iHi] inclusive 0-based index range after magnitude sort
+    //                            e.g. [0, 4] returns the 5 smallest-magnitude eigenvalues         (default: all)
+    //          maxIter         : max iterations                                                   (default: 1000)
+    //          tol             : convergence tolerance                                            (default: 1e-10)
+    //                  }
     //
     // Returns:
     //   {
     //     values  : Array of eigenvalues sorted ascending by magnitude (real or complex)
-    //     vectors : Matrix of eigenvectors as columns, or null if Option.vectors === false
+    //     vectors : Matrix of eigenvectors as columns, or null if Option.returnVectors === false
     //     info    : {
-    //                 algorithm, matrixType, size, real, symmetric, hermitian,
+    //                 algorithm ('qr'), matrixType, size, real, symmetric, hermitian,
     //                 converged, iterations
     //               }
     //   }
     //
     // Matrix type detection and solver dispatch:
     //
-    //   ┌──────────────────────────────┬────────────────────────────────────────────────────────────────┐
-    //   │ Matrix Type                  │ Algorithm       →  Solver                                      │
-    //   ├──────────────────────────────┼────────────────────────────────────────────────────────────────┤
-    //   │ Case A: Real symmetric       │ divide-conquer* →  Eig_DivideConquer_Real_Symmetric            │
-    //   │                              │ lanczos†        →  Eig_Lanczos_Real_Symmetric                  │
-    //   │                              │ qr              →  Eig_QR_Real_Symmetric                       │
-    //   ├──────────────────────────────┼────────────────────────────────────────────────────────────────┤
-    //   │ Case B: Complex Hermitian    │ divide-conquer* →  Eig_DivideConquer_Complex_Hermitian         │
-    //   │                              │ lanczos†        →  Eig_Lanczos_Complex_Hermitian               │
-    //   │                              │ qr              →  Eig_QR_Complex_Hermitian                    │
-    //   ├──────────────────────────────┼────────────────────────────────────────────────────────────────┤
-    //   │ Case C: Real non-symmetric   │ qr*             →  Eig_General_Real                            │
-    //   │                              │ arnoldi†        →  Eig_Arnoldi_Real                            │
-    //   ├──────────────────────────────┼────────────────────────────────────────────────────────────────┤
-    //   │ Case D: Complex non-Hermitian│ qr*             →  Eig_General_Complex                         │
-    //   │                              │ arnoldi†        →  Eig_Arnoldi_Complex                         │
-    //   └──────────────────────────────┴────────────────────────────────────────────────────────────────┘
-    //   * default when algorithm === 'auto'
-    //   † auto-selected when algorithm === 'auto' AND n > 200 AND k/n < 0.10
+    //   ┌──────────────────────────────┬────────────────────────────────────────────────┐
+    //   │ Matrix Type                  │ Solver                                         │
+    //   ├──────────────────────────────┼────────────────────────────────────────────────┤
+    //   │ Case A: Real symmetric       │ Eig_QR_Real_Symmetric                          │
+    //   ├──────────────────────────────┼────────────────────────────────────────────────┤
+    //   │ Case B: Complex Hermitian    │ Eig_QR_Complex_Hermitian                       │
+    //   ├──────────────────────────────┼────────────────────────────────────────────────┤
+    //   │ Case C: Real non-symmetric   │ Eig_General_Real                               │
+    //   ├──────────────────────────────┼────────────────────────────────────────────────┤
+    //   │ Case D: Complex non-Hermitian│ Eig_General_Complex                            │
+    //   └──────────────────────────────┴────────────────────────────────────────────────┘
+    //   All cases use QR-based algorithms.
     //
     // Notes:
     //   - Eigenvalues are always returned sorted ascending by magnitude (|λ| = √(re²+im²)).
@@ -952,47 +944,65 @@ function Eig(A, Option = {}) {
     //     the two flags are mutually exclusive by construction.
     //   - Complex matrices are tested for Hermitian symmetry (A = Aᴴ), not real symmetry.
     //     A complex-symmetric matrix is NOT Hermitian and is dispatched as Case D.
-    //   - The solver names for Cases C & D follow the _Real_Symmetric / _Complex_Hermitian
-    //     suffix convention to denote real vs complex arithmetic, not matrix structure.
+    //   - The solver names for Cases C & D follow the _Real / _Complex suffix convention
+    //     to denote real vs complex arithmetic, not matrix structure.
     //
     // Author   : Dr. Yavuz Kaya, P.Eng.
     // Modified : 20.Feb.2026
-    // =========================================================
 
-    // ---- 1. Extract n unconditionally (needed even if checkInput is false) ----
-    if (!Array.isArray(A) || A.length === 0 || !Array.isArray(A[0])) {
-        throw new Error('Eig: A must be a non-empty 2D array');
-    }
+    // -------------------------------------------------------------------------
+    // Step 1 — Extract the size of A-matrix (n) unconditionally (needed even if checkInput is false)
+    // -------------------------------------------------------------------------
+    if (!Array.isArray(A) || A.length === 0 || !Array.isArray(A[0])) { throw new Error('Eig: A must be a non-empty 2D array'); }
     const n = A.length;
 
-    // ---- 2. Parse and validate options ----------------------------------------
-    const tol        = Option.tol        ?? 1e-10;
-    const vectors    = Option.vectors    ?? true;
-    const subset     = Option.subset     ?? null;
-    const algorithm  = Option.algorithm  ?? 'auto';
-    const maxIter    = Option.maxIter    ?? 1000;
-    const checkInput = Option.checkInput ?? true;
+    // -------------------------------------------------------------------------
+    // Step 2 — Validate Option type
+    // -------------------------------------------------------------------------
+    if (typeof Option !== "object" || Array.isArray(Option)) { throw new TypeError("Eig: Option must be a plain object."); }
 
-    if (typeof tol !== 'number' || tol <= 0)
-        throw new Error('Eig: tol must be a positive number');
-    if (!Number.isInteger(maxIter) || maxIter < 1)
-        throw new Error('Eig: maxIter must be a positive integer');
-    if (typeof vectors !== 'boolean')
-        throw new Error('Eig: vectors must be a boolean');
-    if (!['auto', 'qr', 'divide-conquer', 'lanczos', 'arnoldi'].includes(algorithm))
-        throw new Error(`Eig: unknown algorithm "${algorithm}"`);
-
-    // ---- 3. Validate subset BEFORE early returns ------------------------------
+    // -------------------------------------------------------------------------
+    // Step 4 — Validate all Option fields (type / range checks)
+    // -------------------------------------------------------------------------
+    if (Option.checkInput    != null && typeof Option.checkInput    !== "boolean") { throw new TypeError("Eig: Option.checkInput must be a boolean.");     }
+    if (Option.returnVectors != null && typeof Option.returnVectors !== "boolean") { throw new TypeError("Eig: Option.returnVectors must be a boolean.");  }
+    if (Option.maxIter       != null && typeof Option.maxIter       !== "boolean") { throw new TypeError("Eig: Option.maxIter must be a boolean.");        }
     if (subset !== null) {
-        if (!Array.isArray(subset) || subset.length !== 2 ||
-            !Number.isInteger(subset[0]) || !Number.isInteger(subset[1]) ||
-            subset[0] < 0 || subset[1] < subset[0])
+        if (!Array.isArray(subset) || subset.length !== 2 || !Number.isInteger(subset[0]) || !Number.isInteger(subset[1]) || subset[0] < 0 || subset[1] < subset[0]) {
             throw new Error('Eig: subset must be [iLo, iHi] with 0 <= iLo <= iHi');
-        if (subset[1] >= n)
+        }
+        if (subset[1] >= n) {
             throw new Error(`Eig: subset[1]=${subset[1]} out of range for ${n}x${n} matrix`);
+        }
+    }
+    if (Option.tol != null) {
+        if (typeof Option.tol !== "number" || isNaN(Option.tol)) { throw new TypeError("Eig: Option.tol must be a number.");            }
+        if (!isFinite(Option.tol))                               { throw new RangeError("Eig: Option.tol must be finite.");             }
+        if (Option.tol <= 0)                                     { throw new RangeError("Eig: Option.tol must be greater than zero.");  }
     }
 
-    // ---- 4. Full input validation (skippable for performance) -----------------
+    // -------------------------------------------------------------------------
+    // Step 5 — Reject unrecognized keys (catches typos like maxIteration instead of maxIter)
+    // -------------------------------------------------------------------------
+    const knownKeys = new Set(["checkInput", "returnVectors", "subset", "maxIter", "tol"]);
+    for (const key of Object.keys(Option)) {
+        if (!knownKeys.has(key)) {
+            throw new TypeError(`Eig: Unrecognized option key "${key}" — did you mean one of: ${[...knownKeys].join(", ")}?`);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 6 — Resolve defaults
+    // -------------------------------------------------------------------------
+    const checkInput    = Option.checkInput    ?? true;
+    const returnVectors = Option.returnVectors ?? true;
+    const subset        = Option.subset        ?? true;
+    const maxIter       = Option.maxIter       ?? 1000;
+    const tol           = Option.tol           ?? 1e-6;
+
+    // -------------------------------------------------------------------------
+    // Step 7 — Full input validation (skippable for performance)
+    // -------------------------------------------------------------------------
     if (checkInput) {
         if (A[0].length !== n) throw new Error('Eig: A must be square');
 
@@ -1004,22 +1014,23 @@ function Eig(A, Option = {}) {
                 const isComplex = v instanceof ComplexNum;
                 const val       = isComplex ? v.Re : v;
                 const vim       = isComplex ? v.Im : 0;
-                if (!isFinite(val) || !isFinite(vim))
-                    throw new Error(`Eig: Non-finite value detected at A[${i}][${j}]`);
+                if (!isFinite(val) || !isFinite(vim)) {  throw new Error(`Eig: Non-finite value detected at A[${i}][${j}]`);  }
             }
         }
     }
 
-    // ---- 5. Characterize matrix — four exclusive cases ------------------------
+    // -------------------------------------------------------------------------
+    // Step 8 — Characterize matrix — four exclusive cases
+    // -------------------------------------------------------------------------
     //
     //   IsReal() inspects data types, not values. A ComplexNum matrix with all-zero
     //   imaginaries is still "complex" for dispatch purposes, so solver selection is
     //   driven by storage type, not numerical content.
     //
-    //   Case A — Real    + Symmetric  : isReal=true,  isSymm=true,  isHerm=false
-    //   Case B — Complex + Hermitian  : isReal=false, isSymm=false, isHerm=true
-    //   Case C — Real    + ¬Symmetric : isReal=true,  isSymm=false, isHerm=false
-    //   Case D — Complex + ¬Hermitian : isReal=false, isSymm=false, isHerm=false
+    //   Case A — (Real    + Symmetric    ) : isReal=true,  isSymm=true,  isHerm=false
+    //   Case B — (Complex + Hermitian    ) : isReal=false, isSymm=false, isHerm=true
+    //   Case C — (Real    + NonSymmetric ) : isReal=true,  isSymm=false, isHerm=false
+    //   Case D — (Complex + NonHermitian ) : isReal=false, isSymm=false, isHerm=false
     //
     //   isSymm is only tested for real matrices   (complex symmetric ≠ Hermitian).
     //   isHerm is only tested for complex matrices (avoids redundant test for real input).
@@ -1035,13 +1046,15 @@ function Eig(A, Option = {}) {
         ? (isSymm ? 'real symmetric'    : 'real non-symmetric')
         : (isHerm ? 'complex Hermitian' : 'complex non-Hermitian');
 
-    // ---- 6. Handle trivial sizes analytically ---------------------------------
+    // -------------------------------------------------------------------------
+    // Step 9 — Handle trivial matrix sizes analytically (1-by-1) or (2-by-2)
+    // -------------------------------------------------------------------------
     let result;
-    if      (n === 1) result = Eig_Finalize(Eig_1x1(A, vectors),               subset, vectors);
-    else if (n === 2) result = Eig_Finalize(Eig_2x2(A, isSymmOrHerm, vectors), subset, vectors);
+    if      (n === 1) result = Eig_Finalize(Eig_1x1(A, returnVectors),                      subset, returnVectors);
+    else if (n === 2) result = Eig_Finalize(Eig_2x2(A, isSymmOrHerm, returnVectors),        subset, returnVectors);
 
     if (n <= 2) {
-        if (!result.info) throw new Error('Eig: solver returned no info object');
+        if (!result.info) { throw new Error('Eig: solver returned no info object'); }
         const { converged = null, iterations = null } = result.info;
         result.info = {
             algorithm  : 'analytic',
@@ -1056,141 +1069,45 @@ function Eig(A, Option = {}) {
         return result;
     }
 
-    // ---- 7. Select algorithm --------------------------------------------------
-    //
-    // Each matrix type admits a different set of solvers:
-    //   Cases A & B (symmetric/Hermitian) : divide-conquer | qr | lanczos
-    //   Cases C & D (general)             : qr | arnoldi
-    //
-    // Passing an algorithm from the wrong family (e.g. 'lanczos' for a general matrix)
-    // is rejected here with a descriptive error before any solver is invoked.
-
-    const validAlgorithms = isSymmOrHerm
-        ? new Set(['auto', 'divide-conquer', 'qr', 'lanczos'])
-        : new Set(['auto', 'qr', 'arnoldi']);
-
-    if (!validAlgorithms.has(algorithm)) {
-        const valid = [...validAlgorithms].filter(a => a !== 'auto').join(', ');
-        throw new Error(
-            `Eig: algorithm "${algorithm}" is not supported for ${matrixType} matrices. ` +
-            `Valid choices: ${valid}.`
-        );
-    }
-
-    let chosenAlgorithm = algorithm;
-
-    if (algorithm === 'auto') {
-        if (isSymmOrHerm) {
-            // Default: Divide-and-conquer — O(n³), cache-friendly, best for full spectrum.
-            // Auto-switch to Lanczos O(k·n²) per restart when:
-            //   n    > 200  : dense O(n³) starts to dominate wall-time in JavaScript
-            //   k/n  < 0.10 : iterative savings outweigh restart overhead
-            chosenAlgorithm = 'divide-conquer';
-            if (subset !== null && n > 200) {
-                const k = subset[1] - subset[0] + 1;
-                if (k / n < 0.10) chosenAlgorithm = 'lanczos';
-            }
-        } else {
-            // Default: Francis double-shift QR — robust O(n³) for all general matrices.
-            // Auto-switch to Arnoldi O(k·n²) per restart under the same condition.
-            chosenAlgorithm = 'qr';
-            if (subset !== null && n > 200) {
-                const k = subset[1] - subset[0] + 1;
-                if (k / n < 0.10) chosenAlgorithm = 'arnoldi';
-            }
-        }
-    }
-
-    // ---- 8. Dispatch to solver ------------------------------------------------
-    //
-    // The four matrix cases each route to a dedicated, type-specific solver function.
-    // Solver naming convention:
-    //   Eig_<Algorithm>_Real_Symmetric    — real arithmetic (Cases A and C)
-    //   Eig_<Algorithm>_Complex_Hermitian — complex arithmetic (Cases B and D)
-    //
-    // For Cases C & D the suffix denotes arithmetic type only, not matrix structure;
-    // these solvers implement the Francis double-shift QR / Arnoldi for general matrices.
-
+    // -------------------------------------------------------------------------
+    // Step 10 — Dispatch to QR solver
+    // -------------------------------------------------------------------------
     if (isSymm) {
         // ── Case A : Real symmetric ──────────────────────────────────────────
-        switch (chosenAlgorithm) {
-            case 'divide-conquer':
-                result = Eig_DivideConquer_Real_Symmetric(A, tol, maxIter, vectors);
-                break;
-            case 'lanczos':
-                result = Eig_Lanczos_Real_Symmetric(A, tol, maxIter, vectors);
-                break;
-            case 'qr':
-                result = Eig_QR_Real_Symmetric(A, tol, maxIter, vectors);
-                break;
-            default:
-                throw new Error(
-                    `Eig: unhandled algorithm "${chosenAlgorithm}" for ${matrixType} matrix`
-                );
-        }
+        result = Eig_QR_Real_Symmetric(A, tol, maxIter, returnVectors);
 
     } else if (isHerm) {
         // ── Case B : Complex Hermitian ────────────────────────────────────────
-        switch (chosenAlgorithm) {
-            case 'divide-conquer':
-                result = Eig_DivideConquer_Complex_Hermitian(A, tol, maxIter, vectors);
-                break;
-            case 'lanczos':
-                result = Eig_Lanczos_Complex_Hermitian(A, tol, maxIter, vectors);
-                break;
-            case 'qr':
-                result = Eig_QR_Complex_Hermitian(A, tol, maxIter, vectors);
-                break;
-            default:
-                throw new Error(
-                    `Eig: unhandled algorithm "${chosenAlgorithm}" for ${matrixType} matrix`
-                );
-        }
+        result = Eig_QR_Complex_Hermitian(A, tol, maxIter, returnVectors);
 
     } else if (isReal) {
         // ── Case C : Real non-symmetric ───────────────────────────────────────
-        switch (chosenAlgorithm) {
-            case 'qr':
-                result = Eig_General_Real(A, tol, maxIter, vectors);
-                break;
-            case 'arnoldi':
-                result = Eig_Arnoldi_Real(A, tol, maxIter, vectors);
-                break;
-            default:
-                throw new Error(
-                    `Eig: unhandled algorithm "${chosenAlgorithm}" for ${matrixType} matrix`
-                );
-        }
+        result = Eig_General_Real(A, tol, maxIter, returnVectors);
 
     } else {
         // ── Case D : Complex non-Hermitian ────────────────────────────────────
-        switch (chosenAlgorithm) {
-            case 'qr':
-                result = Eig_General_Complex(A, tol, maxIter, vectors);
-                break;
-            case 'arnoldi':
-                result = Eig_Arnoldi_Complex(A, tol, maxIter, vectors);
-                break;
-            default:
-                throw new Error(
-                    `Eig: unhandled algorithm "${chosenAlgorithm}" for ${matrixType} matrix`
-                );
-        }
+        result = Eig_General_Complex(A, tol, maxIter, returnVectors);
     }
 
-    // ---- 9. Defensive guard: ensure vectors contract is respected -------------
-    if (!vectors) result.vectors = null;
+    // -------------------------------------------------------------------------
+    // Step 10 — Defensive guard: ensure returnVectors contract is respected
+    // -------------------------------------------------------------------------
+    if (!returnVectors) result.vectors = null;
 
-    // ---- 10. Sort ascending by magnitude and apply subset ---------------------
-    result = Eig_Finalize(result, subset, vectors);
+    // -------------------------------------------------------------------------
+    // Step 11 — Sort ascending by magnitude and apply subset
+    // -------------------------------------------------------------------------
+    result = Eig_Finalize(result, subset, returnVectors);
 
-    // ---- 11. Attach diagnostic info and return --------------------------------
+    // -------------------------------------------------------------------------
+    // Step 12 — Attach diagnostic info and return
+    // -------------------------------------------------------------------------
     if (!result.info) throw new Error('Eig: solver returned no info object');
 
     const { converged = null, iterations = null } = result.info;
 
     result.info = {
-        algorithm  : chosenAlgorithm,
+        algorithm  : 'qr',
         matrixType,           // 'real symmetric' | 'complex Hermitian' |
                               // 'real non-symmetric' | 'complex non-Hermitian'
         size       : n,
@@ -1204,116 +1121,33 @@ function Eig(A, Option = {}) {
     return result;
 
     // =========================================================================
-    // Helper functions
+    // Helper functions — QR solvers only
     // =========================================================================
 
     //--------------------------------------------------------------------------
-    function Eig_Finalize(result, subset, vectors) {
-        // Sorts result.values ascending by magnitude (|λ| = √(re²+im²)) and
-        // applies the same permutation to result.vectors columns (if non-null).
-        // Then slices to the inclusive index range [subset[0]..subset[1]] when
-        // subset is non-null; otherwise returns the full sorted result.
-        // Called for ALL n (including n ≤ 2 analytic paths) so sorting and
-        // subsetting logic is never duplicated in individual solvers.
-        //
-        // Parameters:
-        //   result  : { values, vectors, info } returned by any solver
-        //   subset  : [iLo, iHi] inclusive 0-based range, or null for all
-        //   vectors : if false, result.vectors is null; no column permutation attempted
-        //
-        // Returns:
-        //   result with values (and vector columns) sorted and sliced in place
-
+    function Eig_Finalize(result, subset, returnVectors) {
+        // ... (unchanged)
         console.log(' Eig_Finalize ');
     }
 
     //--------------------------------------------------------------------------
-    function Eig_1x1(A, vectors) {
-        // Computes the eigenvalue of a 1×1 matrix analytically: λ = A[0][0].
-        // Handles both real scalars and ComplexNum objects.
-        // The sole eigenvector is always [1] (or [{ Re:1, Im:0 }] for complex input).
-        //
-        // Returns:
-        //   { values: [λ], vectors: [[1]] | null, info: { converged: true, iterations: 0 } }
-
+    function Eig_1x1(A, returnVectors) {
+        // ... (unchanged)
         console.log(' Eig_1x1 ');
     }
 
     //--------------------------------------------------------------------------
-    function Eig_2x2(A, isSymmOrHerm, vectors) {
-        // Computes eigenvalues (and optionally eigenvectors) of a 2×2 matrix analytically.
-        // Symmetric/Hermitian path: numerically stable closed-form discriminant.
-        // General path: quadratic characteristic polynomial with complex square-root support.
-        // Eigenvectors are back-computed from (A − λI)x = 0 for each eigenvalue.
-        //
-        // Returns:
-        //   { values: [λ₀,λ₁], vectors: [[v₀],[v₁]] | null, info: { converged: true, iterations: 0 } }
-        //   (unsorted — Eig_Finalize handles ordering)
-
+    function Eig_2x2(A, isSymmOrHerm, returnVectors) {
+        // ... (unchanged)
         console.log(' Eig_2x2 ');
     }
 
     //--------------------------------------------------------------------------
-    function Eig_DivideConquer_Real_Symmetric(A, tol, maxIter, vectors) {
-        // Case A — Real symmetric matrix, Divide-and-Conquer algorithm.
-        // Step 1 — Householder tridiagonalisation : A = Q T Qᵀ,  O(n³)
-        // Step 2 — D&C tridiagonal eigensolver    : T = V Λ Vᵀ,  O(n³) cache-friendly
-        // Step 3 — Back-transform eigenvectors    : Z = Q V,      O(n³)  (vectors only)
-        // All eigenvalues are real. Default 'auto' solver for Case A.
-        //
-        // Returns:
-        //   { values: real[], vectors: n×n | null, info: { converged, iterations } }
-
-        console.log(' Eig_DivideConquer_Real_Symmetric ');
-    }
-
-    //--------------------------------------------------------------------------
-    function Eig_DivideConquer_Complex_Hermitian(A, tol, maxIter, vectors) {
-        // Case B — Complex Hermitian matrix, Divide-and-Conquer algorithm.
-        // Step 1 — Householder tridiagonalisation : A = Q T Qᴴ,  O(n³)
-        // Step 2 — D&C tridiagonal eigensolver    : T = V Λ Vᵀ,  O(n³) cache-friendly
-        // Step 3 — Back-transform eigenvectors    : Z = Q V,      O(n³)  (vectors only)
-        // All eigenvalues are real (Hermitian spectrum). Default 'auto' solver for Case B.
-        //
-        // Returns:
-        //   { values: real[], vectors: n×n complex | null, info: { converged, iterations } }
-
-        console.log(' Eig_DivideConquer_Complex_Hermitian ');
-    }
-
-    //--------------------------------------------------------------------------
-    function Eig_Lanczos_Real_Symmetric(A, tol, maxIter, vectors) {
-        // Case A — Real symmetric matrix, Implicitly-Restarted Lanczos (IRLM).
-        // Builds a real Krylov–Lanczos basis, extracts Ritz pairs, checks residual
-        // ‖A v − λ v‖ < tol, restarts implicitly until k eigenvalues converge.
-        // Complexity O(k·n²) per restart. Auto-selected for Case A when n>200, k/n<0.10.
-        //
-        // Returns:
-        //   { values: real[], vectors: n×k | null, info: { converged, iterations } }
-
-        console.log(' Eig_Lanczos_Real_Symmetric ');
-    }
-
-    //--------------------------------------------------------------------------
-    function Eig_Lanczos_Complex_Hermitian(A, tol, maxIter, vectors) {
-        // Case B — Complex Hermitian matrix, Implicitly-Restarted Lanczos (IRLM).
-        // Builds a complex Krylov–Lanczos basis with inner products under Hermitian
-        // conjugation, extracts Ritz pairs, restarts until k eigenvalues converge.
-        // Complexity O(k·n²) per restart. Auto-selected for Case B when n>200, k/n<0.10.
-        //
-        // Returns:
-        //   { values: real[], vectors: n×k complex | null, info: { converged, iterations } }
-
-        console.log(' Eig_Lanczos_Complex_Hermitian ');
-    }
-
-    //--------------------------------------------------------------------------
-    function Eig_QR_Real_Symmetric(A, tol, maxIter, vectors) {
+    function Eig_QR_Real_Symmetric(A, tol, maxIter, returnVectors) {
         // Case A — Real symmetric matrix, Wilkinson-shift QR iteration.
         // Step 1 — Householder tridiagonalisation : A = Q T Qᵀ,  O(n³)
         // Step 2 — Shifted QR iteration on T      : O(n²) per step, cubic convergence
-        // Step 3 — Accumulate Givens rotations    : Z = Q · G,    O(n³)  (vectors only)
-        // Reached only when algorithm === 'qr' is explicitly requested for Case A.
+        // Step 3 — Accumulate Givens rotations    : Z = Q · G,    O(n³)  (returnVectors only)
         //
         // Returns:
         //   { values: real[], vectors: n×n | null, info: { converged, iterations } }
@@ -1324,18 +1158,14 @@ function Eig(A, Option = {}) {
 
         // Step 1 - Householder tridiagonalisation on Real-valued matrix A
         const { Q, H } = Hess(A, Option);
-
-
-
     }
 
     //--------------------------------------------------------------------------
-    function Eig_QR_Complex_Hermitian(A, tol, maxIter, vectors) {
+    function Eig_QR_Complex_Hermitian(A, tol, maxIter, returnVectors) {
         // Case B — Complex Hermitian matrix, Wilkinson-shift QR iteration.
         // Step 1 — Householder tridiagonalisation : A = Q T Qᴴ,  O(n³)
         // Step 2 — Shifted QR iteration on T      : O(n²) per step, cubic convergence
-        // Step 3 — Accumulate Givens rotations    : Z = Q · G,    O(n³)  (vectors only)
-        // Reached only when algorithm === 'qr' is explicitly requested for Case B.
+        // Step 3 — Accumulate Givens rotations    : Z = Q · G,    O(n³)  (returnVectors only)
         //
         // Returns:
         //   { values: real[], vectors: n×n complex | null, info: { converged, iterations } }
@@ -1346,17 +1176,16 @@ function Eig(A, Option = {}) {
 
         // Step 1 - Householder tridiagonalisation on complex-valued Hermitian matrix A
         const { Q, H } = Hess(A, Option);
-
     }
 
     //--------------------------------------------------------------------------
-    function Eig_General_Real(A, tol, maxIter, vectors) {
+    function Eig_General_Real(A, tol, maxIter, returnVectors) {
         // Case C — Real non-symmetric matrix, Francis double-shift QR (real arithmetic).
         // Step 1 — Hessenberg reduction           : A = Q H Qᵀ,  O(n³)
         // Step 2 — Francis double-shift QR on H   : O(n²) per step (real Schur form)
-        // Step 3 — Back-transform Schur vectors   : Z = Q · V,    O(n³)  (vectors only)
+        // Step 3 — Back-transform Schur vectors   : Z = Q · V,    O(n³)  (returnVectors only)
         // Complex conjugate pairs are extracted from 2×2 diagonal blocks of the
-        // quasi-upper-triangular real Schur matrix. Default 'auto' solver for Case C.
+        // quasi-upper-triangular real Schur matrix.
         //
         // Returns:
         //   { values: (real|ComplexNum)[], vectors: n×n | null, info: { converged, iterations } }
@@ -1365,46 +1194,17 @@ function Eig(A, Option = {}) {
     }
 
     //--------------------------------------------------------------------------
-    function Eig_General_Complex(A, tol, maxIter, vectors) {
+    function Eig_General_Complex(A, tol, maxIter, returnVectors) {
         // Case D — Complex non-Hermitian matrix, Francis double-shift QR (complex arithmetic).
         // Step 1 — Hessenberg reduction           : A = Q H Qᴴ,  O(n³)
         // Step 2 — Francis double-shift QR on H   : O(n²) per step (complex Schur form)
-        // Step 3 — Back-transform Schur vectors   : Z = Q · V,    O(n³)  (vectors only)
+        // Step 3 — Back-transform Schur vectors   : Z = Q · V,    O(n³)  (returnVectors only)
         // All eigenvalues are extracted directly from the upper-triangular complex Schur matrix.
-        // Default 'auto' solver for Case D.
         //
         // Returns:
         //   { values: ComplexNum[], vectors: n×n complex | null, info: { converged, iterations } }
 
         console.log(' Eig_General_Complex');
-    }
-
-    //--------------------------------------------------------------------------
-    function Eig_Arnoldi_Real(A, tol, maxIter, vectors) {
-        // Case C — Real non-symmetric matrix, Implicitly-Restarted Arnoldi (IRAM).
-        // Builds a real Arnoldi–Krylov basis, extracts Ritz pairs from the upper
-        // Hessenberg projected matrix, checks residual ‖A v − λ v‖ < tol, restarts
-        // implicitly until k eigenvalues converge. Complexity O(k·n²) per restart.
-        // Auto-selected for Case C when n > 200 and k/n < 0.10.
-        //
-        // Returns:
-        //   { values: (real|ComplexNum)[], vectors: n×k | null, info: { converged, iterations } }
-
-        console.log('Eig_Arnoldi_Real');
-    }
-
-    //--------------------------------------------------------------------------
-    function Eig_Arnoldi_Complex(A, tol, maxIter, vectors) {
-        // Case D — Complex non-Hermitian matrix, Implicitly-Restarted Arnoldi (IRAM).
-        // Builds a complex Arnoldi–Krylov basis with inner products under conjugation,
-        // extracts Ritz pairs from the upper Hessenberg projected matrix, restarts
-        // implicitly until k eigenvalues converge. Complexity O(k·n²) per restart.
-        // Auto-selected for Case D when n > 200 and k/n < 0.10.
-        //
-        // Returns:
-        //   { values: ComplexNum[], vectors: n×k complex | null, info: { converged, iterations } }
-
-        console.log('Eig_Arnoldi_Complex');
     }
 
 }
