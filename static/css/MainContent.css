@@ -44,6 +44,19 @@
     font-size: var(--panel-font-size);
 }
 
+.resizable-panel-4 {
+    display: none;
+    flex-direction: row;
+    width: calc(100% - 2 * var(--panel-padding));
+    height: 100%;
+    margin: 0 var(--panel-padding);
+    overflow: auto;
+    background-color: var(--panel-background-color);
+    border-radius: 0.8rem;
+    border: 0.001rem solid gray; 
+    font-size: var(--panel-font-size);
+}
+
 #panel1 {
     min-height: var(--min-panel1-height);
     scrollbar-width: none; 

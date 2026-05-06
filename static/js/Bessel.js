@@ -897,7 +897,7 @@ function Verify_Hess(n, N) {
     }
 }
 //-------------------------------------------------------------------------------------------------
-function Eig(A, Option = {}) {
+function Eig__Old(A, Option = {}) {
     // Wrapper: Compute eigenvalues and/or eigenvectors of A
     //
     // Parameters:
@@ -1207,6 +1207,349 @@ function Eig(A, Option = {}) {
         console.log(' Eig_General_Complex');
     }
 
+}
+//-------------------------------------------------------------------------------------------------
+function Eig(A, Option) {
+    // Eigenvalue and eigenvector decomposition
+    // Finds scalars lambda and vectors v such that A*v = lambda*v
+    //
+    // Dispatch hierarchy (fastest to most general):
+    //
+    //   Tier 0 — Closed form  : scalar, ComplexNum, 1×1, 2×2
+    //   Tier 1 — O(n) trivial : diagonal, upper/lower triangular
+    //   Tier 2 — Symmetric    : all four symmetric/Hermitian paths feed one shared
+    //                           real symmetric tridiagonal QR kernel
+    //                             2a: Real      · Symmetric  · Tridiagonal  → no reduction
+    //                             2b: Real      · Symmetric  · General      → Householder → tridiagonal
+    //                             2c: Complex   · Hermitian  · Tridiagonal  → phase absorption only
+    //                             2d: Complex   · Hermitian  · General      → Householder + phase absorption
+    //   Tier 3 — General      :
+    //                             3a: Real    · General  → Householder → Hessenberg → Francis double-shift QR
+    //                             3b: Complex · General  → Householder → Hessenberg → complex single-shift QR
+    //
+    // Parameters:
+    //   A      : number, ComplexNum, 1D array, or 2D array (must be square for 2D)
+    //   Option : plain object (optional)
+    //     {
+    //       auto          : boolean  →  true  = auto-detect all structural flags  [default: true]
+    //                                →  false = trust user-supplied flags, no further validation
+    //       isReal        : boolean  →  true  = all entries of A are real-valued
+    //                                →  false = A has complex entries
+    //       isSymmHermi   : boolean  →  true  = A is symmetric (real) or Hermitian (complex)
+    //       isTridiagonal : boolean  →  true  = A is tridiagonal  (requires isSymmHermi = true)
+    //       isDiagonal    : boolean  →  true  = A is diagonal     (implies isTridiagonal = true)
+    //       isTriangular  : string   →  'upper' | 'lower' | null
+    //       vectors       : boolean  →  true  = compute eigenvectors             [default: true]
+    //                                →  false = eigenvalues only (faster)
+    //       sort          : string   →  'asc'       = ascending  real part of eigenvalue
+    //                                →  'desc'      = descending real part
+    //                                →  'magnitude' = ascending  |lambda|
+    //                                →  null        = natural QR order           [default: null]
+    //       tol           : number   →  numerical zero threshold                 [default: 1e-14]
+    //       maxIter       : number   →  maximum QR iterations per eigenvalue     [default: 1000]
+    //     }
+    //
+    // Returns:
+    //   {
+    //     values        : 1D array  — eigenvalues (real numbers or ComplexNum instances)
+    //     vectors       : 2D array  — columns are eigenvectors, null if Option.vectors = false
+    //     isReal        : boolean
+    //     isSymmHermi   : boolean
+    //     isTridiagonal : boolean
+    //     isDiagonal    : boolean
+    //     isTriangular  : string | null
+    //     tol           : number
+    //     maxIter       : number
+    //   }
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 2026-05-04
+
+    // -------------------------------------------------------------------------
+    // Step 1 — Apply defaults if Option is omitted
+    // -------------------------------------------------------------------------
+    if (Option == null) { return Eig(A, { auto: true, vectors: true, sort: 'desc', tol: 1e-14, maxIter: 1000 }); }
+
+    // -------------------------------------------------------------------------
+    // Step 2 — Validate Option type
+    // -------------------------------------------------------------------------
+    if (typeof Option !== "object" || Array.isArray(Option)) { throw new TypeError("Eig: Option must be a plain object.");}
+
+    // -------------------------------------------------------------------------
+    // Step 3 — Validate all Option fields (type / range checks)
+    // -------------------------------------------------------------------------
+    if (Option.auto          != null && typeof Option.auto          !== "boolean") { throw new TypeError("Eig: Option.auto must be a boolean.");          }
+    if (Option.isReal        != null && typeof Option.isReal        !== "boolean") { throw new TypeError("Eig: Option.isReal must be a boolean.");        }
+    if (Option.isSymmHermi   != null && typeof Option.isSymmHermi   !== "boolean") { throw new TypeError("Eig: Option.isSymmHermi must be a boolean.");   }
+    if (Option.isTridiagonal != null && typeof Option.isTridiagonal !== "boolean") { throw new TypeError("Eig: Option.isTridiagonal must be a boolean."); }
+    if (Option.isDiagonal    != null && typeof Option.isDiagonal    !== "boolean") { throw new TypeError("Eig: Option.isDiagonal must be a boolean.");    }
+    if (Option.vectors       != null && typeof Option.vectors       !== "boolean") { throw new TypeError("Eig: Option.vectors must be a boolean.");       }
+
+    if (Option.isTriangular != null) {
+        if (Option.isTriangular !== "upper" && Option.isTriangular !== "lower")             { throw new TypeError(`Eig: Option.isTriangular must be 'upper', 'lower', or null.`);   }
+    }
+    if (Option.sort != null) {
+        if (Option.sort !== "asc" && Option.sort !== "desc" && Option.sort !== "magnitude") { throw new TypeError(`Eig: Option.sort must be 'asc', 'desc', 'magnitude', or null.`); }
+    }
+    if (Option.tol != null) {
+        if (typeof Option.tol !== "number" || isNaN(Option.tol)) { throw new TypeError("Eig: Option.tol must be a number.");           }
+        if (!isFinite(Option.tol))                               { throw new RangeError("Eig: Option.tol must be finite.");            }
+        if (Option.tol <= 0)                                     { throw new RangeError("Eig: Option.tol must be greater than zero."); }
+    }
+    if (Option.maxIter != null) {
+        if (!Number.isInteger(Option.maxIter)) { throw new TypeError("Eig: Option.maxIter must be an integer.");          }
+        if (Option.maxIter <= 0)               { throw new RangeError("Eig: Option.maxIter must be greater than zero."); }
+    }
+
+    // Reject unrecognized keys (catches typos)
+    const knownKeys = new Set(["auto", "isReal", "isSymmHermi", "isTridiagonal", "isDiagonal", "isTriangular", "vectors", "sort", "tol", "maxIter"]);
+    for (const key of Object.keys(Option)) {
+        if (!knownKeys.has(key)) {
+            throw new TypeError(`Eig: Unrecognized option key "${key}" — did you mean one of: ${[...knownKeys].join(", ")}?`);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 4 — Resolve defaults
+    // -------------------------------------------------------------------------
+    const auto    = (Option.auto    != null) ? Option.auto    : true;
+    const vectors = (Option.vectors != null) ? Option.vectors : true;
+    const sort    = (Option.sort    != null) ? Option.sort    : 'desc';
+    const tol     = (Option.tol     != null) ? Option.tol     : 1e-14;
+    const maxIter = (Option.maxIter != null) ? Option.maxIter : 1000;
+
+    // -------------------------------------------------------------------------
+    // Step 5 — Classify input type
+    // -------------------------------------------------------------------------
+    const isScalarIn     = typeof A === "number";
+    const isComplexNumIn = A instanceof ComplexNum;
+    const is1D           = Array.isArray(A) && !Array.isArray(A[0]);
+    const is2D           = Array.isArray(A) &&  Array.isArray(A[0]);
+
+    if (!isScalarIn && !isComplexNumIn && !is1D && !is2D) { throw new TypeError("Eig: Unknown type of matrix A."); }
+
+    // -------------------------------------------------------------------------
+    // Step 6 — Tier 0a: scalar and ComplexNum  (trivially 1×1)
+    // -------------------------------------------------------------------------
+    if (isScalarIn)     { return _pack([A],  vectors ? [[1]]                    : null, true,  true,  true,  true,  null, tol, maxIter);  }
+    if (isComplexNumIn) { return _pack([A],  vectors ? [[new ComplexNum(1, 0)]] : null, false, true,  true,  true,  null, tol, maxIter);  }
+
+    // -------------------------------------------------------------------------
+    // Step 7 — Tier 0b: 1D array  (treated as 1×1)
+    // -------------------------------------------------------------------------
+    if (is1D) {
+        if (A.length === 0) { throw new RangeError("Eig: Input array must be non-empty."); }
+        const v0      = A[0];
+        const v0Real  = typeof v0 === "number";
+        return _pack([v0], vectors ? [[v0Real ? 1 : new ComplexNum(1, 0)]] : null, v0Real, true, true, true, null, tol, maxIter);
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 8 — Deep copy and validate 2D structure
+    // -------------------------------------------------------------------------
+    let B = A.map(row => row.slice());
+
+    const m = B.length;
+    if (m === 0) { throw new RangeError("Eig: Matrix A must be non-empty."); }
+
+    const n = B[0].length;
+    if (n === 0) { throw new RangeError("Eig: Matrix A must have at least one column."); }
+    if (m !== n) { throw new RangeError(`Eig: Matrix A must be square, got ${m}×${n}.`); }
+
+    for (let i = 1; i < m; i++) {
+        if (!Array.isArray(B[i]) || B[i].length !== n) {
+            throw new RangeError(`Eig: Matrix A is jagged — row ${i} has length ${B[i]?.length ?? "?"}, expected ${n}.`);
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 9 — Tier 0c: 1×1 matrix  (closed form, no structure detection needed)
+    // -------------------------------------------------------------------------
+    if (m === 1) {
+        const v0     = B[0][0];
+        const v0Real = typeof v0 === "number";
+        return _pack([v0], vectors ? [[v0Real ? 1 : new ComplexNum(1, 0)]] : null, v0Real, true, true, true, null, tol, maxIter);
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 10 — Tier 0d: 2×2 matrix  (closed-form via characteristic polynomial)
+    //           Applies regardless of symmetry or complexity.
+    //           Delegates to Eig_2x2(B, vectors, tol).
+    // -------------------------------------------------------------------------
+    if (m === 2) {
+        const result2 = Eig_2x2(B, vectors, tol);
+        return _attachMeta(result2, IsReal(B), null, null, null, null, tol, maxIter);
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 11 — Detect structural flags  (m ≥ 3 from here on)
+    // -------------------------------------------------------------------------
+    let isReal, isSymmHermi, isTridiagonal, isDiagonal, isTriangular;
+
+    if (!auto) {
+        // Trust caller — all five flags are mandatory when auto = false
+        if (Option.isReal        == null) { throw new TypeError("Eig: Option.isReal is required when Option.auto is false.");        }
+        if (Option.isSymmHermi   == null) { throw new TypeError("Eig: Option.isSymmHermi is required when Option.auto is false.");   }
+        if (Option.isTridiagonal == null) { throw new TypeError("Eig: Option.isTridiagonal is required when Option.auto is false."); }
+        if (Option.isDiagonal    == null) { throw new TypeError("Eig: Option.isDiagonal is required when Option.auto is false.");    }
+        if (Option.isTriangular  == null) { throw new TypeError("Eig: Option.isTriangular is required when Option.auto is false.");  }
+        isReal        = Option.isReal;
+        isSymmHermi   = Option.isSymmHermi;
+        isTridiagonal = Option.isTridiagonal;
+        isDiagonal    = Option.isDiagonal;
+        isTriangular  = Option.isTriangular;
+    } else {
+        // Auto-detect — ordered from cheapest to most expensive check
+        isReal        = IsReal(B);
+        isDiagonal    = IsDiagonal(B, tol);
+        isTriangular  = isDiagonal ? "upper" : IsTriangular(B, tol);          // diagonal ⊂ triangular — avoid redundant scan
+        isSymmHermi   = isDiagonal ? true    : (isReal ? IsSymmetric(B) : IsHermitian(B));
+        isTridiagonal = isDiagonal ? true    : (isSymmHermi ? IsTridiagonal(B, tol, !isReal) : false);
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 12 — Cross-validate structural flags for consistency
+    // -------------------------------------------------------------------------
+    if (isDiagonal    && isTriangular  !== "upper" && isTriangular !== "lower") { throw new TypeError("Eig: isDiagonal is true but isTriangular is null — diagonal implies triangular."); }
+    if (isDiagonal    && !isTridiagonal)                                         { throw new TypeError("Eig: isDiagonal is true but isTridiagonal is false — diagonal implies tridiagonal."); }
+    if (isDiagonal    && !isSymmHermi)                                           { throw new TypeError("Eig: isDiagonal is true but isSymmHermi is false — a real diagonal matrix is symmetric."); }
+    if (isTridiagonal && !isSymmHermi)                                           { throw new TypeError("Eig: isTridiagonal is true but isSymmHermi is false — tridiagonal implies symmetric/Hermitian here."); }
+    if (isSymmHermi   && isTriangular  !== null && !isDiagonal)                  { console.warn("Eig: Matrix is both symmetric/Hermitian and triangular but not diagonal — treating as diagonal."); isDiagonal = true; }
+
+    // -------------------------------------------------------------------------
+    // Step 13 — Dispatch
+    // -------------------------------------------------------------------------
+    let result;
+
+    // --- Tier 1a: Diagonal  O(n) — eigenvalues are diagonal entries, V = I ---
+    if (isDiagonal) {
+        result = Eig_diagonal(B, m, vectors, isReal);
+    }
+
+    // --- Tier 1b: Triangular  O(n) diagonal read + back-substitution for vectors ---
+    else if (isTriangular !== null) {
+        result = Eig_triangular(B, m, vectors, isReal, isTriangular, tol);
+    }
+
+    // --- Tier 2: Symmetric / Hermitian — all paths share one tridiagonal QR kernel ---
+    else if (isSymmHermi) {
+
+        let T;   // real symmetric tridiagonal (2D array of numbers after reduction)
+        let U;   // accumulated unitary transformation  (2D array, real or ComplexNum)
+                 // such that A = U * T * U*  and eigenvectors of A = U * (eigvecs of T)
+
+        if (isReal && isTridiagonal) {
+            // --- 2a: Real · Symmetric · Tridiagonal — no reduction needed ---
+            T = B;
+            U = vectors ? _realIdentity(m) : null;
+
+        } else if (isReal && !isTridiagonal) {
+            // --- 2b: Real · Symmetric · General — Householder → real tridiagonal ---
+            // HouseholderRealSymm returns { T, U } where T is real tridiagonal
+            // and U is the accumulated orthogonal transformation
+            ({ T, U } = HouseholderRealSymm(B, m, vectors, tol));
+
+        } else if (!isReal && isTridiagonal) {
+            // --- 2c: Complex · Hermitian · Tridiagonal — phase absorption only ---
+            // A complex Hermitian tridiagonal has real diagonal and complex sub-diagonal.
+            // PhaseAbsorb finds a diagonal unitary D such that D*AD has real sub-diagonal,
+            // converting it to a real symmetric tridiagonal at O(n) cost.
+            ({ T, U } = PhaseAbsorb(B, m, vectors, tol));
+
+        } else {
+            // --- 2d: Complex · Hermitian · General — Householder + phase absorption ---
+            // HouseholderComplexHermi returns { T, U } where T is real symmetric tridiagonal
+            // and U is the accumulated unitary transformation (phase absorption is done internally)
+            ({ T, U } = HouseholderComplexHermi(B, m, vectors, tol));
+        }
+
+        // Shared kernel: symmetric tridiagonal QR with Wilkinson shift
+        // Input  T : real symmetric tridiagonal (n×n), modified in-place → diagonal
+        // Input  U : accumulated unitary (or null if !vectors)
+        // Output  : { values: real[], vectors: 2D | null }
+        result = Eig_symm_tridiag_QR(T, U, m, vectors, tol, maxIter);
+    }
+
+    // --- Tier 3a: Real · General — Francis implicit double-shift QR ---
+    // Householder → upper Hessenberg → Francis QR  (stays in real arithmetic,
+    // complex conjugate eigenvalue pairs emerge as 2×2 diagonal blocks)
+    else if (isReal) {
+        result = Eig_real_general(B, m, vectors, tol, maxIter);
+    }
+
+    // --- Tier 3b: Complex · General — complex single-shift QR ---
+    // Householder → complex upper Hessenberg → single-shift QR iteration
+    else {
+        result = Eig_complex_general(B, m, vectors, tol, maxIter);
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 14 — Optional sort of eigenvalues and corresponding eigenvector columns
+    // -------------------------------------------------------------------------
+    if (sort !== null && result.values.length > 1) {
+
+        const lambdaRe = v => (v instanceof ComplexNum) ? v.Re       : v;
+        const lambdaMag= v => (v instanceof ComplexNum) ? Math.sqrt(v.Re * v.Re + v.Im * v.Im) : Math.abs(v);
+
+        const idx = result.values.map((_, i) => i);
+
+        if      (sort === "asc")       { idx.sort((a, b) => lambdaRe(result.values[a])  - lambdaRe(result.values[b]));  }
+        else if (sort === "desc")      { idx.sort((a, b) => lambdaRe(result.values[b])  - lambdaRe(result.values[a]));  }
+        else if (sort === "magnitude") { idx.sort((a, b) => lambdaMag(result.values[a]) - lambdaMag(result.values[b])); }
+
+        result.values = idx.map(i => result.values[i]);
+
+        if (result.vectors !== null) {
+            // Reorder columns  (result.vectors is row-major: result.vectors[row][col])
+            result.vectors = result.vectors.map(row => idx.map(i => row[i]));
+        }
+    }
+
+    // -------------------------------------------------------------------------
+    // Step 15 — Attach metadata and return
+    // -------------------------------------------------------------------------
+    return _attachMeta(result, isReal, isSymmHermi, isTridiagonal, isDiagonal, isTriangular, tol, maxIter);
+
+    // =========================================================================
+    // Private helpers (local to Eig)
+    // =========================================================================
+
+    // _realIdentity: returns m×m identity as 2D array of plain numbers
+    function _realIdentity(m) {
+        const I = new Array(m);
+        for (let i = 0; i < m; i++) {
+            I[i] = new Array(m).fill(0.0);
+            I[i][i] = 1.0;
+        }
+        return I;
+    }
+
+    // _pack: constructs the full return object for early-exit paths (Tier 0)
+    function _pack(values, vecs, isReal, isSymmHermi, isTridiagonal, isDiagonal, isTriangular, tol, maxIter) {
+        return {
+            values,
+            vectors      : vecs,
+            isReal,
+            isSymmHermi,
+            isTridiagonal,
+            isDiagonal,
+            isTriangular,
+            tol,
+            maxIter
+        };
+    }
+
+    // _attachMeta: stamps metadata onto a result returned by a dispatch helper
+    function _attachMeta(result, isReal, isSymmHermi, isTridiagonal, isDiagonal, isTriangular, tol, maxIter) {
+        result.isReal        = isReal;
+        result.isSymmHermi   = isSymmHermi;
+        result.isTridiagonal = isTridiagonal;
+        result.isDiagonal    = isDiagonal;
+        result.isTriangular  = isTriangular;
+        result.tol           = tol;
+        result.maxIter       = maxIter;
+        return result;
+    }
 }
 //-------------------------------------------------------------------------------------------------
 function Verify_Eig(n, N) {
@@ -1550,3 +1893,22 @@ function det(A) {
 
 
 
+// Eig(A)
+// │
+// ├── Scalar / ComplexNum / 1×1        → closed form (trivial)
+// ├── 2×2                              → closed form (quadratic formula)
+// │
+// ├── isDiagonal                       → O(n) read diagonal
+// ├── isTriangular                     → O(n) diagonal + back-substitution
+// │
+// ├── isReal
+// │   ├── isSymmHermi
+// │   │   ├── isTridiagonal            → [Branch 1a] skip reduction, QR iteration only
+// │   │   └── (general symmetric)      → [Branch 1b] Householder → tridiagonal → same QR kernel as 1a
+// │   └── (general)                    → [Branch 2]  Householder → Hessenberg → Francis double-shift
+// │
+// └── isComplex
+//     ├── isSymmHermi
+//     │   ├── isTridiagonal            → [Branch 3a] phase-absorb → same real QR kernel as 1a
+//     │   └── (general Hermitian)      → [Branch 3b] Householder + phase → same real QR kernel as 1a
+//     └── (general)                    → [Branch 4]  Householder → Hessenberg → complex single-shift QR

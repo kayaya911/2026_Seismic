@@ -34,6 +34,7 @@
         <link rel="stylesheet" href="./static/css/PlotlyGraphs.css"         />
         <link rel="stylesheet" href="./static/css/Right_Click_Menu.css"     />
         <link rel="stylesheet" href="./static/css/RootPar.css"              />
+        <link rel="stylesheet" href="./static/css/helpPage.css"             />
 
         <!-- LOAD ALL FUNCTIONS-->
         <script type="text/javascript" src="./static/js/XLSX.js">               </script>   <!-- SheetJS Excel Export            -->
@@ -160,6 +161,9 @@
             <!--- RESIZABLE CONTAINER --->
             <div id="content"  class="resizable-container content">
                 <div class="resizable-panels-wrapper">
+                    
+                    <div class="resizable-panel-4" id="panel4"></div>
+
                     <div class="resizable-panel" id="panel1">
                     
                         <!-- Table of Channels -->
@@ -653,10 +657,13 @@
                     <div class="resizable-panel" id="panel2">
                         <!-- Plotly Graphse -->
                     </div>
+
                 </div>
                 <div class="bottom-fixed-panel" id="panel3">
                     <label class="ProgressBar_Label" id="ProgressBar_Label" data-message="0"></label>
                 </div>
+
+                
             </div>
         </div>
 

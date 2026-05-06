@@ -1,0 +1,491 @@
+{
+  "title": "Seismic Data Analysis",
+  "intro": "This application loads and processes seismic records from various data formats. Use the Analysis menu to switch between modules. Click Run to execute the current analysis.",
+
+  "sections": [
+
+    {
+      "id": "data",
+      "menuId": "MainMenu_LoadData",
+      "heading": "Data",
+      "icon": "waveform",
+      "summary": "Load seismic record files and inspect channel metadata.",
+      "steps": [
+        "Click the <b>File</b> button in the header toolbar.",
+        "Select one or more files. Supported formats: <code>.vif</code>, <code>.txt</code>, <code>.v1</code>, <code>.raw</code>, <code>.msd</code>, <code>.asc</code>, <code>.dat</code>.",
+        "Loaded channels appear in the <b>Files &amp; Channels</b> sidebar tree on the left.",
+        "The channel table shows File Name, Channel number, Record Length, Sampling rate, Signal Type, Unit, Scale factor, Date &amp; Time, and Azimuth for each channel.",
+        "Click a channel in the sidebar or table to select it for analysis.",
+        "Click <b>Download</b> in the header to export the channel table to Excel."
+      ],
+      "notes": [
+        "Multiple files can be loaded at the same time. Each file may contain one or more channels.",
+        "Right-clicking in the sidebar opens a context menu with options to select channels by sampling rate, channel type, or azimuth orientation."
+      ]
+    },
+
+    {
+      "id": "filter",
+      "menuId": "MainMenu_Filter",
+      "heading": "Filter",
+      "icon": "filter",
+      "summary": "Apply baseline correction and digital filtering to the selected channel.",
+      "parameters": [
+        {
+          "label": "Baseline Correction",
+          "id": "BaselineCorrection",
+          "options": ["None", "Remove Mean", "Linear", "Quadratic", "Qubic"],
+          "default": "Remove Mean",
+          "description": "Removes the DC offset or trend from the record before filtering. <b>Remove Mean</b> subtracts the signal mean. <b>Linear</b>, <b>Quadratic</b>, and <b>Qubic</b> fit and subtract a polynomial trend."
+        },
+        {
+          "label": "Filter Type",
+          "id": "FilterName",
+          "options": ["None", "Butterworth", "Chebyshev", "Bessel"],
+          "default": "Butterworth",
+          "description": "<b>Butterworth</b>: maximally flat magnitude response in the passband. <b>Chebyshev</b>: steeper roll-off at the cost of passband ripple — set the Maximum Ripple Size accordingly. <b>Bessel</b>: maximally flat group delay, preserving pulse shape."
+        },
+        {
+          "label": "Filter Band",
+          "id": "FilterType",
+          "options": ["Low-Pass", "High-Pass", "Band-Pass"],
+          "default": "High-Pass",
+          "description": "<b>Low-Pass</b>: retains frequencies below F1. <b>High-Pass</b>: retains frequencies above F1. <b>Band-Pass</b>: retains frequencies between F1 and F2."
+        },
+        {
+          "label": "Filter Order",
+          "id": "FilterOrder",
+          "type": "integer",
+          "default": 4,
+          "range": "1 – 12",
+          "description": "Controls the steepness of the roll-off. Higher order = sharper cutoff, but greater phase distortion (unless Zero Phase is enabled) and potential numerical instability at high orders."
+        },
+        {
+          "label": "Cut-off Frequency F1 (Hz)",
+          "id": "F1",
+          "type": "number",
+          "default": 1.5,
+          "description": "Lower cut-off frequency. Used as the sole cut-off for Low-Pass and High-Pass filters, and as the lower bound for Band-Pass."
+        },
+        {
+          "label": "Cut-off Frequency F2 (Hz)",
+          "id": "F2",
+          "type": "number",
+          "default": 4.0,
+          "description": "Upper cut-off frequency. Used only for Band-Pass filtering as the upper bound."
+        },
+        {
+          "label": "Maximum Ripple Size (dB)",
+          "id": "RippleSize",
+          "type": "number",
+          "default": 0.1,
+          "description": "Applies to the Chebyshev filter only. Defines the maximum allowable passband ripple in decibels. Larger values produce a steeper roll-off."
+        },
+        {
+          "label": "Zero Phase Filtering",
+          "id": "ZeroPhase",
+          "type": "checkbox",
+          "default": true,
+          "description": "Applies the filter twice — once forward and once backward — to eliminate phase distortion. This doubles the effective filter order. Recommended for all seismic processing."
+        }
+      ],
+      "notes": [
+        "F2 is only active when Band-Pass is selected. It is greyed out otherwise.",
+        "The Ripple Size parameter is only active when Chebyshev is selected.",
+        "Zero Phase Filtering is strongly recommended. Disabling it will introduce a time-shift in the filtered output."
+      ]
+    },
+
+    {
+      "id": "integral",
+      "menuId": "MainMenu_Integral",
+      "heading": "Integral",
+      "icon": "integral",
+      "summary": "Numerically integrate the filtered signal to obtain velocity and displacement time histories.",
+      "steps": [
+        "Select the channels to display using the toggle switches.",
+        "Click <b>Run</b> to compute the integrals and update the graph."
+      ],
+      "parameters": [
+        {
+          "label": "Original Signal",
+          "id": "Int_Acceleration",
+          "type": "toggle",
+          "default": true,
+          "description": "Display the original (baseline-corrected and filtered) signal."
+        },
+        {
+          "label": "1st Integral",
+          "id": "Int_Velocity",
+          "type": "toggle",
+          "default": false,
+          "description": "Display the first numerical integral of the signal (e.g. velocity if the input is acceleration)."
+        },
+        {
+          "label": "2nd Integral",
+          "id": "Int_Displacement",
+          "type": "toggle",
+          "default": false,
+          "description": "Display the second numerical integral of the signal (e.g. displacement if the input is acceleration)."
+        }
+      ],
+      "notes": [
+        "Integration is performed using the trapezoidal rule after baseline correction and filtering.",
+        "Baseline drift in the integrated signal can indicate insufficient low-frequency filtering. Try increasing the high-pass cut-off frequency in the Filter module."
+      ]
+    },
+
+    {
+      "id": "sdof",
+      "menuId": "MainMenu_SDOF",
+      "heading": "SDOF",
+      "icon": "sdof",
+      "summary": "Compute the dynamic response of a Single Degree of Freedom (SDOF) oscillator subjected to the selected ground motion record.",
+      "parameters": [
+        {
+          "label": "Analysis Type",
+          "id": "SDOF_Analysis",
+          "options": ["Free Vibration", "Forced Vibration", "Piece-Wise Exact", "Central Difference", "Newmark Linear", "Newmark Non-Linear"],
+          "default": "Newmark Linear",
+          "description": "<b>Free Vibration</b>: response to initial conditions only, no external excitation. <b>Forced Vibration</b>: steady-state response to harmonic excitation. <b>Piece-Wise Exact</b>: exact solution assuming linearly interpolated excitation between time steps. <b>Central Difference</b>: explicit finite difference method — conditionally stable, requires small time steps. <b>Newmark Linear</b>: unconditionally stable implicit method for linear systems (α=0.5, β=0.25). <b>Newmark Non-Linear</b>: iterative Newmark method for inelastic systems with hysteretic behavior."
+        },
+        {
+          "label": "Select to display",
+          "id": "SDOF_SelectToDisplay",
+          "type": "dropdown",
+          "description": "Choose which response quantity to display on the graph (e.g. displacement, velocity, acceleration, force)."
+        },
+        {
+          "label": "Frequency (Hz)",
+          "id": "SDOF_Frequency",
+          "type": "number",
+          "default": 1.0,
+          "description": "Natural frequency of the SDOF oscillator."
+        },
+        {
+          "label": "Damping Ratio",
+          "id": "SDOF_DampingRatio",
+          "type": "number",
+          "default": 0.05,
+          "description": "Viscous damping ratio ξ (dimensionless). A value of 0.05 corresponds to 5% critical damping, typical for reinforced concrete structures."
+        },
+        {
+          "label": "Sampling Interval (s)",
+          "id": "SDOF_delt",
+          "type": "number",
+          "default": 0.01,
+          "description": "Time step Δt used for the numerical integration. Should be small relative to the natural period T. See the dt/T limit in Settings."
+        },
+        {
+          "label": "Record Duration (s)",
+          "id": "SDOF_Duration",
+          "type": "number",
+          "default": 5.0,
+          "description": "Total duration of the output time history."
+        },
+        {
+          "label": "Initial Displacement",
+          "id": "SDOF_InDisp",
+          "type": "number",
+          "default": 0.0,
+          "description": "Initial displacement of the SDOF mass at t = 0."
+        },
+        {
+          "label": "Initial Velocity",
+          "id": "SDOF_InVel",
+          "type": "number",
+          "default": 0.0,
+          "description": "Initial velocity of the SDOF mass at t = 0."
+        },
+        {
+          "label": "Harmonic Excitation Amplitude",
+          "id": "SDOF_HarAmp",
+          "type": "number",
+          "default": 2.0,
+          "description": "Amplitude of the harmonic forcing function. Used only when Analysis Type is set to Forced Vibration."
+        },
+        {
+          "label": "Harmonic Excitation Frequency (Hz)",
+          "id": "SDOF_HarF",
+          "type": "number",
+          "default": 2.0,
+          "description": "Frequency of the harmonic forcing function. Set this equal to the natural frequency to simulate resonance. Used only for Forced Vibration."
+        },
+        {
+          "label": "Yield Force",
+          "id": "SDOF_YieldForce",
+          "type": "number",
+          "default": 0.05,
+          "description": "Normalized yield force (force / weight) for the inelastic SDOF. Used only for Newmark Non-Linear analysis."
+        },
+        {
+          "label": "Post-Yield Hardening Ratio",
+          "id": "SDOF_PostYieldStiffnessRatio",
+          "type": "number",
+          "default": 0.05,
+          "description": "Ratio of the post-yield stiffness to the initial elastic stiffness (α). A value of 0 corresponds to an elastic-perfectly-plastic model."
+        },
+        {
+          "label": "Unloading Stiffness Degradation",
+          "id": "SDOF_UnloadStiffnessDegredation",
+          "type": "number",
+          "default": 0.20,
+          "description": "Controls the reduction in unloading stiffness as ductility demand increases (Clough degrading stiffness model). A value of 0 gives no degradation (bilinear model)."
+        }
+      ],
+      "notes": [
+        "For Newmark Non-Linear, convergence tolerances and integration coefficients can be adjusted in the Settings module.",
+        "The Central Difference method is conditionally stable: the time step must satisfy Δt ≤ T/π, where T is the natural period."
+      ]
+    },
+
+    {
+      "id": "response",
+      "menuId": "MainMenu_ResSpec",
+      "heading": "Response Spectrum",
+      "icon": "spectrum",
+      "summary": "Compute elastic or constant-ductility inelastic response spectra from the selected ground motion record.",
+      "parameters": [
+        {
+          "label": "Spectrum Type",
+          "id": "ResSpec_AnalysisMethod",
+          "options": [
+            "Elastic Spectra",
+            "Constant-Ductility Inelastic Spectra (Bilinear hysteretic model)",
+            "Constant-Ductility Inelastic Spectra (Clough bilinear model)"
+          ],
+          "default": "Elastic Spectra",
+          "description": "<b>Elastic Spectra</b>: computes Sd (spectral displacement), Sv (pseudo-velocity), and Sa (pseudo-acceleration) for linear SDOF oscillators across the period range. <b>Constant-Ductility Inelastic Spectra</b>: iterates to find the yield strength reduction factor R that produces exactly the target ductility μ for each period, using either the bilinear or Clough degrading stiffness hysteretic model."
+        },
+        {
+          "label": "Select to display",
+          "id": "ResSpec_SelectToDisplay",
+          "type": "dropdown",
+          "description": "Choose which spectral quantity to display (Sa, Sv, Sd, or inelastic equivalents)."
+        },
+        {
+          "label": "Minimum Period (s)",
+          "id": "ResSpec_MinimumPeriod",
+          "type": "number",
+          "default": 0.1,
+          "description": "Start of the period range for spectral computation."
+        },
+        {
+          "label": "Period Step (s)",
+          "id": "ResSpec_PeriodStep",
+          "type": "number",
+          "default": 0.10,
+          "description": "Increment between successive periods. Smaller values produce a smoother spectrum but increase computation time."
+        },
+        {
+          "label": "Maximum Period (s)",
+          "id": "ResSpec_MaximumPeriod",
+          "type": "number",
+          "default": 4.0,
+          "description": "End of the period range for spectral computation."
+        },
+        {
+          "label": "Unloading Stiffness Degradation",
+          "id": "ResSpec_UnloadingStiffnessDegredation",
+          "type": "number",
+          "default": 0.20,
+          "description": "Used for the Clough inelastic model. Controls degradation of unloading stiffness with increasing ductility demand."
+        },
+        {
+          "label": "Post-Yield Hardening Ratio",
+          "id": "ResSpec_PostYiledHardeningRatio",
+          "type": "number",
+          "default": 0.05,
+          "description": "Ratio of post-yield to initial stiffness for the bilinear hysteretic model."
+        },
+        {
+          "label": "Damping Ratio Count",
+          "id": "ResSpec_DampingRatioCount",
+          "type": "integer",
+          "default": 1,
+          "range": "1 – 4",
+          "description": "Number of damping ratio values to include. Up to 4 curves can be plotted simultaneously (ξ₁ through ξ₄)."
+        },
+        {
+          "label": "Damping Ratios ξ₁ – ξ₄",
+          "ids": ["ResSpec_ksi_1", "ResSpec_ksi_2", "ResSpec_ksi_3", "ResSpec_ksi_4"],
+          "defaults": [0.01, 0.02, 0.03, 0.04],
+          "description": "Viscous damping ratio values for each spectrum curve. Common values: 0.02 (steel), 0.05 (reinforced concrete), 0.10 (heavily damped structures)."
+        },
+        {
+          "label": "Ductility Count",
+          "id": "ResSpec_DuctilityCount",
+          "type": "integer",
+          "default": 1,
+          "range": "1 – 4",
+          "description": "Number of target ductility values for inelastic spectra. Up to 4 curves (μ₁ through μ₄)."
+        },
+        {
+          "label": "Constant Ductility μ₁ – μ₄",
+          "ids": ["ResSpec_mu_1", "ResSpec_mu_2", "ResSpec_mu_3", "ResSpec_mu_4"],
+          "defaults": [1.5, 2.0, 2.5, 3.0],
+          "description": "Target displacement ductility ratios for constant-ductility inelastic spectra. μ = 1 corresponds to the elastic spectrum."
+        }
+      ],
+      "notes": [
+        "Inelastic spectral computation is iterative and significantly more computationally intensive than elastic spectra. Reduce the period range or increase the period step if computation is slow.",
+        "The Damping Ratio Count and Ductility Count fields control how many of the corresponding input rows are active."
+      ]
+    },
+
+    {
+      "id": "spectrum",
+      "menuId": "MainMenu_Spectrum",
+      "heading": "Spectrum",
+      "icon": "fft",
+      "summary": "Compute frequency-domain representations of the selected channel.",
+      "parameters": [
+        {
+          "label": "Select to display",
+          "id": "Spectrum_SelectToDisplay",
+          "options": [
+            "Fourier Amplitude Spectrum",
+            "Power Spectrum",
+            "Spectral Density Spectrum",
+            "Spectrogram"
+          ],
+          "description": "<b>Fourier Amplitude Spectrum</b>: magnitude of the FFT of the signal. <b>Power Spectrum</b>: squared magnitude of the FFT, proportional to signal energy. <b>Spectral Density Spectrum (PSD)</b>: average power per unit frequency, estimated using Welch's method. <b>Spectrogram</b>: time-varying frequency content using a sliding window STFT."
+        },
+        {
+          "label": "Window Length (s)",
+          "id": "WindowLength",
+          "type": "number",
+          "default": 15,
+          "description": "Length of each segment used in Welch's PSD estimate and the Spectrogram. Longer windows give better frequency resolution but poorer time resolution."
+        },
+        {
+          "label": "Overlap Ratio",
+          "id": "OverlapRatio",
+          "type": "number",
+          "default": 0.25,
+          "range": "0 – < 1",
+          "description": "Fraction of overlap between successive windows for the PSD and Spectrogram. Higher overlap (e.g. 0.75) smooths the estimate."
+        },
+        {
+          "label": "Smoothing Window Type",
+          "id": "Spectrum_SmoothingWindow",
+          "options": ["Hamming", "Rectangular"],
+          "default": "Hamming",
+          "description": "<b>Hamming</b>: reduces spectral leakage from signal edges — recommended for most seismic signals. <b>Rectangular</b>: no tapering applied; highest frequency resolution but significant leakage."
+        }
+      ],
+      "notes": [
+        "Window Length and Overlap Ratio apply to the Spectral Density Spectrum and Spectrogram only. They have no effect on the Fourier Amplitude or Power Spectrum.",
+        "The predominant period of a record can be identified from the peak of the Fourier Amplitude Spectrum."
+      ]
+    },
+
+    {
+      "id": "parameters",
+      "menuId": "MainMenu_SM_Parameters",
+      "heading": "Strong Motion Parameters",
+      "icon": "parameters",
+      "summary": "Compute intensity measures and strong motion parameters from the selected record.",
+      "parameters": [
+        {
+          "label": "Select to display",
+          "id": "SM_Par_SelectToDisplay",
+          "type": "dropdown",
+          "description": "Choose which strong motion parameter table or plot to display."
+        },
+        {
+          "label": "Bracketed Duration Threshold (g)",
+          "id": "BracketedDuration",
+          "type": "number",
+          "default": 0.05,
+          "description": "Acceleration threshold used to define the Bracketed Duration — the time between the first and last exceedance of this level. The default of 0.05g is standard per Bolt (1969)."
+        }
+      ],
+      "notes": [
+        "Computed parameters typically include: PGA, PGV, PGD, Arias Intensity, CAV, Housner Intensity, Bracketed Duration, Significant Duration (5–95% Arias), and RMS acceleration.",
+        "All parameters are computed on the baseline-corrected and filtered signal."
+      ]
+    },
+
+    {
+      "id": "drift",
+      "menuId": "MainMenu_Drift",
+      "heading": "Drift",
+      "icon": "drift",
+      "summary": "Compute inter-story drift from displacement records or by double-integrating acceleration channels.",
+      "notes": [
+        "Ensure baseline correction and high-pass filtering are applied before computing drift from integrated acceleration records — low-frequency noise accumulates through integration and will dominate the displacement signal."
+      ]
+    },
+
+    {
+      "id": "hv",
+      "menuId": "MainMenu_HV",
+      "heading": "H/V Spectral Ratio",
+      "icon": "hv",
+      "summary": "Compute the Horizontal-to-Vertical spectral ratio (HVSR / Nakamura technique) from three-component recordings.",
+      "notes": [
+        "Requires at least one horizontal and one vertical channel to be selected.",
+        "The peak of the H/V curve approximates the fundamental resonance frequency of the site."
+      ]
+    },
+
+    {
+      "id": "pwave",
+      "menuId": "MainMenu_PWave",
+      "heading": "P-Wave",
+      "icon": "pwave",
+      "summary": "Detect the P-wave arrival time from the selected channel.",
+      "notes": [
+        "P-wave picking can be used to determine the onset of strong motion and to compute S-P time differences for epicentral distance estimation."
+      ]
+    },
+
+    {
+      "id": "settings",
+      "menuId": "MainMenu_Settings",
+      "heading": "Settings",
+      "icon": "settings",
+      "summary": "Configure numerical integration parameters and output units for graphs.",
+      "subsections": [
+        {
+          "heading": "Newmark integration coefficients",
+          "parameters": [
+            {
+              "label": "Alpha (α)",
+              "id": "Newmark_Alfa",
+              "default": 0.5,
+              "description": "Newmark velocity parameter. α = 0.5 gives no artificial damping (average acceleration method)."
+            },
+            {
+              "label": "Beta (β)",
+              "id": "Newmark_Beta",
+              "default": 0.25,
+              "description": "Newmark displacement parameter. β = 0.25 with α = 0.5 gives the unconditionally stable constant average acceleration method."
+            },
+            {
+              "label": "Maximum Δt/T",
+              "id": "Newmark_dtT",
+              "default": 0.02,
+              "description": "Maximum allowable ratio of the integration time step to the natural period. If the record sampling interval exceeds this limit, the analysis will sub-step automatically."
+            },
+            {
+              "label": "Out-of-balance Force Tolerance",
+              "id": "Newmark_OutOfBalanceForceTolerance",
+              "default": "1e-6",
+              "description": "Convergence tolerance on the residual (out-of-balance) force for the non-linear Newmark iteration."
+            },
+            {
+              "label": "Ductility Convergence Tolerance",
+              "id": "Newmark_DuctilityConvergenceTolerance",
+              "default": "1e-6",
+              "description": "Convergence tolerance on the ductility demand for constant-ductility inelastic spectra computation."
+            }
+          ]
+        }
+        
+      ]
+    }
+
+  ]
+}

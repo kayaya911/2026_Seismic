@@ -2,6 +2,8 @@
 "use strict";
 
 
+
+//-----------------------------------------------------------------------------------------------
 function Blackman(M) {
     // Returns a Blackman Window of M-pont
 
@@ -22,7 +24,7 @@ function Blackman(M) {
     h[M - 1] = 0;
     return h;
 }
-
+//-----------------------------------------------------------------------------------------------
 function GaussWin(M, alpha) {
     // Returns a Gaussian Window of M-point
     // alpha is width factor, and it is specified as a positive real scalar.
@@ -39,7 +41,7 @@ function GaussWin(M, alpha) {
 
     return new Array(M).fill().map(() => {v++; return Math.exp(-Math.pow(v, 2) / 2 / sigma / sigma); } );
 }
-
+//-----------------------------------------------------------------------------------------------
 function Hamming(M) {
     // Returns a Hamming Window of M-point
 
@@ -48,7 +50,7 @@ function Hamming(M) {
 
     return new Array(M).fill().map((v,i) => 0.54 - 0.46 * Math.cos(2 * Math.PI * i / (M - 1)) );
 }
-
+//-----------------------------------------------------------------------------------------------
 function Hann(M) {
     // Returns a hanning Window of M-point
 
@@ -57,7 +59,7 @@ function Hann(M) {
 
     return new Array(M).fill().map((v,i) => 0.5 * (1 - Math.cos(2 * Math.PI * i / (M - 1))) );
 }
-
+//-----------------------------------------------------------------------------------------------
 function Triang(M) {
     // Returns a triangular Window of M-point
 
@@ -66,11 +68,13 @@ function Triang(M) {
 
     return new Array(M).fill().map((v,i) =>  1 - Math.abs(2 * (i - 0.5 * (M - 1)) / (M + 1)) );
 }
-
+//-----------------------------------------------------------------------------------------------
 function Rectwin(M) {
     // Reruns a Rectangular window of M-point
     return new Array(M).fill(1);
 }
+//-----------------------------------------------------------------------------------------------
+
 
 
 
@@ -1059,9 +1063,7 @@ async function Channel_Filter() {
     
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous filter operations
-    
-    document.getElementById("Run_Button").disabled = true;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    DisableButtons(true);
     ProgressBar_Update( 'Computing filtering...', 'red');
     await sleep(5);
 
@@ -1128,8 +1130,7 @@ async function Channel_Filter() {
     }
 
     // Enable CALCULATE Button
-    document.getElementById("Run_Button").disabled = false;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+    DisableButtons(false);
     
     // Helper function to apply baseline correction and filtering 
     function BaseLine_And_Filter(Channel, FiltPar) {
@@ -1162,8 +1163,7 @@ async function Channel_Integral() {
     
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Integral operations
-    document.getElementById("Run_Button").disabled = true;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    DisableButtons(true);
     ProgressBar_Update( 'Computing integration...', 'red');
     await sleep(5);
 
@@ -1246,9 +1246,7 @@ async function Channel_Integral() {
     }
 
     // Enable CALCULATE Button
-    document.getElementById("Run_Button").disabled = false;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
-
+    DisableButtons(false);
 
     // Helper function to apply baseline correction and filtering 
     function BaselineAndFilter(FilteredData, FiltPar) {
@@ -1279,8 +1277,7 @@ async function Channel_SDOF() {
     
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous SDOF operations
-    document.getElementById("Run_Button").disabled = true;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    DisableButtons(true);
     ProgressBar_Update( 'Computing SDOF response...', 'red');
     await sleep(5);
 
@@ -1550,8 +1547,7 @@ async function Channel_SDOF() {
     }
 
     // Enable CALCULATE Button
-    document.getElementById("Run_Button").disabled = false;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+    DisableButtons(false);
 
     // Helper functions
     // Baseline correction and filtering 
@@ -1580,8 +1576,7 @@ async function Channel_SDOF() {
 async function Channel_ResponseSpectrum() {
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
-    document.getElementById("Run_Button").disabled = true;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    DisableButtons(true);
     ProgressBar_Update( 'Computing response spectrum...', 'red');
     await sleep(5);
 
@@ -1753,8 +1748,7 @@ async function Channel_ResponseSpectrum() {
     }
 
     // Enable CALCULATE Button
-    document.getElementById("Run_Button").disabled = false;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+    DisableButtons(false);
 
     // Helper functions
     // Baseline correction and filtering 
@@ -1800,10 +1794,9 @@ async function Channel_ResponseSpectrum() {
 //-----------------------------------------------------------------------------------------------
 async function Channel_Spectrum() {
     
-     // Disable CALCULATE Button during processing (if applicable)
+    // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
-    document.getElementById("Run_Button").disabled = true;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    DisableButtons(true);
     ProgressBar_Update( 'Computing Spectrum...', 'red');
     await sleep(5);
 
@@ -1900,8 +1893,7 @@ async function Channel_Spectrum() {
     }
 
     // Enable CALCULATE Button
-    document.getElementById("Run_Button").disabled = false;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+    DisableButtons(false);
 
 
     // Helper functions
@@ -1945,8 +1937,7 @@ async function Channel_Parameters() {
 
     // Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
-    document.getElementById("Run_Button").disabled = true;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'black');
+    DisableButtons(true);
     ProgressBar_Update( 'Computing SM Parameters...', 'red');
     await sleep(5);
 
@@ -2056,8 +2047,7 @@ async function Channel_Parameters() {
     }
 
     // Enable CALCULATE Button
-    document.getElementById("Run_Button").disabled = false;
-    document.getElementById("Run_Button_SVG").setAttribute('fill', 'green');
+    DisableButtons(false);
 
 
     // Helper functions
@@ -11099,7 +11089,7 @@ function QR(A, Option) {
     //                                  →   false = treat matrix A as complex-valued (all elements of matrix A)
     //       isSymmHermi   : boolean    →   true if matrix A is symmetric if isReal=true or Hermitian if isReal=false
     //       isTridiagonal : boolean    →   true if matrix A is tridiagonal
-    //             ecoSize : boolean    →   true  = economy QR
+    //       ecoSize       : boolean    →   true  = economy QR
     //                                          For tall matrices  (m > n): Q is m×n, R is n×n
     //                                          For wide matrices  (m < n): Q is m×m, R is m×n
     //                                          (economy and full QR are identical for wide matrices  since Q cannot have fewer columns than rows in a

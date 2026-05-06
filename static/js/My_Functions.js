@@ -8,7 +8,7 @@
 // Declaration of global variable
 let ChannelList        = [];
 let PageNo             = 0;
-let MaxPlotly_Graphs   = 15;  // This variable should not be less than 8
+let MaxPlotly_Graphs   = 6;  // This variable should not be less than 8
 let Current_Plotly_Num = 0;
 
 //-----------------------------------------------------------------------------------------------
@@ -54,6 +54,106 @@ function OnLoad() {
     // Load_Data item from Analysis_Menu is selected 
     AnalysisMenu_Selection(document.getElementById("MainMenu_LoadData"));
 
+    // Help page
+    LoadHelpContent();
+
+
+}
+//-----------------------------------------------------------------------------------------------
+async function LoadHelpContent() {
+    
+    const panel = document.getElementById('panel4');
+    if (!panel) return;
+
+    panel.innerHTML = '<p style="padding:1rem; color: #888">Loading help...</p>';
+
+    try {
+        const res  = await fetch('./static/data/help.json');
+        const data = await res.json();
+        RenderHelp(panel, data);
+    } catch (e) {
+        panel.innerHTML = '<p style="padding:1rem; color:red">Could not load help.</p>';
+        console.error('Help load error:', e);
+    }
+    
+
+    function RenderHelp(panel, data) {
+
+        let html = `
+            <div class="help-container">
+                <h2 class="help-title">${data.title}</h2>
+                <p class="help-intro">${data.intro}</p>
+        `;
+
+        for (const section of data.sections) {
+
+            html += `<div class="help-section" id="help-${section.id}">`;
+            html += `<h3 class="help-section-heading">${section.heading}</h3>`;
+
+            if (section.summary)
+                html += `<p class="help-summary">${section.summary}</p>`;
+
+            // Sequential steps (Data, Filter intro, Integral)
+            if (section.steps && section.steps.length) {
+                html += `<ol class="help-steps">`;
+                for (const step of section.steps)
+                    html += `<li>${step}</li>`;
+                html += `</ol>`;
+            }
+
+            // Flat parameters list
+            if (section.parameters && section.parameters.length)
+                html += RenderParameters(section.parameters);
+
+            // Subsections (Settings)
+            if (section.subsections && section.subsections.length) {
+                for (const sub of section.subsections) {
+                    html += `<div class="help-subsection">`;
+                    html += `<h4 class="help-subsection-heading">${sub.heading}</h4>`;
+                    if (sub.description)
+                        html += `<p class="help-sub-desc">${sub.description}</p>`;
+                    if (sub.parameters && sub.parameters.length)
+                        html += RenderParameters(sub.parameters);
+                    html += `</div>`;
+                }
+            }
+
+            // Notes / tips at the bottom of the section
+            if (section.notes && section.notes.length) {
+                html += `<ul class="help-notes">`;
+                for (const note of section.notes)
+                    html += `<li>${note}</li>`;
+                html += `</ul>`;
+            }
+
+            html += `</div>`; // .help-section
+        }
+
+        html += `</div>`; // .help-container
+        panel.innerHTML = html;
+    }
+
+    function RenderParameters(params) {
+        let html = `<table class="help-param-table">`;
+        for (const p of params) {
+            html += `<tr>`;
+            html += `<td class="help-param-label">${p.label}</td>`;
+
+            // Badges on their own row, description below
+            let badges = `<div class="help-param-badges">`;
+            if (p.default  !== undefined) badges += `<span class="help-param-default">Default: ${p.default}</span>`;
+            if (p.range)                  badges += `<span class="help-param-range">Range: ${p.range}</span>`;
+            if (p.options)                badges += `<span class="help-param-options">${p.options.join(' · ')}</span>`;
+            badges += `</div>`;
+
+            let desc = p.description ? `<p class="help-param-desc">${p.description}</p>` : '';
+
+            html += `<td class="help-param-detail">${badges}${desc}</td>`;
+            html += `</tr>`;
+        }
+        html += `</table>`;
+        return html;
+    }
 }
 //-----------------------------------------------------------------------------------------------
 function IsElementExists(id) {
@@ -77,7 +177,26 @@ function ShowHide_AnalysisMenu() {
     if (x.style.display === "none") { 
         x.style.display = "flex"; 
     } else {
-        x.style.display = "none"; 
+        x.style.display = "none";
+    }
+}
+//-----------------------------------------------------------------------------------------------
+function InfoBarShowHide(status) {
+
+    if (status == null) {  status = getComputedStyle(document.getElementById('panel4')).display;  }
+
+    if (status == 'flex') {
+        document.getElementById('panel1').style.display       = 'flex';
+        document.getElementById('panel2').style.display       = 'flex';
+        document.getElementById('panel3').style.display       = 'flex';
+        document.getElementById('panel4').style.display       = 'none';
+        document.getElementById('resizeHandle').style.display = 'flex';
+    } else {
+        document.getElementById('panel1').style.display       = 'none';
+        document.getElementById('panel2').style.display       = 'none';
+        document.getElementById('panel3').style.display       = 'none';
+        document.getElementById('panel4').style.display       = 'flex';
+        document.getElementById('resizeHandle').style.display = 'none';
     }
 }
 //-----------------------------------------------------------------------------------------------
@@ -94,6 +213,7 @@ async function AnalysisMenu_Selection(a) {
     document.getElementById("Parameters_SM_Par").style.display = "none";
     document.getElementById("Parameters_Newmark").style.display = "none";
     document.getElementById("Parameters_Output_Units").style.display = "none";
+    InfoBarShowHide('flex'); 
 
     // Run_Button on Header
     document.getElementById('Run_Button_Div').style.display = 'flex';
@@ -1060,5 +1180,28 @@ function ProgressBar_Update(msg, msg_color) {
 
 }
 //-----------------------------------------------------------------------------------------------
+function DisableButtons(status) {
+
+    // Disables or enables elements on HTLM when Run button is clicked and analaysis is ongoing
+
+    document.getElementById("Run_Button").disabled       = status; 
+    document.getElementById("Main_Menu_Button").disabled = status;
+    document.getElementById("LoadFilesButton").disabled  = status;
+    document.getElementById("Header_Download").disabled  = status;
+    document.getElementById("Header_Info").disabled      = status;  
+    
+    if (status) { 
+        document.getElementById("Run_Button_SVG").setAttribute('fill', 'black'); 
+        document.getElementById("FileListTree").style.pointerEvents = 'none';  
+        document.getElementById("panel1").style.pointerEvents       = 'none';
+    }
+    else        
+    { 
+        document.getElementById("Run_Button_SVG").setAttribute('fill', 'green'); 
+        document.getElementById("FileListTree").style.pointerEvents = '';
+        document.getElementById("panel1").style.pointerEvents        = '';
+    }
 
 
+}
+//-----------------------------------------------------------------------------------------------
