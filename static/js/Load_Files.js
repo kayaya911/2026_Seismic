@@ -2405,7 +2405,12 @@ function AddDataToWorkSheet(WorkSheet, Header, Pos1, Data, Pos2, Data2=null, Pos
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 async function DonwloadExcel_LoadDataPage() {
-  
+    
+    if (IsOnHelpPage) { DisableButtons(true); DownloadPDF_HelpPage(); DisableButtons(false); return; }
+
+    // Disable all buttons
+    DisableButtons(true);
+
     // Decleration of Variables 
     let i, j, FileName, WorkBook, WorkSheet, header, data, data2, data3, rN=1, range, columnConfig, temp, temp2, Indx, plotCount, NumOfResults;
     let CEA1, CEA2;
@@ -3778,8 +3783,8 @@ async function DonwloadExcel_LoadDataPage() {
     // Inform user on progress
     ProgressBar_Update('Downloading Done! ---> ' + FileName.toString().trim(), 'black');
 
-    // Enable Download Button
-    document.getElementById("Header_Download").disabled = false;
+    // Enable all buttons
+    DisableButtons(false);
 
     // Helper functions
     function ShiftExcellAddress(row_excel, col, row) {
@@ -3818,7 +3823,9 @@ async function DonwloadExcel_LoadDataPage() {
 
 }
 //----------------------------------------------------------------------------------------
-
-
+async function DownloadPDF_HelpPage() {
+    window.print();
+}
+//----------------------------------------------------------------------------------------
 
 

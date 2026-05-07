@@ -219,10 +219,10 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].x           = ChannelList[ChNum].time;
             traces[0].y           = Multiply(res_RawData.Data, ChannelList[ChNum].ScaleFactor);
             traces[0].mode        = 'lines',
-            traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
+            traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
             traces[0].visible     = true;
             traces[0].opacity     = 0.35;
-            traces[0].line        = {color: 'red', width: 1.00, dash: 'solid' };
+            traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
             traces[0].name        = '';                 // legend title
             traces[0].showlegend  = false;              // don't show legend 
 
@@ -369,10 +369,10 @@ async function Plotly_Graph_Update(ChNum) {
             else if (Indx_Disp) { traces[0].y = [];         yTitle = res.yTitle_Disp;  }
 
             traces[0].mode        = 'lines',
-            traces[0].marker      = { color: 'red', size: 5, symbol: 'circle' },
+            traces[0].marker      = { color: 'grey', size: 5, symbol: 'circle' },
             traces[0].visible     = true;
             traces[0].opacity     = 0.35;
-            traces[0].line        = {color: 'red', width: 1.00, dash: 'solid' };
+            traces[0].line        = {color: 'grey', width: 1.00, dash: 'solid' };
             traces[0].name        = '';         // legend title
             traces[0].showlegend  = false;      // Don't show legend    
 

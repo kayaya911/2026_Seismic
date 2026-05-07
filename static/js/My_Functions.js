@@ -10,6 +10,7 @@ let ChannelList        = [];
 let PageNo             = 0;
 let MaxPlotly_Graphs   = 6;  // This variable should not be less than 8
 let Current_Plotly_Num = 0;
+let IsOnHelpPage       = false;
 
 //-----------------------------------------------------------------------------------------------
 function OnLoad() {
@@ -57,7 +58,6 @@ function OnLoad() {
     // Help page
     LoadHelpContent();
 
-
 }
 //-----------------------------------------------------------------------------------------------
 async function LoadHelpContent() {
@@ -79,21 +79,41 @@ async function LoadHelpContent() {
 
     function RenderHelp(panel, data) {
 
-        let html = `
-            <div class="help-container">
-                <h2 class="help-title">${data.title}</h2>
-                <p class="help-intro">${data.intro}</p>
-        `;
+        let html = `<div class="help-container">`;
+        html += `<h2 class="help-title">${data.title}</h2>`;
+
+        // ── INTRO ── replace the single line with this block
+        if (Array.isArray(data.intro)) {
+            for (const line of data.intro)
+                html += `<p class="help-intro">${line}</p>`;
+        } else {
+            html += `<p class="help-intro">${data.intro}</p>`;
+        }
+        // ── END INTRO ──
+
+        html += `<div class="help-accordion">`;
 
         for (const section of data.sections) {
 
-            html += `<div class="help-section" id="help-${section.id}">`;
-            html += `<h3 class="help-section-heading">${section.heading}</h3>`;
+            html += `
+                <div class="help-accordion-item" id="help-${section.id}">
+                    <button class="help-accordion-header" onclick="ToggleHelpSection(this)">
+                        <span>${section.heading}</span>
+                        <svg class="help-accordion-icon" viewBox="0 0 24 24">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+                    <div class="help-accordion-body">
+            `;
 
             if (section.summary)
                 html += `<p class="help-summary">${section.summary}</p>`;
 
-            // Sequential steps (Data, Filter intro, Integral)
+            if (section.intro && section.intro.length) {
+                for (const line of section.intro)
+                    html += `<p class="help-intro">${line}</p>`;
+            }
+
             if (section.steps && section.steps.length) {
                 html += `<ol class="help-steps">`;
                 for (const step of section.steps)
@@ -101,11 +121,9 @@ async function LoadHelpContent() {
                 html += `</ol>`;
             }
 
-            // Flat parameters list
             if (section.parameters && section.parameters.length)
                 html += RenderParameters(section.parameters);
 
-            // Subsections (Settings)
             if (section.subsections && section.subsections.length) {
                 for (const sub of section.subsections) {
                     html += `<div class="help-subsection">`;
@@ -118,7 +136,6 @@ async function LoadHelpContent() {
                 }
             }
 
-            // Notes / tips at the bottom of the section
             if (section.notes && section.notes.length) {
                 html += `<ul class="help-notes">`;
                 for (const note of section.notes)
@@ -126,11 +143,24 @@ async function LoadHelpContent() {
                 html += `</ul>`;
             }
 
-            html += `</div>`; // .help-section
+            html += `</div></div>`;
         }
 
-        html += `</div>`; // .help-container
+        html += `</div></div>`;
         panel.innerHTML = html;
+    }
+
+    function ToggleHelpSection(header) {
+        const item = header.parentElement;
+        const isOpen = item.classList.contains("open");
+
+        // Close all open sections
+        document.querySelectorAll(".help-accordion-item.open").forEach(el => {
+            el.classList.remove("open");
+        });
+
+        // Open the clicked one if it was closed
+        if (!isOpen) item.classList.add("open");
     }
 
     function RenderParameters(params) {
@@ -191,12 +221,17 @@ function InfoBarShowHide(status) {
         document.getElementById('panel3').style.display       = 'flex';
         document.getElementById('panel4').style.display       = 'none';
         document.getElementById('resizeHandle').style.display = 'flex';
+
+        IsOnHelpPage = false;
+
     } else {
         document.getElementById('panel1').style.display       = 'none';
         document.getElementById('panel2').style.display       = 'none';
         document.getElementById('panel3').style.display       = 'none';
         document.getElementById('panel4').style.display       = 'flex';
         document.getElementById('resizeHandle').style.display = 'none';
+
+        IsOnHelpPage = true; // Help Page
     }
 }
 //-----------------------------------------------------------------------------------------------
@@ -1171,6 +1206,10 @@ function Toggle_Tables_SingleTable() {
         });
 
     }
+}
+//-----------------------------------------------------------------------------------------------
+function ToggleHelpSection(header) {
+    header.parentElement.classList.toggle("open");
 }
 //-----------------------------------------------------------------------------------------------
 function ProgressBar_Update(msg, msg_color) {

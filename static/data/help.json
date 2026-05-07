@@ -1,64 +1,81 @@
 {
-  "title": "Seismic Data Analysis",
-  "intro": "This application loads and processes seismic records from various data formats. Use the Analysis menu to switch between modules. Click Run to execute the current analysis.",
-
+  "title": "Seismic Data Analysis — User Manual",
+  "intro": [
+    "This application offers a comprehensive set of analysis modules that allow users to load and analyse seismic data files with various formats from numerous data centers around the world.",
+    "The header toolbar provides four main controls: the <b>Run</b> button to start the current analysis, the <b>Analysis</b> button to switch between analysis modules, the <b>File</b> button to load various seismic data files, and the <b>Download</b> button to export analysis results as Excel files.",
+    "The sidebar on the left displays all loaded data files and their channels in a tree structure. Files can be expanded or collapsed to browse individual channels. Each channel has two checkboxes: the blue checkbox includes the channel in the current analysis, and the green checkbox toggles its graph on screen.",
+    "Right-clicking in the sidebar opens a right-click menu with four sections. Sidebar Options provides general controls such as selecting all channels for analysis, selecting the first 6 channels for plotting, expanding or collapsing files in the sidebar, expanding files in the channel table, and switching the table view. The remaining three sections allow batch selection of channels for analysis by Sampling Rate, Channel Type, and Channel Orientation — making it easy to quickly include specific subsets of channels across multiple files for analysis, without selecting them one by one."
+  ],
   "sections": [
-
     {
       "id": "data",
       "menuId": "MainMenu_LoadData",
       "heading": "Data",
       "icon": "waveform",
-      "summary": "Load seismic record files and inspect channel metadata.",
-      "steps": [
-        "Click the <b>File</b> button in the header toolbar.",
-        "Select one or more files. Supported formats: <code>.vif</code>, <code>.txt</code>, <code>.v1</code>, <code>.raw</code>, <code>.msd</code>, <code>.asc</code>, <code>.dat</code>.",
-        "Loaded channels appear in the <b>Files &amp; Channels</b> sidebar tree on the left.",
-        "The channel table shows File Name, Channel number, Record Length, Sampling rate, Signal Type, Unit, Scale factor, Date &amp; Time, and Azimuth for each channel.",
-        "Click a channel in the sidebar or table to select it for analysis.",
-        "Click <b>Download</b> in the header to export the channel table to Excel."
-      ],
-      "notes": [
-        "Multiple files can be loaded at the same time. Each file may contain one or more channels.",
-        "Right-clicking in the sidebar opens a context menu with options to select channels by sampling rate, channel type, or azimuth orientation."
+      "summary": "Load seismic data files, inspect channel metadata and display time-history waveforms",
+      "intro": [
+        "The <b>Data</b> module is the entry point of the web application. It allows user to load multiple seismic data files at the same time and inspect the metadata of all loaded channels before proceeding to analysis. Supported file formats: <code>.vif</code>, <code>.txt</code>, <code>.v1</code>, <code>.raw</code>, <code>.msd</code>, <code>.asc</code>, <code>.dat</code>.",
+        "Once data files are loaded, key metadata for each channel is displayed in a table including file name, channel number, record length, sampling rate, signal type, physical unit, scale factor, date and time, and azimuth orientation.",
+        "Three metadata fields are user-configurable directly in the table: <b>Signal Type</b>, <b>Physical Unit</b>, and <b>Scale Factor</b>. These can be adjusted after loading to correct metadata that was not embedded in the file or to override values that do not match the recording instrument.",
+        "Once data files are loaded, each channel is listed in the <b>Files &amp; Channels</b> sidebar tree on the left, where it can be selected for analysis and display. Use the blue checkbox next to each channel to include it in the analysis, and the green checkbox to toggle its graph on or off. Multiple channels can be selected for analysis and display simultaneously.",
+        "When the green checkbox for a channel is enabled, its time-history waveform is plotted in the graph panel below the channel table. Each graph is accompanied by a summary statistics table showing the Peak absolute value, Mean, RMS, and Residual of the signal, along with a Unit dropdown that allows the graph unit to be changed independently of the channel metadata. Multiple channels can be plotted simultaneously, with each appearing as a separate graph in the panel."
       ]
     },
-
     {
       "id": "filter",
       "menuId": "MainMenu_Filter",
       "heading": "Filter",
       "icon": "filter",
-      "summary": "Apply baseline correction and digital filtering to the selected channel.",
+      "summary": "Apply baseline correction and digital filtering to the selected channels.",
+      "intro": [
+        "The <b>Filter</b> module applies baseline correction and digital filtering to the selected channels and is essential for removing DC offsets, trends, and unwanted frequency content from raw seismic waveforms. These two operations are applied in sequential order — baseline correction first, followed by filtering — and each can be skipped independently.",
+        "Baseline correction removes any DC offset or trend from the waveform before filtering, and offers four options. <b>Remove Mean</b> subtracts the mean value of the entire record, eliminating any constant offset. <b>Linear</b> fits and subtracts a 1st-order polynomial trend, <b>Quadratic</b> a 2nd-order, and <b>Cubic</b> a 3rd-order — use these when the waveform exhibits a gradual drift that cannot be adequately removed by mean subtraction alone.",
+        "Three filter types are available: <b>Butterworth</b> attenuates frequencies outside the passband with a maximally flat magnitude response and no ripple. <b>Chebyshev</b> achieves a steeper roll-off at the cost of passband ripple, controlled by the Maximum Ripple Size parameter. <b>Bessel</b> attenuates out-of-band frequencies while preserving the shape of the signal waveform through maximally flat group delay. For each filter type, three band configurations are available: <b>Low-Pass</b> retains frequencies below the cut-off frequency F1, <b>High-Pass</b> retains frequencies above F1, and <b>Band-Pass</b> retains frequencies between F1 and F2. The Filter Order controls the steepness of the roll-off, with higher orders producing a sharper transition between the passband and stopband, but greater phase distortion and potential numerical instability.",
+        "The <b>Butterworth</b> filter is designed to provide a smooth, ripple-free response in the passband, meaning it does not distort the amplitude of the frequencies it retains. The filter order controls the sharpness of the transition between retained and attenuated frequencies — a higher order produces a steeper roll-off but requires more computation. The cut-off frequency defines the 3 dB point, which is the frequency at which the signal amplitude begins to be attenuated. For Band-Pass filtering, two cut-off frequencies F1 and F2 define the lower and upper bounds of the retained frequency band.",
+        "The <b>Chebyshev</b> filter achieves a steeper roll-off than the Butterworth filter of the same order, meaning it transitions more sharply between retained and attenuated frequencies. This comes at the cost of ripple in the passband — small oscillations in the amplitude response within the retained frequency range. The Maximum Ripple Size parameter controls the magnitude of these oscillations, with larger values producing a steeper roll-off but greater amplitude variation in the passband.",
+        "The <b>Bessel</b> filter is designed to preserve the shape of the signal waveform by maintaining a constant time delay across all frequencies in the passband, a property known as maximally flat group delay. Unlike the Butterworth and Chebyshev filters, the Bessel filter prioritises phase linearity over roll-off steepness, making it the preferred choice when the timing and shape of the waveform are more important than sharp frequency separation.",
+        "Once <b>Run</b> button is clicked, the graph panel displays the raw and filtered waveforms overlaid for each selected channel, allowing direct visual comparison of the effect of baseline correction and filtering. The summary table alongside each graph shows the Peak absolute value, Mean, and RMS of the filtered signal, a Unit dropdown to change the graph unit, the applied baseline correction method, and the filter settings including type, band configuration, cut-off frequency, and whether Zero Phase filtering was enabled. The <b>Filter</b> toggle displays the filter magnitude and phase response on the graph, and the <b>FFT</b> toggle displays the Fourier amplitude spectrum of both the raw and filtered data for easy comparison."
+      ],
       "parameters": [
         {
           "label": "Baseline Correction",
           "id": "BaselineCorrection",
-          "options": ["None", "Remove Mean", "Linear", "Quadratic", "Qubic"],
-          "default": "Remove Mean",
-          "description": "Removes the DC offset or trend from the record before filtering. <b>Remove Mean</b> subtracts the signal mean. <b>Linear</b>, <b>Quadratic</b>, and <b>Qubic</b> fit and subtract a polynomial trend."
+          "options": [
+            "None",
+            "Remove Mean",
+            "Linear",
+            "Quadratic",
+            "Qubic"
+          ],
+          "default": "Remove Mean"
         },
         {
           "label": "Filter Type",
           "id": "FilterName",
-          "options": ["None", "Butterworth", "Chebyshev", "Bessel"],
-          "default": "Butterworth",
-          "description": "<b>Butterworth</b>: maximally flat magnitude response in the passband. <b>Chebyshev</b>: steeper roll-off at the cost of passband ripple — set the Maximum Ripple Size accordingly. <b>Bessel</b>: maximally flat group delay, preserving pulse shape."
+          "options": [
+            "None",
+            "Butterworth",
+            "Chebyshev",
+            "Bessel"
+          ],
+          "default": "Butterworth"
         },
         {
           "label": "Filter Band",
           "id": "FilterType",
-          "options": ["Low-Pass", "High-Pass", "Band-Pass"],
-          "default": "High-Pass",
-          "description": "<b>Low-Pass</b>: retains frequencies below F1. <b>High-Pass</b>: retains frequencies above F1. <b>Band-Pass</b>: retains frequencies between F1 and F2."
+          "options": [
+            "Low-Pass",
+            "High-Pass",
+            "Band-Pass"
+          ],
+          "default": "High-Pass"
         },
         {
           "label": "Filter Order",
           "id": "FilterOrder",
           "type": "integer",
           "default": 4,
-          "range": "1 – 12",
-          "description": "Controls the steepness of the roll-off. Higher order = sharper cutoff, but greater phase distortion (unless Zero Phase is enabled) and potential numerical instability at high orders."
+          "range": "1 – 12"
         },
         {
           "label": "Cut-off Frequency F1 (Hz)",
@@ -86,25 +103,22 @@
           "id": "ZeroPhase",
           "type": "checkbox",
           "default": true,
-          "description": "Applies the filter twice — once forward and once backward — to eliminate phase distortion. This doubles the effective filter order. Recommended for all seismic processing."
+          "description": "Applies the filter twice — once forward and once backward — to eliminate phase distortion. This doubles the effective filter order."
         }
-      ],
-      "notes": [
-        "F2 is only active when Band-Pass is selected. It is greyed out otherwise.",
-        "The Ripple Size parameter is only active when Chebyshev is selected.",
-        "Zero Phase Filtering is strongly recommended. Disabling it will introduce a time-shift in the filtered output."
       ]
     },
-
     {
       "id": "integral",
       "menuId": "MainMenu_Integral",
       "heading": "Integral",
       "icon": "integral",
       "summary": "Numerically integrate the filtered signal to obtain velocity and displacement time histories.",
-      "steps": [
-        "Select the channels to display using the toggle switches.",
-        "Click <b>Run</b> to compute the integrals and update the graph."
+      "intro": [
+        "The <b>Integral</b> module performs cumulative trapezoidal integration with uniform time spacing twice in sequence in the time domain on selected channels to compute the waveforms of the 1st and 2nd integrals. When the underlying channel is an acceleration record, the 1st integral yields the velocity waveform and the 2nd integral yields the displacement waveform.",
+        "The quality of the integrated signals is directly dependent on the effectiveness of the preceding baseline correction and filtering. Low-frequency (long-period) noise that may be present in the signal will accumulate through the integration process and may produce unrealistic residual drift in the integrated waveforms. Therefore, baseline correction and filtering are usually applied to the channel in advance of each integration to minimize the effect of unrealistic residual drift.",
+        "If the residual drift — defined as the final value of the integrated waveform at the end of the record — is unrealistically large, the user should consider adjusting the baseline correction method and/or filter cut-off frequency to better suppress long-period noise before re-running the integration. In practice, the residual displacement of the integrated waveform for long distance recordings at the end of the record is expected to return close to zero, as the ground returns to rest after the shaking. A significant deviation from zero may indicate insufficient baseline correction and/or the presence of low-frequency noise that has not been adequately removed.",
+        "When the <b>Run</b> button is clicked, the graph panel displays the integrated waveforms for each selected channel. The <b>Select to Display</b> panel allows the user to switch between the original waveform, 1st integrated waveform, and 2nd integrated waveform — only one quantity can be displayed at a time.",
+        "The summary table alongside each graph shows the Peak absolute value, Mean, RMS, and Residual of the waveform on display. A <b>Unit</b> dropdown in the table allows the graph unit to be changed independently of the channel metadata. The table also shows the user-specified baseline correction method and the filter settings including type, band configuration, cut-off frequency, and whether zero-phase filtering was enabled. The <b>Filter</b> toggle plots the filter magnitude and phase response on the graph, and the <b>FFT</b> toggle displays the Fourier amplitude spectrum for integrated waveform on display."
       ],
       "parameters": [
         {
@@ -112,40 +126,47 @@
           "id": "Int_Acceleration",
           "type": "toggle",
           "default": true,
-          "description": "Display the original (baseline-corrected and filtered) signal."
+          "description": "Display the original signal."
         },
         {
           "label": "1st Integral",
           "id": "Int_Velocity",
           "type": "toggle",
           "default": false,
-          "description": "Display the first numerical integral of the signal (e.g. velocity if the input is acceleration)."
+          "description": "Display the first numerical integral of the signal (e.g. velocity)."
         },
         {
           "label": "2nd Integral",
           "id": "Int_Displacement",
           "type": "toggle",
           "default": false,
-          "description": "Display the second numerical integral of the signal (e.g. displacement if the input is acceleration)."
+          "description": "Display the second numerical integral of the signal (e.g. displacement)."
         }
-      ],
-      "notes": [
-        "Integration is performed using the trapezoidal rule after baseline correction and filtering.",
-        "Baseline drift in the integrated signal can indicate insufficient low-frequency filtering. Try increasing the high-pass cut-off frequency in the Filter module."
       ]
     },
-
     {
       "id": "sdof",
       "menuId": "MainMenu_SDOF",
       "heading": "SDOF",
       "icon": "sdof",
       "summary": "Compute the dynamic response of a Single Degree of Freedom (SDOF) oscillator subjected to the selected ground motion record.",
+      "intro": [
+        "The <b>SDOF</b> module computes the dynamic time-history response of a Single Degree of Freedom (SDOF) oscillator subjected to a selected ground motion record or harmonic excitation.",
+        "Six analysis methods are available, ranging from the closed-form Piece-Wise Exact solution for linear systems to implicit Newmark methods for both linear and inelastic systems. The inelastic Newmark Non-Linear method supports hysteretic behaviour through a bilinear or Clough degrading stiffness model, allowing simulation of yielding and stiffness degradation under cyclic loading.",
+        "The module is useful for understanding the response of structures with known natural frequency and damping ratio to a specific ground motion, and for validating numerical integration parameters before computing full response spectra."
+      ],
       "parameters": [
         {
           "label": "Analysis Type",
           "id": "SDOF_Analysis",
-          "options": ["Free Vibration", "Forced Vibration", "Piece-Wise Exact", "Central Difference", "Newmark Linear", "Newmark Non-Linear"],
+          "options": [
+            "Free Vibration",
+            "Forced Vibration",
+            "Piece-Wise Exact",
+            "Central Difference",
+            "Newmark Linear",
+            "Newmark Non-Linear"
+          ],
           "default": "Newmark Linear",
           "description": "<b>Free Vibration</b>: response to initial conditions only, no external excitation. <b>Forced Vibration</b>: steady-state response to harmonic excitation. <b>Piece-Wise Exact</b>: exact solution assuming linearly interpolated excitation between time steps. <b>Central Difference</b>: explicit finite difference method — conditionally stable, requires small time steps. <b>Newmark Linear</b>: unconditionally stable implicit method for linear systems (α=0.5, β=0.25). <b>Newmark Non-Linear</b>: iterative Newmark method for inelastic systems with hysteretic behavior."
         },
@@ -229,7 +250,7 @@
           "label": "Unloading Stiffness Degradation",
           "id": "SDOF_UnloadStiffnessDegredation",
           "type": "number",
-          "default": 0.20,
+          "default": 0.2,
           "description": "Controls the reduction in unloading stiffness as ductility demand increases (Clough degrading stiffness model). A value of 0 gives no degradation (bilinear model)."
         }
       ],
@@ -238,13 +259,17 @@
         "The Central Difference method is conditionally stable: the time step must satisfy Δt ≤ T/π, where T is the natural period."
       ]
     },
-
     {
       "id": "response",
       "menuId": "MainMenu_ResSpec",
       "heading": "Response Spectrum",
       "icon": "spectrum",
       "summary": "Compute elastic or constant-ductility inelastic response spectra from the selected ground motion record.",
+      "intro": [
+        "The <b>Response Spectrum</b> module computes elastic and constant-ductility inelastic response spectra from the selected ground motion record over a user-defined period range.",
+        "For elastic spectra, the module sweeps through SDOF oscillators of increasing natural period and records the peak spectral displacement (Sd), pseudo-velocity (Sv), and pseudo-acceleration (Sa) for each. Multiple damping ratios can be plotted simultaneously, producing a family of elastic spectral curves.",
+        "For inelastic spectra, the module iterates at each period to find the yield strength that produces a specified target ductility demand, using either a bilinear or Clough degrading stiffness hysteretic model. Up to four constant-ductility levels can be computed and compared in a single run."
+      ],
       "parameters": [
         {
           "label": "Spectrum Type",
@@ -274,7 +299,7 @@
           "label": "Period Step (s)",
           "id": "ResSpec_PeriodStep",
           "type": "number",
-          "default": 0.10,
+          "default": 0.1,
           "description": "Increment between successive periods. Smaller values produce a smoother spectrum but increase computation time."
         },
         {
@@ -288,7 +313,7 @@
           "label": "Unloading Stiffness Degradation",
           "id": "ResSpec_UnloadingStiffnessDegredation",
           "type": "number",
-          "default": 0.20,
+          "default": 0.2,
           "description": "Used for the Clough inelastic model. Controls degradation of unloading stiffness with increasing ductility demand."
         },
         {
@@ -308,8 +333,18 @@
         },
         {
           "label": "Damping Ratios ξ₁ – ξ₄",
-          "ids": ["ResSpec_ksi_1", "ResSpec_ksi_2", "ResSpec_ksi_3", "ResSpec_ksi_4"],
-          "defaults": [0.01, 0.02, 0.03, 0.04],
+          "ids": [
+            "ResSpec_ksi_1",
+            "ResSpec_ksi_2",
+            "ResSpec_ksi_3",
+            "ResSpec_ksi_4"
+          ],
+          "defaults": [
+            0.01,
+            0.02,
+            0.03,
+            0.04
+          ],
           "description": "Viscous damping ratio values for each spectrum curve. Common values: 0.02 (steel), 0.05 (reinforced concrete), 0.10 (heavily damped structures)."
         },
         {
@@ -322,8 +357,18 @@
         },
         {
           "label": "Constant Ductility μ₁ – μ₄",
-          "ids": ["ResSpec_mu_1", "ResSpec_mu_2", "ResSpec_mu_3", "ResSpec_mu_4"],
-          "defaults": [1.5, 2.0, 2.5, 3.0],
+          "ids": [
+            "ResSpec_mu_1",
+            "ResSpec_mu_2",
+            "ResSpec_mu_3",
+            "ResSpec_mu_4"
+          ],
+          "defaults": [
+            1.5,
+            2.0,
+            2.5,
+            3.0
+          ],
           "description": "Target displacement ductility ratios for constant-ductility inelastic spectra. μ = 1 corresponds to the elastic spectrum."
         }
       ],
@@ -332,13 +377,17 @@
         "The Damping Ratio Count and Ductility Count fields control how many of the corresponding input rows are active."
       ]
     },
-
     {
       "id": "spectrum",
       "menuId": "MainMenu_Spectrum",
       "heading": "Spectrum",
       "icon": "fft",
       "summary": "Compute frequency-domain representations of the selected channel.",
+      "intro": [
+        "The <b>Spectrum</b> module computes frequency-domain representations of the selected channel, allowing the identification of dominant frequencies, energy distribution, and time-varying spectral content.",
+        "Four representations are available: the Fourier Amplitude Spectrum (FAS) and Power Spectrum provide global frequency content over the entire record, while the Power Spectral Density (PSD), estimated using Welch's method, gives a statistically smoothed estimate of signal energy per unit frequency. The Spectrogram visualises how the frequency content evolves over time using a Short-Time Fourier Transform (STFT).",
+        "Spectral analysis is most meaningful when applied to a well-conditioned signal. Run the Filter module first to remove unwanted frequency content before computing the spectrum."
+      ],
       "parameters": [
         {
           "label": "Select to display",
@@ -369,7 +418,10 @@
         {
           "label": "Smoothing Window Type",
           "id": "Spectrum_SmoothingWindow",
-          "options": ["Hamming", "Rectangular"],
+          "options": [
+            "Hamming",
+            "Rectangular"
+          ],
           "default": "Hamming",
           "description": "<b>Hamming</b>: reduces spectral leakage from signal edges — recommended for most seismic signals. <b>Rectangular</b>: no tapering applied; highest frequency resolution but significant leakage."
         }
@@ -379,13 +431,17 @@
         "The predominant period of a record can be identified from the peak of the Fourier Amplitude Spectrum."
       ]
     },
-
     {
       "id": "parameters",
       "menuId": "MainMenu_SM_Parameters",
       "heading": "Strong Motion Parameters",
       "icon": "parameters",
       "summary": "Compute intensity measures and strong motion parameters from the selected record.",
+      "intro": [
+        "The <b>Strong Motion Parameters</b> module computes a comprehensive set of intensity measures and engineering demand parameters from the selected record.",
+        "Computed parameters include peak values (PGA, PGV, PGD), energy-based measures (Arias Intensity, Cumulative Absolute Velocity, Housner Intensity), and duration-based measures (Bracketed Duration, Significant Duration based on 5–95% Arias Intensity). These parameters are widely used in seismic hazard analysis, ground motion selection, and structural performance assessment.",
+        "All parameters are derived from the baseline-corrected and filtered signal. The Bracketed Duration threshold can be adjusted to match the definition used in a specific study or standard."
+      ],
       "parameters": [
         {
           "label": "Select to display",
@@ -406,47 +462,63 @@
         "All parameters are computed on the baseline-corrected and filtered signal."
       ]
     },
-
     {
       "id": "drift",
       "menuId": "MainMenu_Drift",
       "heading": "Drift",
       "icon": "drift",
       "summary": "Compute inter-story drift from displacement records or by double-integrating acceleration channels.",
+      "intro": [
+        "The <b>Drift</b> module computes inter-story drift, which is a key structural response quantity used to assess damage levels in buildings under seismic loading.",
+        "Drift can be computed either directly from displacement records measured at different floor levels, or by double-integrating acceleration channels recorded at those levels. In the latter case, the quality of the result depends critically on the preceding baseline correction and high-pass filtering steps, as low-frequency noise accumulates rapidly through double integration.",
+        "Inter-story drift is defined as the relative horizontal displacement between two adjacent floors, typically normalised by the story height to give a drift ratio."
+      ],
       "notes": [
         "Ensure baseline correction and high-pass filtering are applied before computing drift from integrated acceleration records — low-frequency noise accumulates through integration and will dominate the displacement signal."
       ]
     },
-
     {
       "id": "hv",
       "menuId": "MainMenu_HV",
       "heading": "H/V Spectral Ratio",
       "icon": "hv",
       "summary": "Compute the Horizontal-to-Vertical spectral ratio (HVSR / Nakamura technique) from three-component recordings.",
+      "intro": [
+        "The <b>H/V Spectral Ratio</b> module computes the Horizontal-to-Vertical Spectral Ratio (HVSR) using the Nakamura technique. It is a standard method for estimating the fundamental resonance frequency of a site from ambient noise or earthquake recordings.",
+        "The HVSR is computed as the ratio of the combined horizontal Fourier amplitude spectrum to the vertical spectrum. A distinct peak in the H/V curve indicates the fundamental site frequency, which is related to the depth and impedance contrast of the underlying soil layers.",
+        "The analysis requires a three-component recording with at least one horizontal channel (N-S or E-W) and one vertical channel (U-D) to be selected and included in the analysis."
+      ],
       "notes": [
         "Requires at least one horizontal and one vertical channel to be selected.",
         "The peak of the H/V curve approximates the fundamental resonance frequency of the site."
       ]
     },
-
     {
       "id": "pwave",
       "menuId": "MainMenu_PWave",
       "heading": "P-Wave",
       "icon": "pwave",
       "summary": "Detect the P-wave arrival time from the selected channel.",
+      "intro": [
+        "The <b>P-Wave</b> module detects the arrival time of the primary (P) wave in the selected channel. The P-wave is the first body wave to arrive at a seismic station and travels as a compressional wave through the earth.",
+        "Accurate P-wave picking is essential for computing travel times, estimating epicentral distances from S-P time differences, and determining the onset of strong motion for duration calculations.",
+        "The detected arrival time is displayed on the signal graph and can be used as a reference point for trimming or windowing the record in other modules."
+      ],
       "notes": [
         "P-wave picking can be used to determine the onset of strong motion and to compute S-P time differences for epicentral distance estimation."
       ]
     },
-
     {
       "id": "settings",
       "menuId": "MainMenu_Settings",
       "heading": "Settings",
       "icon": "settings",
       "summary": "Configure numerical integration parameters and output units for graphs.",
+      "intro": [
+        "The <b>Settings</b> module provides global configuration options that apply across the analysis modules. It is divided into two sections: Newmark integration coefficients and output units for graphs.",
+        "The Newmark coefficients control the numerical integration scheme used by the SDOF and Response Spectrum modules for linear and non-linear time-history analysis. The default values (α = 0.5, β = 0.25) correspond to the unconditionally stable constant average acceleration method. The convergence tolerances apply to the non-linear Newmark iteration used in inelastic SDOF and constant-ductility spectral computations.",
+        "The output units section allows you to select the physical units in which results are displayed on graphs for each quantity type: acceleration, velocity, displacement, strain, wind direction, wind speed, temperature, humidity, pore pressure, and tilt."
+      ],
       "subsections": [
         {
           "heading": "Newmark integration coefficients",
@@ -483,9 +555,7 @@
             }
           ]
         }
-        
       ]
     }
-
   ]
 }
