@@ -5287,6 +5287,161 @@ function HousnerSpectralIntensity(data, delt, ksi, T) {
     return Trapz(SPv, T) / 2.4;
 }
 //-----------------------------------------------------------------------------------------------
+function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
+    // Computes the average Horizontal-to-Vertical Spectral Ratio (HVSR) of three-component
+    // ambient noise or ground motion recordings using Welch's overlapping-segment method.
+    //
+    // Each recording is divided into overlapping segments of RWL samples with OVS overlap.
+    // Each segment is multiplied by a normalised Hamming window before the NFFT-point FFT
+    // is applied to reduce spectral leakage.  The two horizontal Fourier amplitude spectra
+    // are combined into a single horizontal spectrum according to Option, then divided by
+    // the vertical spectrum to form the H/V ratio for that segment.  Segment-averaged H/V
+    // spectra and their standard deviations are returned together with the frequency vector.
+    //
+    // Parameters:
+    //   EW     : East-West  recording (1D array)
+    //   NS     : North-South recording (1D array)
+    //   UD     : Vertical   recording (1D array, same length as EW and NS)
+    //   RWL    : Segment length in samples (default: floor(N/8), minimum 2)
+    //   OVS    : Overlap between adjacent segments in samples
+    //            Must satisfy 0 ≤ OVS < RWL  (default: floor(RWL*0.25))
+    //   FSamp  : Sampling frequency in Hz (default: 1)
+    //   NFFT   : FFT length per segment; must satisfy NFFT ≥ RWL  (default: NextPow2(RWL))
+    //   Option : Method for combining the two horizontal amplitude spectra
+    //            1 → Geometric mean   √(EW·NS)             (default) (SESAME 2004 recommendation)
+    //            2 → Vector sum       √(EW²+NS²)
+    //            3 → Quadratic mean   √((EW²+NS²)/2)       
+    //            4 → Arithmetic mean  (EW+NS)/2
+    //
+    // Returns: [HV, Std, f]
+    //   HV  : Segment-averaged H/V spectral ratio (1D array, one-sided, length = nFreq)
+    //   Std : Standard deviation of H/V ratio across segments (1D array, same length)
+    //   f   : Frequency vector in Hz (1D array, same length)
+    //
+    // Notes:
+    //   - Segments containing NaN values in any component are silently skipped.
+    //   - No Konno-Ohmachi or other smoothing is applied to the individual FAS values.
+    //   - The window is normalised so that its power equals 1 (sum(Win²) = RWL), which
+    //     keeps the amplitude scale consistent across different window shapes.
+    //
+    // Reference:
+    //   SESAME European project (2004). Guidelines for the implementation of the H/V
+    //   spectral ratio technique on ambient vibrations. WP12 - Deliverable D23.12.
+    //
+    // Author   : Dr. Yavuz Kaya, P.Eng.
+    // Modified : 06.May.2026
+
+    // Check if the input arguments are correct; otherwise, throw an error.
+    if (!Array.isArray(EW)) { throw new Error("EW[] must be an array."); }
+    if (!Array.isArray(NS)) { throw new Error("NS[] must be an array."); }
+    if (!Array.isArray(UD)) { throw new Error("UD[] must be an array."); }
+
+    if ((EW.length !== NS.length) || (EW.length !== UD.length)) { throw new Error("Dimensions of EW[], NS[] and UD[] arrays are inconsistent."); }
+
+    // Check default values of input arguments
+    if (RWL    == null) { RWL    = Math.max(2, Math.floor(EW.length / 8)); }
+    if (OVS    == null) { OVS    = Math.floor(RWL * 0.25);                 }
+    if (FSamp  == null) { FSamp  = 1;                                      }
+    if (NFFT   == null) { NFFT   = NextPow2(RWL);                          }
+    if (Option == null) { Option = 1;                                      }
+
+    if ((RWL <= 0) || (RWL > EW.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)) {
+        throw new Error("Input arguments are inconsistent: (RWL <= 0) || (RWL > EW.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)");
+    }
+
+    // Pre-allocation
+    const HV_sum  = new Array(NFFT).fill(0);   // Σ HV[k]   across segments
+    const HV_sum2 = new Array(NFFT).fill(0);   // Σ HV[k]²  across segments (for std)
+
+    // Segment step and normalised window
+    const DW  = RWL - OVS;
+    let   Win = Hamming(RWL);
+    Win = Multiply(Win, Math.sqrt(RWL / Sum(Pow(Win, 2))));
+
+    let K  = 0;       // Number of valid segments processed
+    let a1 = 0;       // Segment start index
+    let a2 = RWL - 1; // Segment end  index
+
+    while (a2 < EW.length) {
+
+        // Extract segment
+        const EW1 = GetRange(EW, a1, a2);
+        const NS1 = GetRange(NS, a1, a2);
+        const UD1 = GetRange(UD, a1, a2);
+
+        // Skip segments that contain NaN in any component
+        if (IsContainNaN(EW1) || IsContainNaN(NS1) || IsContainNaN(UD1)) { a1 += DW; a2 += DW; continue; }
+
+        // Apply window in-place
+        for (let i = 0; i < RWL; i++) {
+            EW1[i] *= Win[i];
+            NS1[i] *= Win[i];
+            UD1[i] *= Win[i];
+        }
+
+        // Compute FFT of each windowed segment
+        const [Re1, Im1] = FFT(EW1, null, NFFT);
+        const [Re2, Im2] = FFT(NS1, null, NFFT);
+        const [Re3, Im3] = FFT(UD1, null, NFFT);
+
+        // Compute Fourier amplitude spectra
+        const [Mag1] = FFT_MagPhase(Re1, Im1);
+        const [Mag2] = FFT_MagPhase(Re2, Im2);
+        const [Mag3] = FFT_MagPhase(Re3, Im3);
+
+        // Combine horizontal components and form H/V ratio; accumulate in-place
+        for (let i = 0; i < NFFT; i++) {
+            const m1 = Mag1[i];
+            const m2 = Mag2[i];
+            const m3 = Mag3[i];
+
+            let H;
+            if      (Option === 1) { H = Math.sqrt(m1 * m2);           }   // Geometric mean
+            else if (Option === 2) { H = Math.sqrt(m1*m1 + m2*m2);     }   // Vector sum
+            else if (Option === 3) { H = Math.sqrt((m1*m1 + m2*m2)/2); }   // Quadratic mean
+            else                   { H = (m1 + m2) / 2;                }   // Arithmetic mean
+
+            const hv       = H / m3;
+            HV_sum[i]  += hv;
+            HV_sum2[i] += hv * hv;
+        }
+
+        a1 += DW;
+        a2 += DW;
+        K++;
+    }
+
+    // Compute average H/V and standard deviation across K valid segments
+    const HV  = new Array(NFFT).fill(0);
+    const Std = new Array(NFFT).fill(0);
+
+    if (K > 0) {
+        for (let i = 0; i < NFFT; i++) {
+            HV[i] = HV_sum[i] / K;
+        }
+
+        if (K > 1) {
+            // Sample standard deviation across K segments.
+            // For overlapping segments this is a biased underestimate of the true standard deviation (segments are not independent), 
+            // but it is the conventional measure used throughout the HVSR literature (SESAME, 2004).
+            // s = sqrt( (Σx² - n·x̄²) / (n-1) )
+            for (let i = 0; i < NFFT; i++) {
+                const variance = (HV_sum2[i] - K * HV[i] * HV[i]) / (K - 1);
+                Std[i] = Math.sqrt(Math.max(0, variance));  // Guard against floating-point negatives
+            }
+        }
+    }
+
+    // Frequency vector
+    const df    = FSamp / NFFT;
+    const f     = LinSpace(0, (NFFT - 1) * df, NFFT);
+
+    // Return one-sided spectrum only
+    const nFreq = IsEven(NFFT) ? (NFFT / 2) + 1 : (NFFT + 1) / 2;
+
+    return [GetRange(HV, 0, nFreq - 1), GetRange(Std, 0, nFreq - 1), GetRange(f, 0, nFreq - 1)];
+}
+//-----------------------------------------------------------------------------------------------
 function Poly(x) {
     // Compute polynomial coefficients from roots in x array
     // Converts an array of roots (real or complex) into polynomial coefficients
