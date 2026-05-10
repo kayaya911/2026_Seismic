@@ -162,7 +162,9 @@
             <div id="content"  class="resizable-container content">
                 <div class="resizable-panels-wrapper">
                     
+                    <!--- HELPER PAGE --->
                     <div class="resizable-panel-4" id="panel4"></div>
+
 
                     <div class="resizable-panel" id="panel1">
                     
@@ -513,6 +515,98 @@
                             </table>
                         </div>
 
+                        <!-- H/V Parameters -->
+                        <div class="Parameters" id="Parameters_HVSR">
+
+                            <table class="table-sm Parameters2-Table" id="HVSR_Parameters_Table">
+                                <colgroup>
+                                    <col style="width: 50%">
+                                    <col style="width: 10%">
+                                    <col style="width: 35%">
+                                    <col style="width:  5%">
+                                    <col style="width:  0%">
+                                </colgroup>
+                                
+                                <thead>
+                                    <tr>
+                                        <th>File Name</th>
+                                        <th>ChNum</th>
+                                        <th>Date&Time</th>
+                                        <th>Azimuth</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="table-group-divider overflow-y-scroll">
+                                    
+                                    <tr onclick="TabelsRowlClick(0)" value="">
+                                        <td>N/A</td>
+                                        <td id="HVSR_ChannelNum_1"></td>
+                                        <td id="HVSR_DateTime_1"></td>
+                                        <td id="HVSR_Azimuth_1"></td>
+                                        <td>H1</td>
+                                    </tr>
+
+                                    <tr onclick="TabelsRowlClick(1)" value="">
+                                        <td>N/A</td>
+                                        <td id="HVSR_ChannelNum_2"></td>
+                                        <td id="HVSR_DateTime_2"></td>
+                                        <td id="HVSR_Azimuth_2"></td>
+                                        <td>H2</td>
+                                    </tr>
+
+                                    <tr onclick="TabelsRowlClick(2)" value="">
+                                        <td>N/A</td>
+                                        <td id="HVSR_ChannelNum_3"></td>
+                                        <td id="HVSR_DateTime_3"></td>
+                                        <td id="HVSR_Azimuth_3"></td>
+                                        <td>V</td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            
+                            <br>
+
+                            <table class="table-sm Parameters-Table" id="HVSR_Parameters_Table">
+                                <tbody class="table-group-divider overflow-y-scroll">
+                                    
+                                    <tr>
+                                        <td> <b>H/V Spectral Ratio Parameters</b> </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td>Window Length (s)</td>
+                                        <td><input title="Window Segment Length in seconds" id="HVSR_WindowLength" type="number" onfocus="this.oldValue = this.value;" onchange="HVSR_WindowsLength_Change()" value="15" step="0.5"/></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>Overlap Ratio</td>
+                                        <td><input title="Overlap Ratio" id="HVSR_OverlapRatio" type="number" onfocus="this.oldValue = this.value;" onchange="HVSR_OverlapRatio_Change()" value="0.25" step="0.01"/></td>
+                                    </tr>
+
+                                    <tr>
+                                        <td>
+                                            Combination Type
+                                        </td>
+                                        <td>
+                                            <select class="form-custom" id="HVSR_CombinationType" onchange="">
+                                                <option value=""         >Geometric Mean</option>
+                                                <option value="" selected>Vector Sum</option>
+                                                <option value=""         >Quadratic Mean</option>
+                                                <option value=""         >Arithmetic Mean</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Overlapped Duration, s</td>
+                                        <td id="HVSR_OverlappedDuration"></td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+
 
 
                         <!-- SETTINGS -->
@@ -543,109 +637,6 @@
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
-
-                        <!-- Units Settings for graphs -->
-                        <div class="Parameters" id="Parameters_Output_Units" >
-                            <label><b>Units of Analysis Results on Graphs</b></label>
-                            <table class="table-sm Parameters-Table" id="Parameters_Output_Units_Tabel" >
-                                <tbody class="table-group-divider overflow-y-scroll" >
-                                    <tr>
-                                    <td>Acceleration Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Acceleration" onchange="">
-                                            <option class="Settings_Select" value="g" selected>g</option>
-                                            <option class="Settings_Select" value="m/s²">m/s²</option>
-                                            <option class="Settings_Select" value="cm/s²">cm/s²</option>
-                                            <option class="Settings_Select" value="mm/s²">mm/s²</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Velocity Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Velocity" onchange="">
-                                            <option class="Settings_Select" value="g•s" selected>g•s</option>
-                                            <option class="Settings_Select" value="m/s" >m/s</option>
-                                            <option class="Settings_Select" value="cm/s">cm/s</option>
-                                            <option class="Settings_Select" value="mm/s">mm/s</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Displacement Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Displacement" onchange="">
-                                            <option class="Settings_Select" value="g•s²" selected>g•s²</option>
-                                            <option class="Settings_Select" value="m" >m</option>
-                                            <option class="Settings_Select" value="cm">cm</option>
-                                            <option class="Settings_Select" value="mm">mm</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Strain Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Strain" onchange="">
-                                            <option class="Settings_Select" value="Strain" selected>Strain</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Wind Direction Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_WindDir" onchange="">
-                                            <option class="Settings_Select" value="Degree" selected>Degree</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Wind Speed Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_WindSpeed" onchange="">
-                                            <option class="Settings_Select" value="Mile/h" selected>Mile/h</option>
-                                            <option class="Settings_Select" value="km/h" >km/h</option>
-                                            <option class="Settings_Select" value="m/s" >m/s</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Temperature Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Temperature" onchange="">
-                                            <option class="Settings_Select" value="°C" selected>°C</option>
-                                            <option class="Settings_Select" value="°F" >°F</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Humidity Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Humidity" onchange="">
-                                            <option class="Settings_Select" value="%" selected>%</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Pore Pressure Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_PorePressure" onchange="">
-                                            <option class="Settings_Select" value="N/m" selected>N/m</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                    <tr>
-                                    <td>Tilt Output Unit</td>
-                                    <td>
-                                        <select class="form-select" id="Graph_Output_Tilt" onchange="">
-                                            <option class="Settings_Select" value="Degrees" selected>Degrees</option>
-                                            <option class="Settings_Select" value="Volts" >Volts</option>
-                                        </select>
-                                    </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                    
                         </div>
 
                     </div>

@@ -19,7 +19,8 @@ class Channel {
         this.NumSamples           = undefined;         // Number of digitized data points
         this.ScaleFactor          = undefined;         // User Scale Factor - Taken 1.0 if not specified
         this.Orientation          = undefined;         // Orientation
-        this.DateTime             = undefined;         // Date&Time of the first sample in the records
+        this.DateTime             = undefined;         // Date&Time of the first sample in the record
+        this.DateTime_End         = undefined;         // Date&Time of the last sample in the record
         this.Duration             = undefined;         // Total duration in seconds
         this.Lat                  = undefined;         // Latitude coordinate of the sensor
         this.Long                 = undefined;         // Longitude coordinate of the sensor
@@ -300,7 +301,7 @@ async function Add_To_Table(Channel) {
     checkbox1.id         = 'FileTreeView_Checkbox_' + Channel.Unique_ID;
     checkbox1.title      = 'Click to analyze channel';
     checkbox1.checked    = false;
-    checkbox1.setAttribute('onclick',   'Channel_Click(this)' );
+    checkbox1.setAttribute('onclick',    'Channel_Click(this)' );
 
     checkbox2.className  = 'form-check-input File_CheckBox_Ch_Green';
     checkbox2.type       = 'checkbox';
@@ -309,9 +310,10 @@ async function Add_To_Table(Channel) {
     checkbox2.checked    = false;
     checkbox2.setAttribute('onclick',   'Toggle_Sidebar_Checkbox_For_PlotGraph(this)' );
     
-    label.textContent = "(Ch-" + Channel.ChNum + ") (" +  Channel.Orientation  + ") (" + Number(Channel.FSamp).toFixed(3).toString() + " Hz)";;
+    label.textContent = "(Ch-" + Channel.ChNum + ") (" +  Channel.Orientation  + ") (" + Number(Channel.FSamp).toFixed(3).toString() + " Hz)";
     label.setAttribute('for', 'FileTreeView_Checkbox_' + Channel.Unique_ID);
     label.setAttribute('class', 'LabelClass');
+    label.setAttribute('ondblclick', 'Channel_DoubleClick(this)' );
 
     li_el.appendChild(checkbox1);
     li_el.appendChild(checkbox2);
@@ -525,7 +527,7 @@ async function Add_To_Table(Channel) {
         // Increase the number of Plotly-elememnts are in panel2
         Current_Plotly_Num++;
     }
-    
+
     // Checkbox for analysis - TRUE --------------------------------------------------------------------------------
     document.getElementById('FileTreeView_Checkbox_' + Channel.Unique_ID).checked = true;
 
@@ -593,6 +595,7 @@ async function Read_DAT(FileName, delta, dataview) {
     res.Orientation    = 'N/A';                    // Orientation of channel
     res.DateTime       = DateTime;                 // Date&Time of the first sample
     res.Duration       = Duration;                 // Total duration in seconds
+    res.DateTime_End   = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
     res.Lat            = undefined;                // Latitude coordinate of the sensor
     res.Long           = undefined;                // Longitude coordinate of the sensor
     res.FSamp          = FSamp;                    // Sampling Frequency in Hz
@@ -837,6 +840,7 @@ async function Read_VIF(FileName, delta, dataview) {
         res.Orientation    = Orientation[Ch];          // Orientation of channel
         res.DateTime       = DateTime;                 // Date&Time of the first sample
         res.Duration       = Duration[Ch];             // Total duration in seconds
+        res.DateTime_End   = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
         res.Lat            = undefined;                // Latitude coordinate of the sensor
         res.Long           = undefined;                // Longitude coordinate of the sensor
         res.FSamp          = FSamp[Ch];                // Sampling Frequency in Hz
@@ -968,7 +972,7 @@ async function Read_V1(FileName, delta, dataview) {
         else if (Number(Azimuth) == 600) { Orientation[ChNum] = 'DOWN';}
         else                             { Orientation[ChNum] = Number(Azimuth).toFixed(2); }
 
-        DateTime[ChNum]     = ToString(IntNum[23],4) + "-" + ToString(IntNum[22], 2) + "-" + ToString(IntNum[21], 2) + "T" + ToString(IntNum[16], 2) + ":" + ToString(IntNum[17], 2) + ":" + ToString(IntNum[18], 2) + ".000";
+        DateTime[ChNum]     = ToString(IntNum[23],4) + "-" + ToString(IntNum[21], 2) + "-" + ToString(IntNum[22], 2) + "T" + ToString(IntNum[16], 2) + ":" + ToString(IntNum[17], 2) + ":" + ToString(IntNum[18], 2) + ".000";
         StationName[ChNum]  = header[5].slice(0, IntNum[29]);
         EqeTitleName[ChNum] = header[7].slice(0, IntNum[30]);
         ScaleFactor[ChNum]  = 1;
@@ -1076,6 +1080,7 @@ async function Read_V1(FileName, delta, dataview) {
         res.Orientation    = Orientation[ChNum];   // Orientation of channel
         res.DateTime       = DateTime[ChNum];      // Date&Time of the first sample
         res.Duration       = Duration[ChNum];      // Total duration in seconds
+        res.DateTime_End   = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
         res.Lat            = Lat[ChNum];           // Latitude coordinate of the sensor
         res.Long           = Long[ChNum];          // Longitude coordinate of the sensor
         res.FSamp          = FSamp[ChNum];         // Sampling Frequency in Hz
@@ -1324,6 +1329,7 @@ async function Read_ASC(FileName, delta, dataview) {
         res.Orientation    = Orientation[i];            // Orientation of channel
         res.DateTime       = DateTime[i];               // Date&Time of the first sample
         res.Duration       = Duration[i];               // Total duration in seconds
+        res.DateTime_End   = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
         res.Lat            = Station_Latitude_Degree;   // Latitude coordinate of the sensor
         res.Long           = Station_Longitude_Degree;  // Longitude coordinate of the sensor
         res.FSamp          = FSamp[i];                  // Sampling Frequency in Hz
@@ -1511,6 +1517,7 @@ async function Read_TXT(FileName, delta, dataview) {
         res.Orientation    = Orientation[i];            // Orientation of channel
         res.DateTime       = DateTime;                  // Date&Time of the first sample
         res.Duration       = Duration[i];               // Total duration in seconds
+        res.DateTime_End   = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
         res.Lat            = Lat;                       // Latitude coordinate of the sensor
         res.Long           = Long;                      // Longitude coordinate of the sensor
         res.FSamp          = FSamp[i];                  // Sampling Frequency in Hz
@@ -2039,6 +2046,7 @@ async function Read_MSD(FileName, delta, dataview) {
             res.IntervalUnit        = temp2.Unit;           // (0-2)
             res.IntervalUnitString  = temp2.Unit_String;     // (Second, DateTime, etc.)
             res.Duration            = time.at(-1);
+            res.DateTime_End        = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
             res.NumSamples          = data.length;
             res.FSamp               = FSamp;
             res.delt                = delt;
@@ -2272,6 +2280,20 @@ async function Read_MSD(FileName, delta, dataview) {
     }
 
 
+}
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+function ComputeEndDateTime(startDateTime, lengthSeconds) {
+  const start = new Date(startDateTime);
+  const end = new Date(start.getTime() + lengthSeconds * 1000);
+
+  const fmt = (d) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")} ` +
+    `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}:` +
+    `${String(d.getSeconds()).padStart(2, "0")}.${String(d.getMilliseconds()).padStart(3, "0")}`;
+
+  return fmt(end).replace(" ", "T");
 }
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------

@@ -2087,6 +2087,116 @@ async function Channel_Parameters() {
 
 }
 //-----------------------------------------------------------------------------------------------
+async function Channel_HVSR() {
+
+
+    // STEP 1: Check HVSR table 
+    let HVSR_Status = HVSR_Table_Check();
+    if (HVSR_Status.IsValid == false ) { return; }
+
+    // STEP 2: Declaration of variables 
+    let i, ChNum=[], Data=[], Ug, FiltPar, HVSR_Par;
+
+    // STEP 3: Disable CALCULATE Button during processing (if applicable)
+    // Prevents user from triggering multiple simultaneous Response Spectrum operations
+    DisableButtons(true);
+    ProgressBar_Update( 'Computing HVSR...', 'red');
+    await sleep(5);
+
+    // STEP 4: Get Filter-Parameters and ResSpectrum-Parameters
+    FiltPar  = Filter_Parameters();
+    HVSR_Par = HVSR_Parameters();
+   
+    // STEP 5: Get the channel numbers of the EW, NS, UD from H/V Table
+    const tbody = document.querySelector("#HVSR_Parameters_Table tbody");
+
+    // STEP 6: Loop over each channel
+    for (i=0; i < tbody.rows.length; i++) { 
+
+        // Sub-STEP 1: 
+        ChNum[i] = ChannelList_UniqueID(tbody.rows[i].value); 
+        
+        // Sub-STEP 2: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        FiltPar = Filter_Is_Stable(ChannelList[ChNum[i]], FiltPar);
+        
+        // Sub-STEP 3: Skip this Channel if filter is unstable
+        if (FiltPar.ErrorMessage != undefined) { continue; }
+
+        // Sub-STEP 4: Get the waveform 
+        Ug = ChannelList[ChNum[i]].data;
+
+        // Sub-STEP 5: Trim the begining and the end of the waveform if applicable for synchronization
+        if(HVSR_Status.Trim_Start[i] != 0)  { Ug = Truncate(Ug,  Ug.length - HVSR_Status.Trim_Start[i],  false ) };  // Truncates elements from the begining of the waveform
+        if(HVSR_Status.Trim_End[i]   != 0)  { Ug = Truncate(Ug,  Ug.length - HVSR_Status.Trim_End[i],    true  ) };  // Truncates elements from the end of the waveform
+
+        // Sub-STEP 6: Apply the scale factor
+        Ug = Multiply(Ug,   ChannelList[ChNum[i]].ScaleFactor);
+
+        // Sub-STEP 7: Apply Baseline correction and filtering 
+        Data[i] = BaselineAndFilter(Ug, FiltPar);
+        
+    }
+
+    // STEP 9: HVSR parameters    
+    if (HVSR_Par.WindowLength > HVSR_Status.OverlappedSegment_Length) { 
+        ProgressBar_Update( 'Window length must be smaller than overlapped duration!', 'red');
+        DisableButtons(false);
+        return;
+    }
+
+    // STEP 9: Power Spectral Density
+    let RWL    = Math.max(2, Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength));  // Length of running window in samples
+    let OVS    = Math.floor(RWL * HVSR_Par.OverlapRatio);                             // Length of overlap in samples 
+    let NFFT   = Data[0].length;                                                      // Length of Fourier Transform
+    let Option = HVSR_Par.CombinationType;
+    let HV     = [];
+    let std    = [];
+    let f      = [];
+
+    // STEP 10: Compute the H/V Spectral Ratio
+    [HV, std, f] = HVSR(Data[0], Data[1], Data[2], RWL, OVS, HVSR_Status.FSamp, NFFT, Option);
+
+    // STEP 11: Enable CALCULATE Button
+    DisableButtons(false);
+
+
+    // Helper functions
+    // Baseline correction and filtering 
+    function BaselineAndFilter(FilteredData, FiltPar) {
+        // Apply baseline Correction and Filtering 
+
+        // Apply Detrend if applicable
+        if (FiltPar.BaselineCorrection != 0) { 
+            if      (FiltPar.BaselineCorrection == 1) { FilteredData = Detrend(FilteredData, 0); } // Remove mean
+            else if (FiltPar.BaselineCorrection == 2) { FilteredData = Detrend(FilteredData, 1); } // Remove linear trend
+            else if (FiltPar.BaselineCorrection == 3) { FilteredData = Detrend(FilteredData, 2); } // Remove quadratic trend
+            else if (FiltPar.BaselineCorrection == 4) { FilteredData = Detrend(FilteredData, 3); } // Remove cubic trend
+        }
+
+        // Apply filter
+        if (FiltPar.FilterName !=0) {
+            if (FiltPar.ZeroPhase) { FilteredData = FiltFilt(FiltPar.b,   FiltPar.a,   FilteredData).y; } // Zero-phase filtering (Forward and backward)
+            else                   { FilteredData = Filter(  FiltPar.b,   FiltPar.a,   FilteredData).y; } // Single-pass filtering
+        }
+        // Return Filtered data 
+        return FilteredData;
+
+    }
+    async function UX_Update(i) {
+        
+        let perc;
+
+        perc = ((i+1)/ChannelList.length*100).toFixed(0);
+
+        if (perc != 100) {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
+        }
+    }
+
+}
+//-----------------------------------------------------------------------------------------------
 function Chebyshev_LowPass(N, fc, FSamp, ripple_dB) {
     // Design digital Chebyshev Type I lowpass filter using bilinear transformation
     // 
@@ -5308,10 +5418,10 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     //   FSamp  : Sampling frequency in Hz (default: 1)
     //   NFFT   : FFT length per segment; must satisfy NFFT ≥ RWL  (default: NextPow2(RWL))
     //   Option : Method for combining the two horizontal amplitude spectra
-    //            1 → Geometric mean   √(EW·NS)             (default) (SESAME 2004 recommendation)
-    //            2 → Vector sum       √(EW²+NS²)
-    //            3 → Quadratic mean   √((EW²+NS²)/2)       
-    //            4 → Arithmetic mean  (EW+NS)/2
+    //            0 → Geometric mean   √(EW·NS)             (default) (SESAME 2004 recommendation)
+    //            1 → Vector sum       √(EW²+NS²)
+    //            2 → Quadratic mean   √((EW²+NS²)/2)       
+    //            3 → Arithmetic mean  (EW+NS)/2
     //
     // Returns: [HV, Std, f]
     //   HV  : Segment-averaged H/V spectral ratio (1D array, one-sided, length = nFreq)
@@ -5396,9 +5506,9 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             const m3 = Mag3[i];
 
             let H;
-            if      (Option === 1) { H = Math.sqrt(m1 * m2);           }   // Geometric mean
-            else if (Option === 2) { H = Math.sqrt(m1*m1 + m2*m2);     }   // Vector sum
-            else if (Option === 3) { H = Math.sqrt((m1*m1 + m2*m2)/2); }   // Quadratic mean
+            if      (Option === 0) { H = Math.sqrt(m1 * m2);           }   // Geometric mean
+            else if (Option === 1) { H = Math.sqrt(m1*m1 + m2*m2);     }   // Vector sum
+            else if (Option === 2) { H = Math.sqrt((m1*m1 + m2*m2)/2); }   // Quadratic mean
             else                   { H = (m1 + m2) / 2;                }   // Arithmetic mean
 
             const hv       = H / m3;

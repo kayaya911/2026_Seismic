@@ -940,7 +940,7 @@ function ResSpec_TMax_Change() {
 //-----------------------------------------------------------------------------------------------
 //-----------------------------------------------------------------------------------------------
 // Spectrum Parameters --------------------------------------------------------------------------
-function  Spectrum_Parameters() {
+function Spectrum_Parameters() {
     
     let WindowLength, OverlapRatio, SmoothingWindow, SmoothingWindow_string;
     
@@ -1018,7 +1018,7 @@ function Spectrum_WindowsLength_Change() {
 
     if (Number(x.value) <= 0) { 
         document.getElementById('WindowLength').value = x.oldValue; 
-        ProgressBar_Update('Invalid value - Number of Window Segments must be greater than 0 !', 'red');
+        ProgressBar_Update('Invalid value - Window length must be greater than 0 !', 'red');
     }
     else {
         document.getElementById('WindowLength').value        = String(Number(x.value));
@@ -1165,6 +1165,165 @@ function SM_Par_BracketedDuration_Change() {
         ProgressBar_Update('', 'black');
     }
 }
+//-----------------------------------------------------------------------------------------------
+function HVSR_Parameters() {
+    
+    let WindowLength, OverlapRatio, CombinationType, CombinationType_string;
+    
+    WindowLength      = Number(document.getElementById('HVSR_WindowLength').value);
+    OverlapRatio      = Number(document.getElementById('HVSR_OverlapRatio').value);
+    CombinationType   = document.getElementById('HVSR_CombinationType').selectedIndex;
 
+    if      (CombinationType == 0) { CombinationType_string = "Geometric Mean"; } 
+    else if (CombinationType == 1) { CombinationType_string = "Vector Sum";     }
+    else if (CombinationType == 2) { CombinationType_string = "Quadratic Mean"; }
+    else if (CombinationType == 3) { CombinationType_string = "Aritmetic Mean"; }
+
+    // Return Spectrum Parameters
+    return {
+        IsAnalysisCompleted      : false,
+        WindowLength             : WindowLength,
+        OverlapRatio             : OverlapRatio,
+        CombinationType          : CombinationType,
+        CombinationType_string   : CombinationType_string,
+        HV                       : undefined,
+        Std                      : undefined,
+        f                        : undefined,
+    }
+
+}
+function HVSR_Table_Check() {
+    
+    let tbody, i, ChNum, OverlappedSegment_Length;
+    let FSamp      = new Array(3).fill(0);
+    let DT_Start   = new Array(3).fill(0);
+    let DT_End     = new Array(3).fill(0);
+    let Trim_Start = new Array(3).fill(0);
+    let Trim_End   = new Array(3).fill(0);
+    let Result     = {
+            IsValid                     : false, 
+            Trim_Start                  : undefined,
+            Trim_End                    : undefined,
+            OverlappedSegment_Length    : '',
+            latest                      : undefined,
+            earliest                    : undefined
+        }
+
+    // Get the Table Body
+    tbody = document.querySelector("#HVSR_Parameters_Table tbody");
+
+    // Loop over each row 
+    for (i=0; i < tbody.rows.length; i++) { 
+
+        // Return if the row is empty
+        if ((tbody.rows[i].value == '') || (tbody.rows[i].value == undefined)) { 
+            ProgressBar_Update( 'Select 3 channels for H/V computation!', 'red');
+            return Result;
+        }
+
+        // Get channel number 
+        ChNum = ChannelList_UniqueID(tbody.rows[i].value); 
+
+        // Get FSamp, Start Date&Time, End Date&Time
+        FSamp[i]     = ChannelList[ChNum].FSamp;
+        DT_Start[i]  = ChannelList[ChNum].DateTime;
+        DT_End[i]    = ChannelList[ChNum].DateTime_End;
+    }
+
+    // FSamp must be the same value across all channels
+    if ([...new Set(FSamp)].length > 1) { 
+        ProgressBar_Update( 'FSamp must be the same value across all channels!', 'red');
+        return Result;
+    }
+    
+    // Find the latest Date&Time in DT_Start 
+    const latest = Fmt(new Date(Math.max(...DT_Start.map(dt => new Date(dt)))));
+
+    // Find the earliest Date&Time in DT_End
+    const earliest = Fmt(new Date(Math.min(...DT_End.map(dt => new Date(dt)))));
+
+    // Length of the overlpped segment in seconds
+    OverlappedSegment_Length = DiffInSeconds(latest, earliest);  // In seconds 
+
+    if (!isFinite(OverlappedSegment_Length)) {
+        ProgressBar_Update( 'Check Date&Time values !', 'red');
+        return Result;
+    }
+    
+    // Return if waveforms do not overlap
+    if (new Date(earliest.replace(" ", "T")) <= new Date(latest.replace(" ", "T"))) {
+        ProgressBar_Update( 'Waveforms do not overlap!', 'red');
+        return Result;
+    } else {
+        // Waveforms overlaps, so compute the number of samples to trim for synchronization
+
+        // Loop over each waveform
+        for (i=0; i < tbody.rows.length; i++) {
+
+            // Compute the number of samples to trim for synchronization
+            Trim_Start[i] = Math.floor( DiffInSeconds(DT_Start[i], latest) * FSamp[i] ); // Number of samples to trim from the begining of the record 
+            Trim_End[i]   = Math.floor( DiffInSeconds(earliest, DT_End[i]) * FSamp[i] ); // Number of samples to trim from the end of the record 
+            
+        }
+        // No Issues found 
+        ProgressBar_Update( '', 'black');
+        return {
+            IsValid                     : true, 
+            Trim_Start                  : Trim_Start,               // Number of samples to trim from the begining of the record 
+            Trim_End                    : Trim_End,                 // Number of samples to trim from the end of the record 
+            OverlappedSegment_Length    : OverlappedSegment_Length, // Length of the overlapped segment (3 waveforms) in seconds 
+            FSamp                       : FSamp[0],
+            earliest                    : earliest,
+            latest                      : latest,
+        }
+    }
+
+    // Helper function 
+    function Fmt(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ` +
+                `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:` +
+                `${String(date.getSeconds()).padStart(2, "0")}.${String(date.getMilliseconds()).padStart(3, "0")}`;
+    }
+
+    function DiffInSeconds(dateTime1, dateTime2) {
+        const d1 = new Date(dateTime1);
+        const d2 = new Date(dateTime2);
+        return (d2 - d1) / 1000;
+    }
+
+}
+function HVSR_WindowsLength_Change() {
+    // Declaration of variables
+    let x  = document.getElementById('HVSR_WindowLength');
+
+    if (Number(x.value) <= 0) { 
+        document.getElementById('HVSR_WindowLength').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Window length must be greater than 0 !', 'red');
+    }
+    else {
+        document.getElementById('HVSR_WindowLength').value        = String(Number(x.value));
+        document.getElementById('HVSR_WindowLength').defaultValue = String(Number(x.value));
+        ProgressBar_Update('', 'black');
+    }
+}
+function HVSR_OverlapRatio_Change() {
+    // Declaration of variables
+    let x  = document.getElementById('HVSR_OverlapRatio');
+
+    if (Number(x.value) <= 0) { 
+        document.getElementById('HVSR_OverlapRatio').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Overlap Ratios must be greater than 0 !', 'red');
+    }
+    else if (Number(x.value) >= 1) { 
+        document.getElementById('HVSR_OverlapRatio').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Overlap Ratios must be less than 1 !', 'red');
+    }
+    else {
+        document.getElementById('HVSR_OverlapRatio').value        = String(Number(x.value));
+        document.getElementById('HVSR_OverlapRatio').defaultValue = String(Number(x.value));
+        ProgressBar_Update('', 'black');
+    }
+}
+//-----------------------------------------------------------------------------------------------
 
 

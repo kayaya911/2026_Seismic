@@ -45,16 +45,44 @@
     max-width: 20rem;
 }
 
-.Parameters-Table {
+#Parameters_Spectrum {
+    min-width: 25rem;
+    max-width: 25rem;
+}
+
+#Parameters_SM_Par {
+    min-width: 25rem;
+    max-width: 25rem;
+}
+
+#Parameters_HVSR {
+    min-width: 40rem;
+    max-width: 40rem;
+}
+
+.Parameters-Table, .Parameters2-Table {
     border-style: hidden;
     border-collapse: collapse; 
 }
 
-.Parameters-Table input {
+.Parameters-Table input, .Parameters2-Table input {
     width: 100%;
     max-width: 12rem; 
     box-sizing: border-box;
     text-align: right;
+}
+
+.Parameters-Table select {
+    width: 100%;
+    max-width: 12rem; 
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.Parameters-Table2 select {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
 }
 
 .Parameters-Table td {
@@ -88,6 +116,9 @@
     width: 100%;
 }
 
+.row-armed {
+    background-color: rgba(129, 182, 239, 0.2);
+}
 
 
 /* Hide the 3rd column on screens narrower than 768px (common mobile breakpoint) */

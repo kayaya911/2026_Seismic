@@ -11,6 +11,7 @@ let PageNo             = 0;
 let MaxPlotly_Graphs   = 6;  // This variable should not be less than 8
 let Current_Plotly_Num = 0;
 let IsOnHelpPage       = false;
+let targetRow          = 0;
 
 //-----------------------------------------------------------------------------------------------
 function OnLoad() {
@@ -73,7 +74,6 @@ async function LoadHelpContent() {
         RenderHelp(panel, data);
     } catch (e) {
         panel.innerHTML = '<p style="padding:1rem; color:red">Could not load help.</p>';
-        console.error('Help load error:', e);
     }
     
 
@@ -238,16 +238,16 @@ function InfoBarShowHide(status) {
 async function AnalysisMenu_Selection(a) {
 
     // First, hide ALL parameter sections
-    document.getElementById("Table_Channel_Div").style.display = "none";
-    document.getElementById("Parameters_Filter").style.display = "none";
+    document.getElementById("Table_Channel_Div").style.display      = "none";
+    document.getElementById("Parameters_Filter").style.display      = "none";
     document.getElementById("Parameters_Integration").style.display = "none";
-    document.getElementById("Parameters_SDOF").style.display = "none";
-    document.getElementById("Parameters_ResSpec").style.display = "none";
-    document.getElementById("Parameters_ResSpec2").style.display = "none";
-    document.getElementById("Parameters_Spectrum").style.display = "none";
-    document.getElementById("Parameters_SM_Par").style.display = "none";
-    document.getElementById("Parameters_Newmark").style.display = "none";
-    document.getElementById("Parameters_Output_Units").style.display = "none";
+    document.getElementById("Parameters_SDOF").style.display        = "none";
+    document.getElementById("Parameters_ResSpec").style.display     = "none";
+    document.getElementById("Parameters_ResSpec2").style.display    = "none";
+    document.getElementById("Parameters_Spectrum").style.display    = "none";
+    document.getElementById("Parameters_SM_Par").style.display      = "none";  
+    document.getElementById("Parameters_HVSR").style.display        = "none";
+    document.getElementById("Parameters_Newmark").style.display     = "none";
     InfoBarShowHide('flex'); 
 
     // Run_Button on Header
@@ -312,9 +312,16 @@ async function AnalysisMenu_Selection(a) {
         
         PageNo = 6;
     }
+    else if (a.id == "MainMenu_HV") {
+        // SM Parameters
+        document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById("Parameters_HVSR").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  H/V";
+        
+        PageNo = 8;
+    }
     else if ((a.id == "MainMenu_Settings") || (a.id == "Header_Settings")) {
         document.getElementById("Parameters_Newmark").style.display = "flex";
-        document.getElementById("Parameters_Output_Units").style.display = "flex";
     }
 
     // Hide the Analysis_Menu on the screen
@@ -332,6 +339,7 @@ async function Anlysis_Button() {
     else if ( PageNo == 4) { await Channel_ResponseSpectrum();  } // Response Spectrum Page
     else if ( PageNo == 5) { await Channel_Spectrum();          } // Spectrum Page
     else if ( PageNo == 6) { await Channel_Parameters();        } // Strong Motion Parameters
+    else if ( PageNo == 8) { await Channel_HVSR();              } // H/V Spectral Ratio
 }
 //-----------------------------------------------------------------------------------------------
 function Channel_Click(checkbox) {
@@ -356,6 +364,59 @@ function Channel_Click(checkbox) {
 
     // Chage the File-icon on TreeView if needed
     TreeView_File_SVG_Change(Indx);
+
+}
+//-----------------------------------------------------------------------------------------------
+function Channel_DoubleClick(lb) {
+    
+    // Return if not in H/V page
+    if (PageNo != 8) { return; }
+
+    // Get the Unique_ID of the double-clicked element
+    let Unique_ID = lb.getAttribute("for").replace('FileTreeView_Checkbox_','');
+
+    // Get the channel number
+    let ChNum = ChannelList_UniqueID(Unique_ID);
+
+    // Reject all measurment types other than Acceleration type 
+    if (ChannelList[ChNum].Type != 0) { 
+        ProgressBar_Update( 'Invalid channel type: expected acceleration, got ' + ChannelList[ChNum].TypeString +'.', 'red');
+        return;
+    } else { ProgressBar_Update( '', 'red'); }
+
+    // Update table
+    const tbody = document.querySelector("#HVSR_Parameters_Table tbody");
+    tbody.rows[targetRow].cells[0].innerHTML = ChannelList[ChNum].FileName;
+    tbody.rows[targetRow].cells[1].innerHTML = ChannelList[ChNum].ChNum;
+    tbody.rows[targetRow].cells[2].innerHTML = ChannelList[ChNum].DateTime.replace("T", " ");
+    tbody.rows[targetRow].cells[3].innerHTML = ChannelList[ChNum].Orientation;
+    tbody.rows[targetRow].value = Unique_ID;
+
+    // Remove class - no highlight of rows
+    for (let row of tbody.rows) { row.classList.remove("row-armed"); }
+
+    // Update targetRow
+    if (targetRow < 2) { targetRow++; } else { targetRow = 0; }
+
+    // Add class - highligths the row 
+    tbody.rows[targetRow].classList.add("row-armed"); 
+
+    // Update User interface about the Overlapped Duration
+    document.getElementById('HVSR_OverlappedDuration').innerHTML = HVSR_Table_Check().OverlappedSegment_Length;
+
+}
+//-----------------------------------------------------------------------------------------------
+function TabelsRowlClick(rowIndex) {
+    targetRow = rowIndex;
+
+    // Highlight the clicked row
+    const tbody = document.querySelector("#HVSR_Parameters_Table tbody");
+
+    // Remove class - no highlight of rows
+    for (let row of tbody.rows) { row.classList.remove("row-armed"); }
+
+    // Add class - highligths the row 
+    tbody.rows[rowIndex].classList.add("row-armed");
 
 }
 //-----------------------------------------------------------------------------------------------
@@ -1000,7 +1061,7 @@ async function Toggle_SidebBar_SelectAllChannels_For_Plotting() {
     // Get the status of the checkbox
     if (document.getElementById('Right_Click_Select_All_Plotting').checked) { 
 
-        MPG = Math.min(MaxPlotly_Graphs, InputArray.length);  console.log(MPG, Current_Plotly_Num)
+        MPG = Math.min(MaxPlotly_Graphs, InputArray.length);
         
         // No plotly-graph
         Turn_off_Plotly_Graphs(InputArray, MPG);
