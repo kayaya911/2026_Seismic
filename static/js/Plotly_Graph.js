@@ -870,10 +870,42 @@ async function Plotly_Graph_Update(ChNum) {
         }
 
     }
+    else if (PageNo == 8) {
+        // H/V Spectral Ratio
+
+        if (ChannelList[ChNum].Results.HVSR.IsAnalysisCompleted) {
+
+            traces[0].x           = ChannelList[ChNum].Results.HVSR.f;
+            traces[0].y           = ChannelList[ChNum].Results.HVSR.HV;
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[0].yaxis       = "y1",
+            traces[0].visible     = true;
+            traces[0].opacity     = 1.00;
+            traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+            traces[0].name        = '<b><b>';   // legend title
+            traces[0].showlegend  = false;      // Show legend
+
+            layout_update.yaxis.title.text      = '<b>H/V Amplitude</b>';
+            layout_update.yaxis2.showticklabels = false;
+            layout_update.yaxis2.title.text     = "";
+
+            // Show Baseline-Row in InforBar
+            document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.HVSR.FiltPar.BaselineCorrection_String;
+
+            // Show Filter_ID-Row in InfoBar
+            FilterInfo  = ChannelList[ChNum].Results.HVSR.FiltPar.FilterName_String;
+            FilterInfo += "<br>" + ChannelList[ChNum].Results.HVSR.FiltPar.FilterType_String;
+            FilterInfo += " " + ChannelList[ChNum].Results.HVSR.FiltPar.FilterBand;
+            FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.HVSR.FiltPar.ZeroPhase;
+            document.getElementById(FilterType_ID).innerHTML = FilterInfo;
+
+        }
+
+    }
 
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);
-
 
 
 }
@@ -1439,6 +1471,7 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[10].style.display = "none";       // Baseline 
         Table.rows[11].style.display = "none";       // Filter 
 
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
 
@@ -1458,6 +1491,7 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter
         
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
 
@@ -1477,6 +1511,7 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter 
 
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
 
@@ -1496,6 +1531,7 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter 
 
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'flex';
 
@@ -1514,7 +1550,8 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[9].style.display  = "table-row";  // Graph Unit
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter 
-         
+        
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
     }
@@ -1532,7 +1569,8 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[9].style.display  = "table-row";  // Graph Unit
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter 
-         
+        
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
 
@@ -1551,10 +1589,30 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[9].style.display  = "table-row";  // Graph Unit
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter 
-         
+        
+        // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
         
+    }
+    else if (PageNo == 8) {
+        // H/V Spectral Ratio
+        Table.rows[0].style.display  = "none";       // Peak
+        Table.rows[1].style.display  = "none";       // Mean
+        Table.rows[2].style.display  = "none";       // RMS
+        Table.rows[3].style.display  = "none";       // Residual
+        Table.rows[4].style.display  = "none";       // Analysis Method
+        Table.rows[5].style.display  = "none";       // SDOF Display
+        Table.rows[6].style.display  = "none";       // ResSpec Display
+        Table.rows[7].style.display  = "none";       // Spectrum Display
+        Table.rows[8].style.display  = "none";       // SM_Par Display
+        Table.rows[9].style.display  = "none";       // Graph Unit
+        Table.rows[10].style.display = "table-row";  // Baseline 
+        Table.rows[11].style.display = "table-row";  // Filter 
+        
+        // Two toggels on the Info Summary table for FFT and Filter 
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
     }
 
     // Update the graph

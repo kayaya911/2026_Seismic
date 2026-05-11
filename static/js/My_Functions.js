@@ -13,6 +13,7 @@ let Current_Plotly_Num = 0;
 let IsOnHelpPage       = false;
 let targetRow          = 0;
 
+
 //-----------------------------------------------------------------------------------------------
 function OnLoad() {
 
@@ -59,6 +60,17 @@ function OnLoad() {
     // Help page
     LoadHelpContent();
 
+
+    // Catch all unhandled errors globally 
+    window.addEventListener('error',              (e) => { AppError(e.error || e.message); });
+    window.addEventListener('unhandledrejection', (e) => { AppError(e.reason);             });
+
+    // Helper function
+    function AppError(error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        ProgressBar_Update(msg, 'red');
+    }
+
 }
 //-----------------------------------------------------------------------------------------------
 async function LoadHelpContent() {
@@ -84,8 +96,12 @@ async function LoadHelpContent() {
 
         // ── INTRO ── replace the single line with this block
         if (Array.isArray(data.intro)) {
-            for (const line of data.intro)
-                html += `<p class="help-intro">${line}</p>`;
+            for (const line of data.intro) {
+                if (line.startsWith('[indent]'))
+                    html += `<p class="help-intro help-intro-indent">${line.slice(8).trim()}</p>`;
+                else
+                    html += `<p class="help-intro">${line}</p>`;
+            }
         } else {
             html += `<p class="help-intro">${data.intro}</p>`;
         }
@@ -110,8 +126,12 @@ async function LoadHelpContent() {
                 html += `<p class="help-summary">${section.summary}</p>`;
 
             if (section.intro && section.intro.length) {
-                for (const line of section.intro)
-                    html += `<p class="help-intro">${line}</p>`;
+                for (const line of section.intro) {
+                    if (line.startsWith('[indent]'))
+                        html += `<p class="help-intro help-intro-indent">${line.slice(8).trim()}</p>`;
+                    else
+                        html += `<p class="help-intro">${line}</p>`;
+                }
             }
 
             if (section.steps && section.steps.length) {
@@ -313,22 +333,31 @@ async function AnalysisMenu_Selection(a) {
         PageNo = 6;
     }
     else if (a.id == "MainMenu_HV") {
-        // SM Parameters
+        // H/V Spectral Ratio
         document.getElementById("Parameters_Filter").style.display = "flex";
         document.getElementById("Parameters_HVSR").style.display = "flex";
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  H/V";
-        
+
         PageNo = 8;
     }
     else if ((a.id == "MainMenu_Settings") || (a.id == "Header_Settings")) {
         document.getElementById("Parameters_Newmark").style.display = "flex";
     }
-
+    
     // Hide the Analysis_Menu on the screen
     document.getElementById("Analysis_Menu").style.display = "none";
     
     // Update UI (Screen)
     for (let i=0; i<ChannelList.length; i++) { await Plotly_Graph_Update(i); }
+
+    
+    // Show the first graph on the screen and the turn off the rest of the graphs 
+    if (PageNo == 8) {
+        for (let i=0; i<ChannelList.length; i++) { 
+            if ((i!=0) && ChannelList[i].PlotGraph) { document.getElementById("Div_ID_"+ChannelList[i].Unique_ID).style.display = 'none';  } 
+        }
+    }
+
 }
 //-----------------------------------------------------------------------------------------------
 async function Anlysis_Button() {

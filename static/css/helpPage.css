@@ -55,7 +55,12 @@
 .help-accordion-item.open
   .help-accordion-body       { display: block; }
 
-
+.help-intro-indent {
+    margin-left: 1.5rem;
+    padding-left: 0.75rem;
+    border-left: 0.15rem solid #828080;
+    margin-bottom: 0.40rem;
+}
 
 
 

@@ -112,7 +112,7 @@
       "menuId": "MainMenu_Integral",
       "heading": "Integral",
       "icon": "integral",
-      "summary": "Numerically integrate the filtered signal to obtain velocity and displacement time histories.",
+      "summary": "Apply filtering and numerical double integration to the selected channels.",
       "intro": [
         "The <b>Integral</b> module performs cumulative trapezoidal integration with uniform time spacing twice in sequence in the time domain on selected channels to compute the waveforms of the 1st and 2nd integrals. When the underlying channel is an acceleration record, the 1st integral yields the velocity waveform and the 2nd integral yields the displacement waveform.",
         "The quality of the integrated signals is directly dependent on the effectiveness of the preceding baseline correction and filtering. Low-frequency (long-period) noise that may be present in the signal will accumulate through the integration process and may produce unrealistic residual drift in the integrated waveforms. Therefore, baseline correction and filtering are usually applied to the channel in advance of each integration to minimize the effect of unrealistic residual drift.",
@@ -405,7 +405,7 @@
           "id": "WindowLength",
           "type": "number",
           "default": 15,
-          "description": "Length of each segment used in Welch's PSD estimate and the Spectrogram. Longer windows give better frequency resolution but poorer time resolution."
+          "description": "Length of each segment used in Welch's PSD estimate and the Spectrogram. Longer windows give better frequency resolution but poorer PSD estimate."
         },
         {
           "label": "Overlap Ratio",
@@ -413,7 +413,7 @@
           "type": "number",
           "default": 0.25,
           "range": "0 – < 1",
-          "description": "Fraction of overlap between successive windows for the PSD and Spectrogram. Higher overlap (e.g. 0.75) smooths the estimate."
+          "description": "Overlap ratio between successive windows for the PSD and Spectrogram. Higher overlap (e.g. 0.75) smooths the estimate."
         },
         {
           "label": "Smoothing Window Type",
@@ -436,18 +436,32 @@
       "menuId": "MainMenu_SM_Parameters",
       "heading": "Strong Motion Parameters",
       "icon": "parameters",
-      "summary": "Compute intensity measures and strong motion parameters from the selected record.",
+      "summary": "Compute strong motion parameters for the selected acceleration channels.",
       "intro": [
-        "The <b>Strong Motion Parameters</b> module computes a comprehensive set of intensity measures and engineering demand parameters from the selected record.",
-        "Computed parameters include peak values (PGA, PGV, PGD), energy-based measures (Arias Intensity, Cumulative Absolute Velocity, Housner Intensity), and duration-based measures (Bracketed Duration, Significant Duration based on 5–95% Arias Intensity). These parameters are widely used in seismic hazard analysis, ground motion selection, and structural performance assessment.",
-        "All parameters are derived from the baseline-corrected and filtered signal. The Bracketed Duration threshold can be adjusted to match the definition used in a specific study or standard."
+        "The <b>Strong Motion Parameters</b> module computes a comprehensive set of strong ground motion parameters for acceleration channels only. Acceleration channels selected from the sidebar will be included in the analysis.",
+        "Computed strong ground motion parameters include peak values, energy-based measures, and duration-based measures. These parameters are widely used in seismic hazard analysis, ground motion selection, and structural performance assessment. The full list of computed parameters is given below.",
+
+        "[indent] <b>PGA</b>: Peak Ground Acceleration — maximum absolute value of the acceleration time series.",
+        "[indent] <b>RMS</b>: Root Mean Square of the acceleration time series over the entire record duration.",
+        "[indent] <b>Arias Intensity</b>: Integral of the squared acceleration over the duration of the record, proportional to the total energy of the ground motion.",
+        "[indent] <b>Cumulative Absolute Velocity</b>: Integral of the absolute value of acceleration over the duration of the record. Commonly used as an indicator of potential structural damage.",
+        "[indent] <b>Significant Duration</b>: Duration between the 5% and 95% Arias Intensity thresholds.",
+        "[indent] <b>Bracketed Duration</b>: Time between the first and last exceedance of a defined acceleration threshold. The threshold is user-configurable and defaults to 0.05g.",
+        "[indent] <b>Effective Pseudo-Spectral Acceleration</b>: Average pseudo-spectral acceleration (5% damping) over the period range 0.1 to 0.5 s, divided by 2.5.",
+        "[indent] <b>Effective Pseudo-Spectral Velocity</b>: Average pseudo-spectral velocity (5% damping) over the period range 0.5 to 2.0 s, divided by 2.5.",
+        "[indent] <b>Housner Spectral Intensity</b>: Integral of the pseudo-spectral velocity (5% damping) over the period range 0.1 to 2.5 s.",
+        "[indent] <b>Katayama Spectral Intensity</b>: Integral of the pseudo-spectral velocity (20% damping) over the period range 0.1 to 2.5 s.",
+
+        "Before computing the strong ground motion parameters, a baseline correction and filtering, if enabled, are applied to remove any DC offset or trend from the signal and remove unwanted frequency components from the selected channels.",
+        "When the <b>Run</b> button is clicked, the strong motion parameters are computed and plotted in the graph panel. For instance, the <b>Arias Intensity</b> is displayed as a cumulative curve, with two dashed vertical lines marking the 5% and 95% Arias Intensity thresholds that define the <b>Significant Duration</b>. The computed Significant Duration is shown in the summary panel on the right.",
+        "The <b>Display</b> and <b>Unit</b> dropdowns in the summary panel allow selection of energy-based parameters to plot and the unit of the graph, respectively."
       ],
       "parameters": [
         {
           "label": "Select to display",
           "id": "SM_Par_SelectToDisplay",
           "type": "dropdown",
-          "description": "Choose which strong motion parameter table or plot to display."
+          "description": "Choose which energy-based parameter to plot in the graph panel. Options include Arias Intensity and Cumulative Absolute Velocity."
         },
         {
           "label": "Bracketed Duration Threshold (g)",
@@ -456,10 +470,6 @@
           "default": 0.05,
           "description": "Acceleration threshold used to define the Bracketed Duration — the time between the first and last exceedance of this level. The default of 0.05g is standard per Bolt (1969)."
         }
-      ],
-      "notes": [
-        "Computed parameters typically include: PGA, PGV, PGD, Arias Intensity, CAV, Housner Intensity, Bracketed Duration, Significant Duration (5–95% Arias), and RMS acceleration.",
-        "All parameters are computed on the baseline-corrected and filtered signal."
       ]
     },
     {
@@ -478,19 +488,47 @@
       ]
     },
     {
-      "id": "hv",
+      "id": "HVSR",
       "menuId": "MainMenu_HV",
       "heading": "H/V Spectral Ratio",
-      "icon": "hv",
-      "summary": "Compute the Horizontal-to-Vertical spectral ratio (HVSR / Nakamura technique) from three-component recordings.",
+      "icon": "HVSR",
+      "summary": "Compute the Horizontal-to-Vertical Spectral Ratio (HVSR / Nakamura technique) from three selected channels.",
       "intro": [
         "The <b>H/V Spectral Ratio</b> module computes the Horizontal-to-Vertical Spectral Ratio (HVSR) using the Nakamura technique. It is a standard method for estimating the fundamental resonance frequency of a site from ambient noise or earthquake recordings.",
-        "The HVSR is computed as the ratio of the combined horizontal Fourier amplitude spectrum to the vertical spectrum. A distinct peak in the H/V curve indicates the fundamental site frequency, which is related to the depth and impedance contrast of the underlying soil layers.",
-        "The analysis requires a three-component recording with at least one horizontal channel (N-S or E-W) and one vertical channel (U-D) to be selected and included in the analysis."
+        "The analysis requires a three-component recording with two horizontal channels and one vertical channel. Select the three channels from the sidebar by double-clicking. The selected channels will appear in the table on the right panel, showing the file name, channel number, date and time, and azimuth. Ensure the first two channels in the table are horizontal and the last channel is vertical before running the analysis.",
+        "Channel synchronization is automatically handled. The overlapping duration across the three selected channels is computed and displayed automatically, giving you an indication of the usable data length for the analysis.",
+        "Before computing the HVSR, a baseline correction and filtering, if enabled, are applied to remove any DC offset or trend from the signal and remove unwanted frequency components from the selected channels.",
+        "The HVSR computation is controlled by three key parameters. The <b>Window Length</b> defines the duration of each window segment and controls the frequency resolution of the resulting spectrum. The <b>Overlap Ratio</b> determines how much consecutive window segments overlap, affecting the number of windows averaged and the stability of the result. The <b>Combination Type</b> defines how the two horizontal components are combined into a single horizontal spectrum prior to computing the ratio.",
+        "When the <b>Run</b> button is clicked, the <b>HVSR</b> is computed as the ratio of the combined horizontal Fourier amplitude spectrum to the vertical spectrum. The computed H/V spectral ratio is then displayed in the graph panel, allowing visual inspection and interpretation of the HVSR. A distinct peak in the H/V curve may indicate the fundamental site frequency, which is related to the depth and impedance contrast of the underlying soil layers."
       ],
-      "notes": [
-        "Requires at least one horizontal and one vertical channel to be selected.",
-        "The peak of the H/V curve approximates the fundamental resonance frequency of the site."
+      "parameters": [
+        {
+          "label": "Window Length (s)",
+          "id": "WindowLength",
+          "type": "number",
+          "default": 15,
+          "description": "Length of each window segment used in the HVSR computation. Longer windows give better frequency resolution but result in fewer averaged windows and a less stable HVSR estimate."
+        },
+        {
+          "label": "Overlap Ratio",
+          "id": "OverlapRatio",
+          "type": "number",
+          "default": 0.25,
+          "range": "0 – < 1",
+          "description": "Overlap ratio between successive window segments. A value of 0 means no overlap. Higher overlap (e.g. 0.75) increases the number of windows and smooths the HVSR estimate."
+        },
+        {
+          "label": "Combination Type",
+          "id": "Combination_Type",
+          "options": [
+            "Geometric Mean",
+            "Vector Sum",
+            "Quadratic Mean",
+            "Arithmetic Mean"
+          ],
+          "default": "Vector Sum",
+          "description": "Method used to combine the Fourier amplitude spectra of the two horizontal channels into a single horizontal spectrum prior to computing the H/V ratio."
+        }
       ]
     },
     {

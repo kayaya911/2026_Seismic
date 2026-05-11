@@ -1288,8 +1288,12 @@ async function Channel_SDOF() {
 
     // Loop over each channel
     for (i=0; i<ChannelList.length; i++) {
+
+        // STEP 3: Get Filter-Parameters and SDOF-Parameters
+        FiltPar  = Filter_Parameters();
+        SDOF_Par = SDOF_Parameters();
         
-        // STEP 1: Skip this Channel if it is not selected for analysis
+        // STEP 2: Skip this Channel if it is not selected for analysis
         if (!ChannelList[i].Selected) {
 
             await Plotly_Graph_Update(i);
@@ -1304,7 +1308,7 @@ async function Channel_SDOF() {
             continue; 
         }
 
-        // STEP 2: Skip if not an acceleration channel
+        // STEP 3: Skip if not an acceleration channel
         if (ChannelList[i].Type != 0) { 
 
             await Plotly_Graph_Update(i);
@@ -1318,10 +1322,6 @@ async function Channel_SDOF() {
             await sleep(5);
             continue; 
         }
-
-        // STEP 3: Get Filter-Parameters and SDOF-Parameters
-        FiltPar  = Filter_Parameters();
-        SDOF_Par = SDOF_Parameters();
 
         // STEP 4: Skip if it is Free Vibration or Forced Vibration 
         if ((i>0) && ((SDOF_Par.AnalysisMethod==0) || (SDOF_Par.AnalysisMethod==1))) {
@@ -2089,7 +2089,6 @@ async function Channel_Parameters() {
 //-----------------------------------------------------------------------------------------------
 async function Channel_HVSR() {
 
-
     // STEP 1: Check HVSR table 
     let HVSR_Status = HVSR_Table_Check();
     if (HVSR_Status.IsValid == false ) { return; }
@@ -2100,7 +2099,7 @@ async function Channel_HVSR() {
     // STEP 3: Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
     DisableButtons(true);
-    ProgressBar_Update( 'Computing HVSR...', 'red');
+    ProgressBar_Update( 'Computing H/V Spectral Ratio...', 'red');
     await sleep(5);
 
     // STEP 4: Get Filter-Parameters and ResSpectrum-Parameters
@@ -2155,6 +2154,39 @@ async function Channel_HVSR() {
 
     // STEP 10: Compute the H/V Spectral Ratio
     [HV, std, f] = HVSR(Data[0], Data[1], Data[2], RWL, OVS, HVSR_Status.FSamp, NFFT, Option);
+
+
+    // STEP 11: Collect computed HVSR
+    HVSR_Par.HV                         = HV;
+    HVSR_Par.f                          = f;
+    HVSR_Par.Std                        = std;
+    HVSR_Par.Data                       = Data;
+    HVSR_Par.RWL                        = RWL;
+    HVSR_Par.OVS                        = OVS;
+    HVSR_Par.OverlappedSegment_Length   = HVSR_Status.OverlappedSegment_Length;
+    HVSR_Par.Sync_Date_Time_Start       = HVSR_Status.latest;
+    HVSR_Par.Sync_Date_Time_End         = HVSR_Status.earliest;
+    HVSR_Par.ChNum                      = HVSR_Status.ChNum;
+    HVSR_Par.Azimuth                    = HVSR_Status.Azimuth; 
+    HVSR_Par.FileName                   = HVSR_Status.FileName; 
+
+    // STEP 12: Store Filter Parameters
+    HVSR_Par.FiltPar = FiltPar;
+
+    // STEP 13: Flag Successfully Completion
+    HVSR_Par.IsAnalysisCompleted = true;
+
+    // STEP 14: Store Results on the fist channel
+    ChannelList[0].Results.HVSR = HVSR_Par;
+
+    // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    await Plotly_Graph_Update(0);
+
+    // STEP 16: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    ProgressBar_Update( 'H/V Spectral Ratio -- 100% completed!', 'black');
+
+    // STEP 17:
+    await sleep(5);
 
     // STEP 11: Enable CALCULATE Button
     DisableButtons(false);

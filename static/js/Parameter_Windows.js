@@ -549,7 +549,7 @@ async function SDOF_AnalysisType() {
         await Plotly_Graph_Update(i); 
     
         // Show the first graph on the screen and the turn off the rest of the graphs 
-        if ((Indx==0 || Indx==1) && (i!=0)) { document.getElementById("Div_ID_"+ChannelList[i].Unique_ID).style.display = 'none';  }
+        if ((Indx==0 || Indx==1) && (i!=0) && ChannelList[i].PlotGraph) { document.getElementById("Div_ID_"+ChannelList[i].Unique_ID).style.display = 'none';  }
         
     }
 
@@ -1030,9 +1030,9 @@ function Spectrum_OverlapRatio_Change() {
     // Declaration of variables
     let x  = document.getElementById('OverlapRatio');
 
-    if (Number(x.value) <= 0) { 
+    if (Number(x.value) < 0) { 
         document.getElementById('OverlapRatio').value = x.oldValue; 
-        ProgressBar_Update('Invalid value - Overlap Ratios must be greater than 0 !', 'red');
+        ProgressBar_Update('Invalid value - Overlap Ratio must be greater than or equal to 0 !', 'red');
     }
     else if (Number(x.value) >= 1) { 
         document.getElementById('OverlapRatio').value = x.oldValue; 
@@ -1189,24 +1189,33 @@ function HVSR_Parameters() {
         HV                       : undefined,
         Std                      : undefined,
         f                        : undefined,
+        RWL                      : undefined,
+        OVS                      : undefined,
+        Data                     : undefined
     }
 
 }
 function HVSR_Table_Check() {
     
-    let tbody, i, ChNum, OverlappedSegment_Length;
+    let tbody, i, OverlappedSegment_Length;
+    let ChNum      = new Array(3).fill(0);
     let FSamp      = new Array(3).fill(0);
     let DT_Start   = new Array(3).fill(0);
     let DT_End     = new Array(3).fill(0);
     let Trim_Start = new Array(3).fill(0);
     let Trim_End   = new Array(3).fill(0);
+    let Azimuth    = new Array(3).fill(0);
+    let FileName   = new Array(3).fill(0);
+
     let Result     = {
             IsValid                     : false, 
             Trim_Start                  : undefined,
             Trim_End                    : undefined,
             OverlappedSegment_Length    : '',
             latest                      : undefined,
-            earliest                    : undefined
+            earliest                    : undefined,
+            ChNum                       : undefined,
+            Azimuth                     : undefined,
         }
 
     // Get the Table Body
@@ -1222,12 +1231,14 @@ function HVSR_Table_Check() {
         }
 
         // Get channel number 
-        ChNum = ChannelList_UniqueID(tbody.rows[i].value); 
+        ChNum[i] = ChannelList_UniqueID(tbody.rows[i].value); 
 
         // Get FSamp, Start Date&Time, End Date&Time
-        FSamp[i]     = ChannelList[ChNum].FSamp;
-        DT_Start[i]  = ChannelList[ChNum].DateTime;
-        DT_End[i]    = ChannelList[ChNum].DateTime_End;
+        FSamp[i]     = ChannelList[ChNum[i] ].FSamp;
+        DT_Start[i]  = ChannelList[ChNum[i] ].DateTime;
+        DT_End[i]    = ChannelList[ChNum[i] ].DateTime_End;
+        Azimuth[i]   = ChannelList[ChNum[i] ].Orientation;
+        FileName[i]  = ChannelList[ChNum[i] ].FileName;
     }
 
     // FSamp must be the same value across all channels
@@ -1275,6 +1286,9 @@ function HVSR_Table_Check() {
             FSamp                       : FSamp[0],
             earliest                    : earliest,
             latest                      : latest,
+            ChNum                       : ChNum,
+            Azimuth                     : Azimuth,
+            FileName                    : FileName,
         }
     }
 
@@ -1310,9 +1324,9 @@ function HVSR_OverlapRatio_Change() {
     // Declaration of variables
     let x  = document.getElementById('HVSR_OverlapRatio');
 
-    if (Number(x.value) <= 0) { 
+    if (Number(x.value) < 0) { 
         document.getElementById('HVSR_OverlapRatio').value = x.oldValue; 
-        ProgressBar_Update('Invalid value - Overlap Ratios must be greater than 0 !', 'red');
+        ProgressBar_Update('Invalid value - Overlap Ratio must be greater than or equal to 0 !', 'red');
     }
     else if (Number(x.value) >= 1) { 
         document.getElementById('HVSR_OverlapRatio').value = x.oldValue; 

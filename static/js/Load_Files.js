@@ -53,6 +53,7 @@ class Channel {
             ResSpec: [],
             Spectrum: [],
             SM_Parameters: [],
+            HVSR: [],
             P_Wave: [],
         };
 
@@ -2428,7 +2429,7 @@ function AddDataToWorkSheet(WorkSheet, Header, Pos1, Data, Pos2, Data2=null, Pos
 //-------------------------------------------------------------------------------------------------------------
 async function DonwloadExcel_LoadDataPage() {
     
-    if (IsOnHelpPage) { DisableButtons(true); DownloadPDF_HelpPage(); DisableButtons(false); return; }
+    if (IsOnHelpPage) { DisableButtons(true);   window.print();   DisableButtons(false); return; }
 
     // Disable all buttons
     DisableButtons(true);
@@ -2536,6 +2537,9 @@ async function DonwloadExcel_LoadDataPage() {
             // File name 
             FileName = "SDA_Results_Filter.xlsx";
 
+            // Skip this channel if Filter Results are nor ready
+            if (!ChannelList[i].Results.Filter.IsAnalysisCompleted) { continue; }
+
             // Populate Time-RawData-FilteredData to WorkSheet
             header = [["Time (s)", "Raw Data (" + ChannelList[i].UnitString + ")", "Filtered Data (" + ChannelList[i].UnitString + ")"]];
             data   = [ChannelList[i].time, Multiply(ChannelList[i].data, ChannelList[i].ScaleFactor)];
@@ -2621,6 +2625,9 @@ async function DonwloadExcel_LoadDataPage() {
         else if (PageNo == 2) {
             // File name 
             FileName = "SDA_Results_Integral.xlsx";
+
+            // Skip this channel if Integral Results are nor ready
+            if (!ChannelList[i].Results.Integral.IsAnalysisCompleted) { continue; }
 
             // Integral Units
             temp = TypeAndUnit(ChannelList[i].TypeAndUnits);
@@ -2713,6 +2720,9 @@ async function DonwloadExcel_LoadDataPage() {
         else if (PageNo == 3) {
             // File name 
             FileName = "SDA_Results_SDOF.xlsx";
+
+            // Skip this channel if SDOF Results are nor ready
+            if (!ChannelList[i].Results.SDOF.IsAnalysisCompleted) { continue; }
 
             // Skip if this channels has no SDOF results
             if (ChannelList[i].Results.SDOF                     == []    ) { continue; }
@@ -3446,6 +3456,9 @@ async function DonwloadExcel_LoadDataPage() {
             // File name 
             FileName = "SDA_Results_ResponseSpectrum.xlsx";
 
+            // Skip this channel if Response Spectrum Results are nor ready
+            if (!ChannelList[i].Results.ResSpec.IsAnalysisCompleted) { continue; }
+
             Indx = ChannelList[i].Results.ResSpec.AnalysisMethod;
 
             // Populate Time and Rawdata
@@ -3606,6 +3619,9 @@ async function DonwloadExcel_LoadDataPage() {
             // File name 
             FileName = "SDA_Results_Spectrum.xlsx";
 
+            // Skip this channel if Spectrum Results are nor ready
+            if (!ChannelList[i].Results.Spectrum.IsAnalysisCompleted) { continue; }
+
             // Populate Time-RawData-AriasIntensity-CAV to WorkSheet
             header = [  "Time (s)",
                         "Raw Data (" + ChannelList[i].UnitString + ")",
@@ -3696,6 +3712,9 @@ async function DonwloadExcel_LoadDataPage() {
         else if (PageNo == 6) {
             // File name 
             FileName = "SDA_Results_SM_Parameters.xlsx";
+            
+            // Skip this channel if Strong Motion Results are nor ready
+            if (!ChannelList[i].Results.SM_Parameters.IsAnalysisCompleted) { continue; }
 
             temp = TypeAndUnit(ChannelList[i].TypeAndUnits)
 
@@ -3785,6 +3804,119 @@ async function DonwloadExcel_LoadDataPage() {
             WorkSheet["F28"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
             WorkSheet["F29"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
         }
+        else if (PageNo == 8) {
+
+            // Skip all channels expect the first one 
+            // HVSR is always stored in the frst channel
+            if (i!=0) { continue; }
+
+            // Skip this channel if HVSR Results are nor ready
+            if (!ChannelList[i].Results.HVSR.IsAnalysisCompleted) { continue; }
+
+            FileName = "SDA_Results_Spectrum.xlsx";
+
+            // Populate Time, Horizontal-1, Horizontal-2, Vertical to WorkSheet
+            header = [  "Time (s)",
+                        "Horizontal-1 (" + ChannelList[i].UnitString + ")",
+                        "Horizontal-2 (" + ChannelList[i].UnitString + ")",
+                        "Vertical (" + ChannelList[i].UnitString + ")",
+                    ];
+            data =  [   ChannelList[i].time,  
+                        Multiply(ChannelList[i].Results.HVSR.Data[0], ChannelList[i].ScaleFactor),
+                        Multiply(ChannelList[i].Results.HVSR.Data[1], ChannelList[i].ScaleFactor),
+                        Multiply(ChannelList[i].Results.HVSR.Data[2], ChannelList[i].ScaleFactor),
+                    ];
+            AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
+
+            // Populate frequency and H/V amplitude
+            header = [  "Frequency (Hz)",
+                        "H/V Amplitude",
+                        "Standard Deviation",
+                    ];
+            data =  [   ChannelList[i].Results.HVSR.f,  
+                        ChannelList[i].Results.HVSR.HV,
+                        ChannelList[i].Results.HVSR.Std,
+                    ];
+            AddDataToWorkSheet(WorkSheet, [header], "F1", Transpose(data), "F2");
+
+            
+            // Populate FileName, ChannelNumber, Duration (s), Data Type, Data Unit, Scale Factor, Orientation and Sampling Frequency
+            header = [["Horizontal-1"],
+                      ["Horizontal-2"],
+                      ["Vertical"],
+                      ["Window length (samples)"],
+                      ["Overlap length (samples)"],
+                      ["Sampling Frequency (Hz)"]
+                    ];   
+            data   = [["File Name"],
+                      [ChannelList[i].Results.HVSR.FileName[0]],
+                      [ChannelList[i].Results.HVSR.FileName[1]],
+                      [ChannelList[i].Results.HVSR.FileName[2]],
+                      [ChannelList[i].Results.HVSR.RWL],
+                      [ChannelList[i].Results.HVSR.OVS],
+                      [ChannelList[i].FSamp]
+                    ];
+            AddDataToWorkSheet(WorkSheet, header, "J2", data, "K1");
+
+            header = [["ChNum"]];   
+            data   = [[ChannelList[i].Results.HVSR.ChNum[0]], [ChannelList[i].Results.HVSR.ChNum[1]], [ChannelList[i].Results.HVSR.ChNum[2]]];
+            AddDataToWorkSheet(WorkSheet, header, "L1", data, "L2");
+
+            header = [["Orientation"]];   
+            data   = [[ChannelList[i].Results.HVSR.Azimuth[0]], [ChannelList[i].Results.HVSR.Azimuth[1]], [ChannelList[i].Results.HVSR.Azimuth[2]]];
+            AddDataToWorkSheet(WorkSheet, header, "M1", data, "M2");
+            
+            header = [["Synced Date&Time (Start)"], ["Synced Date&Time (End)"], ["Overlapped Segment Length (s)"]];
+            data   = [[ChannelList[i].Results.HVSR.Sync_Date_Time_Start], [ChannelList[i].Results.HVSR.Sync_Date_Time_End], [ChannelList[i].Results.HVSR.OverlappedSegment_Length]];
+            AddDataToWorkSheet(WorkSheet, header, "J8", data, "K8");
+
+
+            // Populate Filter Settings to WorkSheet
+            header = [["Filter Settings"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, "J12", data, "K12");
+
+            header = [["Baseline Correction"],  ["Filter Name"], ["Filter Type"], ["Filter Order"], ["Cut-Off Frequency (Hz)"], ["Zero Phase"], ["Filter Stable"]];
+            data = [[ChannelList[i].Results.HVSR.FiltPar.BaselineCorrection_String],
+                    [ChannelList[i].Results.HVSR.FiltPar.FilterName_String],
+                    [ChannelList[i].Results.HVSR.FiltPar.FilterType_String],
+                    [ChannelList[i].Results.HVSR.FiltPar.FilterOrder],
+                    [ChannelList[i].Results.HVSR.FiltPar.FilterBand],
+                    [ChannelList[i].Results.HVSR.FiltPar.ZeroPhase],
+                    [ChannelList[i].Results.HVSR.FiltPar.IsStable],
+                ];
+            AddDataToWorkSheet(WorkSheet, header, "J13", data, "K13");
+
+            // Populate Filter Coefficients to WorkSheet
+            header = [["Filter a_Coefficients"], ["Filter b_Coefficients"]];
+            data = [ChannelList[i].Results.HVSR.FiltPar.a, ChannelList[i].Results.HVSR.FiltPar.b];
+            AddDataToWorkSheet(WorkSheet, header, "J21", data, "K21");
+
+            // All column formatting
+            columnConfig = [
+                { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Time (s)
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Horizontal-1
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Horizontal-1
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Vertical
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Empty
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Frequency
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // H/V Amplitude
+                { width: 25, align: { horizontal: 'right',  vertical: 'center' } },  // Standard Deviation
+                { width:  5, align: { horizontal: 'right',  vertical: 'center' } },  // Empty
+                { width: 35, align: { horizontal: 'left',   vertical: 'center' } },  // Parameters-1
+                { width: 35, align: { horizontal: 'right',  vertical: 'center' } },  // Parameters-2
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Parameters-3
+                { width: 20, align: { horizontal: 'right',  vertical: 'center' } },  // Parameters-4
+            ];
+
+            range = XLSX.utils.decode_range(WorkSheet['!ref']);
+            ColumnStyle(WorkSheet, range, columnConfig);
+
+            WorkSheet["J12"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J21"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J22"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+
+        }
 
         // Add the workSheet to WorkBook
         XLSX.utils.book_append_sheet(WorkBook, WorkSheet, (i+1).toString());
@@ -3845,9 +3977,8 @@ async function DonwloadExcel_LoadDataPage() {
 
 }
 //----------------------------------------------------------------------------------------
-async function DownloadPDF_HelpPage() {
-    window.print();
-}
+
+
 //----------------------------------------------------------------------------------------
 
 
