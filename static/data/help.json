@@ -492,14 +492,15 @@
       "menuId": "MainMenu_HV",
       "heading": "H/V Spectral Ratio",
       "icon": "HVSR",
-      "summary": "Compute the Horizontal-to-Vertical Spectral Ratio (HVSR / Nakamura technique) from three selected channels.",
+      "summary": "Compute the Horizontal-to-Vertical Spectral Ratio (<B>HVSR</b> / Nakamura technique) from three selected channels.",
       "intro": [
         "The <b>H/V Spectral Ratio</b> module computes the Horizontal-to-Vertical Spectral Ratio (HVSR) using the Nakamura technique. It is a standard method for estimating the fundamental resonance frequency of a site from ambient noise or earthquake recordings.",
-        "The analysis requires a three-component recording with two horizontal channels and one vertical channel. Select the three channels from the sidebar by double-clicking. The selected channels will appear in the table on the right panel, showing the file name, channel number, date and time, and azimuth. Ensure the first two channels in the table are horizontal and the last channel is vertical before running the analysis.",
-        "Channel synchronization is automatically handled. The overlapping duration across the three selected channels is computed and displayed automatically, giving you an indication of the usable data length for the analysis.",
+        "The analysis requires a three-component recording with two horizontal channels and one vertical channel. Select the three channels from the sidebar by double-clicking. The selected channels will appear in the table on the right panel, showing the file name, channel number, date and time, and azimuth. Ensure the first two channels in the table are horizontal and the last channel is vertical before running the analysis. All three selected channels must have the same sampling frequency — channels with mismatched sampling frequencies cannot be used together in the analysis.",
+        "Channel synchronization is automatically handled. The overlapping duration is the length of the time window common across all three selected channels — it represents the usable data length available for the HVSR computation. It is computed as the difference between the earliest end time and the latest start time across the three channels, effectively identifying the time interval where all channels have recorded simultaneously. All three channels must have a common overlapping time window — if the channels do not overlap in time, the overlapping duration will be zero and the analysis cannot proceed. A longer overlapping duration generally yields more stable results as more window segments can be averaged.",
         "Before computing the HVSR, a baseline correction and filtering, if enabled, are applied to remove any DC offset or trend from the signal and remove unwanted frequency components from the selected channels.",
-        "The HVSR computation is controlled by three key parameters. The <b>Window Length</b> defines the duration of each window segment and controls the frequency resolution of the resulting spectrum. The <b>Overlap Ratio</b> determines how much consecutive window segments overlap, affecting the number of windows averaged and the stability of the result. The <b>Combination Type</b> defines how the two horizontal components are combined into a single horizontal spectrum prior to computing the ratio.",
-        "When the <b>Run</b> button is clicked, the <b>HVSR</b> is computed as the ratio of the combined horizontal Fourier amplitude spectrum to the vertical spectrum. The computed H/V spectral ratio is then displayed in the graph panel, allowing visual inspection and interpretation of the HVSR. A distinct peak in the H/V curve may indicate the fundamental site frequency, which is related to the depth and impedance contrast of the underlying soil layers."
+        "The HVSR computation is controlled by three key parameters. The <b>Window Length</b> defines the duration of each window segment and controls the frequency resolution of the resulting spectrum. The <b>Overlap Ratio</b> determines how much consecutive window segments overlap, affecting the number of windows averaged and the stability of the result. The <b>Combination Type</b> defines how the two horizontal components are combined into a single horizontal spectrum prior to computing the HVSR ratio. Note that the HVSR ratios across window segments are always positive and right-skewed — they cannot be negative; therefore, the distribution of HVSR values across window segments is log-normal.",
+        "When the <b>Run</b> button is clicked, the <b>HVSR</b> is computed as the ratio of the combined horizontal Fourier amplitude spectrum to the vertical spectrum. The computed H/V spectral ratio is then displayed in the graph panel, allowing visual inspection and interpretation of the HVSR. A distinct peak in the H/V curve may indicate the fundamental site frequency, which is related to the depth and impedance contrast of the underlying soil layers.",
+        "https://link.springer.com/article/10.1007/s10950-021-10062-9"
       ],
       "parameters": [
         {
@@ -518,7 +519,7 @@
           "description": "Overlap ratio between successive window segments. A value of 0 means no overlap. Higher overlap (e.g. 0.75) increases the number of windows and smooths the HVSR estimate."
         },
         {
-          "label": "Combination Type",
+          "label": "Combination Method",
           "id": "Combination_Type",
           "options": [
             "Geometric Mean",

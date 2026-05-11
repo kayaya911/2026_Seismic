@@ -5435,10 +5435,11 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     //
     // Each recording is divided into overlapping segments of RWL samples with OVS overlap.
     // Each segment is multiplied by a normalised Hamming window before the NFFT-point FFT
-    // is applied to reduce spectral leakage.  The two horizontal Fourier amplitude spectra
-    // are combined into a single horizontal spectrum according to Option, then divided by
-    // the vertical spectrum to form the H/V ratio for that segment.  Segment-averaged H/V
-    // spectra and their standard deviations are returned together with the frequency vector.
+    // is applied to reduce spectral leakage. The two horizontal Fourier amplitude spectra
+    // are smoothed using Konno-Ohmachi (b=40) and combined into a single horizontal spectrum
+    // according to Option, then divided by the vertical spectrum to form the H/V ratio for
+    // that segment. Segment-averaged H/V spectra and their log-space standard deviations
+    // are returned together with the frequency vector.
     //
     // Parameters:
     //   EW     : East-West  recording (1D array)
@@ -5450,37 +5451,48 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     //   FSamp  : Sampling frequency in Hz (default: 1)
     //   NFFT   : FFT length per segment; must satisfy NFFT ≥ RWL  (default: NextPow2(RWL))
     //   Option : Method for combining the two horizontal amplitude spectra
-    //            0 → Geometric mean   √(EW·NS)             (default) (SESAME 2004 recommendation)
-    //            1 → Vector sum       √(EW²+NS²)
-    //            2 → Quadratic mean   √((EW²+NS²)/2)       
+    //            0 → Geometric mean   √(EW·NS)             (SESAME 2004 recommendation)
+    //            1 → Vector sum       √(EW²+NS²)           (default)
+    //            2 → Quadratic mean   √((EW²+NS²)/2)
     //            3 → Arithmetic mean  (EW+NS)/2
     //
     // Returns: [HV, Std, f]
     //   HV  : Segment-averaged H/V spectral ratio (1D array, one-sided, length = nFreq)
-    //   Std : Standard deviation of H/V ratio across segments (1D array, same length)
-    //   f   : Frequency vector in Hz (1D array, same length)
+    //   Std : Standard deviation of log(H/V) across segments (1D array, same length)
+    //         Plot bounds as: upper = HV * exp(+Std), lower = HV * exp(-Std)
+    //   f   : Frequency vector in Hz (1D array, same length as HV)
     //
     // Notes:
     //   - Segments containing NaN values in any component are silently skipped.
-    //   - No Konno-Ohmachi or other smoothing is applied to the individual FAS values.
-    //   - The window is normalised so that its power equals 1 (sum(Win²) = RWL), which
-    //     keeps the amplitude scale consistent across different window shapes.
+    //   - Konno-Ohmachi smoothing (b=40) is applied to each segment's one-sided Fourier
+    //     amplitude spectra before computing the H/V ratio. Weights are precomputed once
+    //     using a sparse typed-array representation (±2 octaves) to minimise memory usage.
+    //   - The Hamming window is normalised so that its power equals 1 (sum(Win²) = RWL),
+    //     keeping the amplitude scale consistent across different window shapes.
+    //   - H/V values are always positive (ratio of two positive spectra) and are
+    //     log-normally distributed. The standard deviation is therefore computed in
+    //     log space. Plot bounds: upper = HV * exp(+Std), lower = HV * exp(-Std).
     //
     // Reference:
     //   SESAME European project (2004). Guidelines for the implementation of the H/V
     //   spectral ratio technique on ambient vibrations. WP12 - Deliverable D23.12.
     //
+    //   Konno, K. and Ohmachi, T. (1998). Ground-motion characteristics estimated from
+    //   spectral ratio between horizontal and vertical components of microtremor.
+    //   Bulletin of the Seismological Society of America, 88(1), 228-241.
+    //
     // Author   : Dr. Yavuz Kaya, P.Eng.
     // Modified : 06.May.2026
 
-    // Check if the input arguments are correct; otherwise, throw an error.
-    if (!Array.isArray(EW)) { throw new Error("EW[] must be an array."); }
-    if (!Array.isArray(NS)) { throw new Error("NS[] must be an array."); }
-    if (!Array.isArray(UD)) { throw new Error("UD[] must be an array."); }
+    // ── Input validation
+    if (!Array.isArray(EW)) { throw new Error("HVSR: EW[] must be an array."); }
+    if (!Array.isArray(NS)) { throw new Error("HVSR: NS[] must be an array."); }
+    if (!Array.isArray(UD)) { throw new Error("HVSR: UD[] must be an array."); }
+    if ((EW.length !== NS.length) || (EW.length !== UD.length)) {
+        throw new Error("HVSR: Dimensions of EW[], NS[] and UD[] arrays are inconsistent.");
+    }
 
-    if ((EW.length !== NS.length) || (EW.length !== UD.length)) { throw new Error("Dimensions of EW[], NS[] and UD[] arrays are inconsistent."); }
-
-    // Check default values of input arguments
+    // ── Default arguments
     if (RWL    == null) { RWL    = Math.max(2, Math.floor(EW.length / 8)); }
     if (OVS    == null) { OVS    = Math.floor(RWL * 0.25);                 }
     if (FSamp  == null) { FSamp  = 1;                                      }
@@ -5488,51 +5500,66 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     if (Option == null) { Option = 1;                                      }
 
     if ((RWL <= 0) || (RWL > EW.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)) {
-        throw new Error("Input arguments are inconsistent: (RWL <= 0) || (RWL > EW.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)");
+        throw new Error("HVSR: Input arguments are inconsistent: (RWL <= 0) || (RWL > EW.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)");
     }
 
-    // Pre-allocation
-    const HV_sum  = new Array(NFFT).fill(0);   // Σ HV[k]   across segments
-    const HV_sum2 = new Array(NFFT).fill(0);   // Σ HV[k]²  across segments (for std)
+    // ── One-sided spectrum length and frequency vector
+    const nFreq      = IsEven(NFFT) ? (NFFT / 2) + 1 : (NFFT + 1) / 2;
+    const df         = FSamp / NFFT;
+    const f          = LinSpace(0, (nFreq - 1) * df, nFreq);
 
-    // Segment step and normalised window
+    // ── Precompute Konno-Ohmachi weights (one-sided, sparse, typed arrays)
+    const b          = 40;
+
+    // ── Pre-allocate accumulators (one-sided length only)
+    const HV_sum     = new Float64Array(nFreq);   // Σ HV[k]        across segments
+    const LogHV_sum  = new Float64Array(nFreq);   // Σ log(HV[k])   across segments
+    const LogHV_sum2 = new Float64Array(nFreq);   // Σ log(HV[k])²  across segments
+
+    // ── Normalised Hamming window
     const DW  = RWL - OVS;
     let   Win = Hamming(RWL);
     Win = Multiply(Win, Math.sqrt(RWL / Sum(Pow(Win, 2))));
 
-    let K  = 0;       // Number of valid segments processed
-    let a1 = 0;       // Segment start index
-    let a2 = RWL - 1; // Segment end  index
+    // ── Segment loop 
+    let K  = 0;
+    let a1 = 0;
+    let a2 = RWL - 1;
 
     while (a2 < EW.length) {
 
-        // Extract segment
         const EW1 = GetRange(EW, a1, a2);
         const NS1 = GetRange(NS, a1, a2);
         const UD1 = GetRange(UD, a1, a2);
 
-        // Skip segments that contain NaN in any component
-        if (IsContainNaN(EW1) || IsContainNaN(NS1) || IsContainNaN(UD1)) { a1 += DW; a2 += DW; continue; }
+        // Skip segments containing NaN in any component
+        if (IsContainNaN(EW1) || IsContainNaN(NS1) || IsContainNaN(UD1)) {
+            a1 += DW; a2 += DW; continue;
+        }
 
-        // Apply window in-place
+        // Apply normalised Hamming window in-place
         for (let i = 0; i < RWL; i++) {
             EW1[i] *= Win[i];
             NS1[i] *= Win[i];
             UD1[i] *= Win[i];
         }
 
-        // Compute FFT of each windowed segment
+        // Compute FFT
         const [Re1, Im1] = FFT(EW1, null, NFFT);
         const [Re2, Im2] = FFT(NS1, null, NFFT);
         const [Re3, Im3] = FFT(UD1, null, NFFT);
 
-        // Compute Fourier amplitude spectra
-        const [Mag1] = FFT_MagPhase(Re1, Im1);
-        const [Mag2] = FFT_MagPhase(Re2, Im2);
-        const [Mag3] = FFT_MagPhase(Re3, Im3);
+        // Fourier amplitude spectra — trim to one-sided before smoothing
+        let [Mag1] = FFT_MagPhase(Re1, Im1);
+        let [Mag2] = FFT_MagPhase(Re2, Im2);
+        let [Mag3] = FFT_MagPhase(Re3, Im3);
 
-        // Combine horizontal components and form H/V ratio; accumulate in-place
-        for (let i = 0; i < NFFT; i++) {
+        Mag1 = GetRange(Mag1, 0, nFreq - 1);
+        Mag2 = GetRange(Mag2, 0, nFreq - 1);
+        Mag3 = GetRange(Mag3, 0, nFreq - 1);
+
+        // Combine horizontals, compute H/V, accumulate
+        for (let i = 0; i < nFreq; i++) {
             const m1 = Mag1[i];
             const m2 = Mag2[i];
             const m3 = Mag3[i];
@@ -5543,9 +5570,12 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             else if (Option === 2) { H = Math.sqrt((m1*m1 + m2*m2)/2); }   // Quadratic mean
             else                   { H = (m1 + m2) / 2;                }   // Arithmetic mean
 
-            const hv       = H / m3;
-            HV_sum[i]  += hv;
-            HV_sum2[i] += hv * hv;
+            const hv     = H / m3;
+            const log_hv = hv > 0 ? Math.log(hv) : 0;
+
+            HV_sum[i]     += hv;
+            LogHV_sum[i]  += log_hv;
+            LogHV_sum2[i] += log_hv * log_hv;
         }
 
         a1 += DW;
@@ -5553,35 +5583,130 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         K++;
     }
 
-    // Compute average H/V and standard deviation across K valid segments
-    const HV  = new Array(NFFT).fill(0);
-    const Std = new Array(NFFT).fill(0);
+    // ── Compute mean H/V and log-space standard deviation
+    let   HV  = new Array(nFreq).fill(0);
+    const Std = new Array(nFreq).fill(0);
 
     if (K > 0) {
-        for (let i = 0; i < NFFT; i++) {
+        for (let i = 0; i < nFreq; i++) {
             HV[i] = HV_sum[i] / K;
         }
 
         if (K > 1) {
-            // Sample standard deviation across K segments.
-            // For overlapping segments this is a biased underestimate of the true standard deviation (segments are not independent), 
-            // but it is the conventional measure used throughout the HVSR literature (SESAME, 2004).
-            // s = sqrt( (Σx² - n·x̄²) / (n-1) )
-            for (let i = 0; i < NFFT; i++) {
-                const variance = (HV_sum2[i] - K * HV[i] * HV[i]) / (K - 1);
-                Std[i] = Math.sqrt(Math.max(0, variance));  // Guard against floating-point negatives
+            for (let i = 0; i < nFreq; i++) {
+                const log_mean = LogHV_sum[i] / K;
+                const log_var  = (LogHV_sum2[i] - K * log_mean * log_mean) / (K - 1);
+                Std[i]         = Math.sqrt(Math.max(0, log_var));
             }
         }
     }
 
-    // Frequency vector
-    const df    = FSamp / NFFT;
-    const f     = LinSpace(0, (NFFT - 1) * df, NFFT);
+    // Apply Konno-Ohmachi smoothing to all three components simultaneously
+    let t1 = performance.now();
 
-    // Return one-sided spectrum only
-    const nFreq = IsEven(NFFT) ? (NFFT / 2) + 1 : (NFFT + 1) / 2;
+    const KO_weights = PrecomputeKOWeights(f, b);          console.log(`Elapsed: ${(performance.now() - t1).toFixed(2)} ms`);
 
-    return [GetRange(HV, 0, nFreq - 1), GetRange(Std, 0, nFreq - 1), GetRange(f, 0, nFreq - 1)];
+    t1 = performance.now();
+    HV = ApplyKOWeights(HV, KO_weights);                   console.log(`Elapsed: ${(performance.now() - t1).toFixed(2)} ms`);
+
+    return [HV, Std, Array.from(f)];
+
+    // ── Helper: precompute sparse Konno-Ohmachi weights
+    function PrecomputeKOWeights(f, b) {
+
+        if (b == null) { b = 40; }
+        const nFreq = f.length;
+
+        // Precompute log10(f[i]) once for all frequencies
+        const log10f = new Float64Array(nFreq);
+        for (let i = 0; i < nFreq; i++) {
+            log10f[i] = f[i] > 0 ? Math.log10(f[i]) : -Infinity;
+        }
+
+        // Pre-allocate a temporary buffer for the worst-case number of entries
+        const tmpIdx = new Int32Array(nFreq);
+        const tmpWts = new Float32Array(nFreq);
+
+        const log10_4   = Math.log10(4);    // ±2 octave limits in log10 space
+        const log10_025 = Math.log10(0.25); // = -log10_4
+
+        const weights = [];
+
+        for (let ic = 0; ic < nFreq; ic++) {
+
+            const fc = f[ic];
+
+            if (fc <= 0) { weights.push(null); continue; }
+
+            const log10fc = log10f[ic];
+
+            // Binary search for the lower bound: find first i where log10f[i] >= log10fc + log10_025
+            const lo_val = log10fc + log10_025;   // log10(fc * 0.25)
+            const hi_val = log10fc + log10_4;     // log10(fc * 4.0)
+
+            let lo = 1;   // skip DC bin at index 0
+            let hi = nFreq - 1;
+            while (lo < hi) {
+                const mid = (lo + hi) >> 1;
+                if (log10f[mid] < lo_val) lo = mid + 1; else hi = mid;
+            }
+
+            let count = 0;
+            let wsum  = 0;
+
+            for (let i = lo; i < nFreq; i++) {
+                if (log10f[i] > hi_val) break;   // past upper bound — stop early
+
+                let w;
+                if (i === ic) {
+                    w = 1.0;
+                } else {
+                    const x = b * (log10f[i] - log10fc);  // b * log10(f[i]/fc)
+                    const s = Math.sin(x) / x;
+                    w       = s * s * s * s;
+                }
+
+                tmpIdx[count] = i;
+                tmpWts[count] = w;
+                wsum  += w;
+                count++;
+            }
+
+            // Normalise and trim to exact size
+            const idx = new Int32Array(count);
+            const wts = new Float32Array(count);
+            if (wsum > 0) {
+                for (let j = 0; j < count; j++) {
+                    idx[j] = tmpIdx[j];
+                    wts[j] = tmpWts[j] / wsum;
+                }
+            }
+
+            weights.push({ idx, wts, count });
+        }
+
+        return weights;
+    }
+
+    // ── Helper: apply precomputed weights to three spectra simultaneously
+    function ApplyKOWeights(Spec, weights) {
+        const nFreq = Spec.length;
+        const SM    = new Array(nFreq).fill(0);
+
+        for (let ic = 0; ic < nFreq; ic++) {
+            const entry = weights[ic];
+
+            if (entry === null) { SM[ic] = Spec[ic]; continue; }
+
+            const { idx, wts, count } = entry;
+            let s = 0;
+            for (let j = 0; j < count; j++) {
+                s += wts[j] * Spec[idx[j]];
+            }
+            SM[ic] = s;
+        }
+        return SM;
+    }
 }
 //-----------------------------------------------------------------------------------------------
 function Poly(x) {

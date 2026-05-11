@@ -3830,8 +3830,8 @@ async function DonwloadExcel_LoadDataPage() {
 
             // Populate frequency and H/V amplitude
             header = [  "Frequency (Hz)",
-                        "H/V Amplitude",
-                        "Standard Deviation",
+                        "HVSR_Mean Amplitude",
+                        "HVSR_Std",
                     ];
             data =  [   ChannelList[i].Results.HVSR.f,  
                         ChannelList[i].Results.HVSR.HV,

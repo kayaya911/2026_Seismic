@@ -875,6 +875,12 @@ async function Plotly_Graph_Update(ChNum) {
 
         if (ChannelList[ChNum].Results.HVSR.IsAnalysisCompleted) {
 
+
+            const f_plot     = ChannelList[ChNum].Results.HVSR.f.slice(1);
+            const HV_plot    = ChannelList[ChNum].Results.HVSR.HV.slice(1);
+            const upper_plot = HV_plot.map((v, i) => v * Math.exp(+f_plot[i]));
+            const lower_plot = HV_plot.map((v, i) => v * Math.exp(-f_plot[i]));
+
             traces[0].x           = ChannelList[ChNum].Results.HVSR.f;
             traces[0].y           = ChannelList[ChNum].Results.HVSR.HV;
             traces[0].mode        = 'lines',
@@ -885,6 +891,37 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
             traces[0].name        = '<b><b>';   // legend title
             traces[0].showlegend  = false;      // Show legend
+            
+
+            traces[1].x           = ChannelList[ChNum].Results.HVSR.f;
+            traces[1].y           = ChannelList[ChNum].Results.HVSR.HV.map((v, i) => v * Math.exp(ChannelList[ChNum].Results.HVSR.Std[i]));
+            traces[1].mode        = 'lines',
+            traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[1].yaxis       = "y1",
+            traces[1].visible     = true;
+            traces[1].opacity     = 1.00;
+            traces[1].line        = {color: 'black', width: 1.00, dash: 'dash' };
+            traces[1].name        = '<b><b>';   // legend title
+            traces[1].showlegend  = false;      // Show legend
+
+            traces[2].x           = ChannelList[ChNum].Results.HVSR.f;
+            traces[2].y           = ChannelList[ChNum].Results.HVSR.HV.map((v, i) => v * Math.exp(-ChannelList[ChNum].Results.HVSR.Std[i]));
+            traces[2].mode        = 'lines',
+            traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[2].yaxis       = "y1",
+            traces[2].visible     = true;
+            traces[2].opacity     = 1.00;
+            traces[2].line        = {color: 'black', width: 1.00, dash: 'dash' };
+            traces[2].name        = '<b><b>';   // legend title
+            traces[2].showlegend  = false;      // Show legend
+
+            layout_update.yaxis.type            = "log";
+            layout_update.xaxis.type            = "log";
+
+            layout_update.yaxis.dtick           = 1;
+            layout_update.xaxis.dtick           = 1;
+
+            layout_update.xaxis.range      = [ChannelList[ChNum].Results.HVSR.f[1], ChannelList[ChNum].Results.HVSR.f.at(-1)];
 
             layout_update.yaxis.title.text      = '<b>H/V Amplitude</b>';
             layout_update.yaxis2.showticklabels = false;
@@ -1037,9 +1074,9 @@ async function Plotly_NewGraph(Div_ID, Channel) {
     // Define Layout
     layout = {
         title           : { text: GraphTitle, font: {size: 10 }, x: 0.5, xanchor: 'center', y: 0.98, yanchor: 'top'},
-        xaxis           : { zeroline: false, automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: xLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true },
-        yaxis           : { zeroline: true,  automargin: true, tickfont: { size: 15 }, tickformat: '.2e', linecolor: 'black', linewidth: 1, mirror: true, title: {text: yLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, rangemode: 'normal' },
-        yaxis2          : { zeroline: true,  automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false, matches: "y", rangemode: 'normal'},
+        xaxis           : { zeroline: false, automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: xLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, type: 'linear' },
+        yaxis           : { zeroline: true,  automargin: true, tickfont: { size: 15 }, tickformat: '.2e', linecolor: 'black', linewidth: 1, mirror: true, title: {text: yLabel,  standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, rangemode: 'normal', type: 'linear' },
+        yaxis2          : { zeroline: true,  automargin: true, tickfont: { size: 15 },                    linecolor: 'black', linewidth: 1, mirror: true, title: {text: y2Label, standoff: 5, font: {family: "Arial", size: 17} }, autorange: true, overlaying: 'y', side: 'right', showticklabels: false, matches: "y", rangemode: 'normal', type: 'linear'},
         plot_bgcolor    : '#ffffff', 
         paper_bgcolor   : '#ffffff',
         legend          : { x: 0.99, y:0.85, xanchor: 'right',  orientation: 'v', font: {size: 14, weight: 700}, bgcolor: '#f8f4f4', bordercolor: '#6c6a6a', borderwidth: 1.5, },
@@ -1422,6 +1459,11 @@ function Plotly_Clear_Graph(ChNum) {
 
     // Get the existing layout in the PlotArea_ID
     layout_update = document.getElementById(PlotArea_ID).layout;
+    layout_update.yaxis.type       = "linear";
+    layout_update.xaxis.type       = "linear";
+    layout_update.yaxis.dtick      = null;
+    layout_update.xaxis.dtick      = null;
+
     layout_update.xaxis.autorange  = true;
     layout_update.yaxis.autorange  = true;
     layout_update.yaxis2.autorange = true;
