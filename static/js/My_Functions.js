@@ -73,138 +73,176 @@ function OnLoad() {
 
 }
 //-----------------------------------------------------------------------------------------------
+
+
 async function LoadHelpContent() {
-    
     const panel = document.getElementById('panel4');
     if (!panel) return;
 
     panel.innerHTML = '<p style="padding:1rem; color: #888">Loading help...</p>';
 
+    if (!document.getElementById('help-print-styles')) {
+        const style = document.createElement('style');
+        style.id = 'help-print-styles';
+        style.innerHTML = `
+            @media print {
+                /* Force Table of Contents to its own page */
+                .help-toc {
+                    page-break-after: always !important;
+                    break-after: page !important;
+                }
+
+                /* Force the Main Title/Intro to start on a new page */
+                .help-title {
+                    page-break-before: always !important;
+                    break-before: page !important;
+                    margin-top: 0 !important;
+                }
+
+                /* Force every Accordion Section to start on a new page */
+                .help-accordion-item {
+                    page-break-before: always !important;
+                    break-before: page !important;
+                    display: block !important;
+                    border: none !important;
+                }
+
+                .help-accordion-body { 
+                    display: block !important; 
+                    padding: 0 !important;
+                }
+
+                .help-accordion-icon { display: none !important; }
+                
+                .help-accordion-header { 
+                    background: none !important; 
+                    border-bottom: 1px solid #000 !important; 
+                    pointer-events: none;
+                    padding-left: 0 !important;
+                }
+
+                .help-container { padding: 0; }
+                .help-accordion { border: none !important; }
+                
+                /* Clean up UI elements for print */
+                .help-toc::after, .help-accordion-item::after { content: none !important; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
     try {
-        const res  = await fetch('./static/data/help.json');
+        const res = await fetch('./static/data/help.json');
         const data = await res.json();
         RenderHelp(panel, data);
     } catch (e) {
         panel.innerHTML = '<p style="padding:1rem; color:red">Could not load help.</p>';
     }
-    
 
     function RenderHelp(panel, data) {
 
-        let html = `<div class="help-container">`;
-        html += `<h2 class="help-title">${data.title}</h2>`;
+        //  <p class="help-cover-subtitle">for</p>
 
-        // ── INTRO ── replace the single line with this block
+        let html = `
+        <div class="help-cover-page">
+            <div class="help-cover-center">
+                <p class="help-cover-title">Seismic Data Analysis Webtool</p>
+                <p class="help-cover-title">User Guide</p>
+            </div>
+            <div class="help-cover-footer">
+                <p class="help-cover-datetime">${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;|&nbsp; ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+                <p class="help-cover-location">Vancouver, Canada</p>
+            </div>
+        </div>`;
+        
+        html += `<div class="help-container">`;
+        
+        // 1. Table of Contents
+        html += `<div class="help-toc">
+                    <h3>Table of Contents</h3>
+                    <ul>
+                        <li><a href="#help-top">1. ${data.title}</a></li>`;
+        
+        data.sections.forEach((section, index) => {
+            html += `<li><a href="#help-${section.id}">${index + 2}. ${section.heading}</a></li>`;
+        });
+        html += `</ul></div>`;
+
+        // 2. Title and Intro (Main Section 1)
+        html += `<h2 class="help-title" id="help-top">1. ${data.title}</h2>`;
+        
         if (Array.isArray(data.intro)) {
-            for (const line of data.intro) {
-                if (line.startsWith('[indent]'))
-                    html += `<p class="help-intro help-intro-indent">${line.slice(8).trim()}</p>`;
-                else
-                    html += `<p class="help-intro">${line}</p>`;
-            }
+            data.intro.forEach(line => {
+                const isIndent = line.startsWith('[indent]');
+                const text = isIndent ? line.slice(8).trim() : line;
+                html += `<p class="help-intro ${isIndent ? 'help-intro-indent' : ''}">${text}</p>`;
+            });
         } else {
             html += `<p class="help-intro">${data.intro}</p>`;
         }
-        // ── END INTRO ──
 
+        // 3. Sections (Accordion Items)
         html += `<div class="help-accordion">`;
-
-        for (const section of data.sections) {
-
+        data.sections.forEach((section, index) => {
             html += `
                 <div class="help-accordion-item" id="help-${section.id}">
                     <button class="help-accordion-header" onclick="ToggleHelpSection(this)">
-                        <span>${section.heading}</span>
-                        <svg class="help-accordion-icon" viewBox="0 0 24 24">
-                            <path d="M7 10l5 5 5-5z"/>
-                        </svg>
+                        <span>${index + 2}. ${section.heading}</span>
+                        <svg class="help-accordion-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </button>
-                    <div class="help-accordion-body">
-            `;
+                    <div class="help-accordion-body">`;
 
-            if (section.summary)
-                html += `<p class="help-summary">${section.summary}</p>`;
-
-            if (section.intro && section.intro.length) {
-                for (const line of section.intro) {
-                    if (line.startsWith('[indent]'))
-                        html += `<p class="help-intro help-intro-indent">${line.slice(8).trim()}</p>`;
-                    else
-                        html += `<p class="help-intro">${line}</p>`;
-                }
+            if (section.summary) html += `<p class="help-summary">${section.summary}</p>`;
+            if (section.intro) {
+                section.intro.forEach(line => {
+                    const isIndent = line.startsWith('[indent]');
+                    const text = isIndent ? line.slice(8).trim() : line;
+                    html += `<p class="help-intro ${isIndent ? 'help-intro-indent' : ''}">${text}</p>`;
+                });
             }
-
-            if (section.steps && section.steps.length) {
-                html += `<ol class="help-steps">`;
-                for (const step of section.steps)
-                    html += `<li>${step}</li>`;
-                html += `</ol>`;
-            }
-
-            if (section.parameters && section.parameters.length)
-                html += RenderParameters(section.parameters);
-
-            if (section.subsections && section.subsections.length) {
-                for (const sub of section.subsections) {
-                    html += `<div class="help-subsection">`;
-                    html += `<h4 class="help-subsection-heading">${sub.heading}</h4>`;
-                    if (sub.description)
-                        html += `<p class="help-sub-desc">${sub.description}</p>`;
-                    if (sub.parameters && sub.parameters.length)
-                        html += RenderParameters(sub.parameters);
+            if (section.parameters) html += RenderParameters(section.parameters);
+            if (section.subsections) {
+                section.subsections.forEach(sub => {
+                    html += `<div class="help-subsection"><h4 class="help-subsection-heading">${sub.heading}</h4>`;
+                    if (sub.parameters) html += RenderParameters(sub.parameters);
                     html += `</div>`;
-                }
+                });
             }
-
-            if (section.notes && section.notes.length) {
+            if (section.notes) {
                 html += `<ul class="help-notes">`;
-                for (const note of section.notes)
-                    html += `<li>${note}</li>`;
+                section.notes.forEach(note => html += `<li>${note}</li>`);
                 html += `</ul>`;
             }
-
             html += `</div></div>`;
-        }
-
+        });
         html += `</div></div>`;
         panel.innerHTML = html;
+    }
+
+    function RenderParameters(params) {
+        let html = `<table class="help-param-table">`;
+        params.forEach(p => {
+            html += `<tr><td class="help-param-label">${p.label}</td><td class="help-param-detail">
+                <div class="help-param-badges">`;
+            if (p.default !== undefined) html += `<span class="help-param-default">Default: ${p.default}</span>`;
+            if (p.options) html += `<span class="help-param-options">${p.options.join(' · ')}</span>`;
+            html += `</div>`;
+            if (p.description) html += `<p class="help-param-desc">${p.description}</p>`;
+            html += `</td></tr>`;
+        });
+        html += `</table>`;
+        return html;
     }
 
     function ToggleHelpSection(header) {
         const item = header.parentElement;
         const isOpen = item.classList.contains("open");
-
-        // Close all open sections
-        document.querySelectorAll(".help-accordion-item.open").forEach(el => {
-            el.classList.remove("open");
-        });
-
-        // Open the clicked one if it was closed
+        document.querySelectorAll(".help-accordion-item.open").forEach(el => el.classList.remove("open"));
         if (!isOpen) item.classList.add("open");
     }
-
-    function RenderParameters(params) {
-        let html = `<table class="help-param-table">`;
-        for (const p of params) {
-            html += `<tr>`;
-            html += `<td class="help-param-label">${p.label}</td>`;
-
-            // Badges on their own row, description below
-            let badges = `<div class="help-param-badges">`;
-            if (p.default  !== undefined) badges += `<span class="help-param-default">Default: ${p.default}</span>`;
-            if (p.range)                  badges += `<span class="help-param-range">Range: ${p.range}</span>`;
-            if (p.options)                badges += `<span class="help-param-options">${p.options.join(' · ')}</span>`;
-            badges += `</div>`;
-
-            let desc = p.description ? `<p class="help-param-desc">${p.description}</p>` : '';
-
-            html += `<td class="help-param-detail">${badges}${desc}</td>`;
-            html += `</tr>`;
-        }
-        html += `</table>`;
-        return html;
-    }
 }
+
+
 //-----------------------------------------------------------------------------------------------
 function IsElementExists(id) {
     // Return true is an element with id exists

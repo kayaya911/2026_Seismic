@@ -3892,6 +3892,10 @@ async function DonwloadExcel_LoadDataPage() {
             data = [ChannelList[i].Results.HVSR.FiltPar.a, ChannelList[i].Results.HVSR.FiltPar.b];
             AddDataToWorkSheet(WorkSheet, header, "J21", data, "K21");
 
+            header = [["Upper bound = HVSR * EXP(Std)"],["Lower bound = HVSR * EXP(-Std)"]];
+            data = "";
+            AddDataToWorkSheet(WorkSheet, header, "J25", data, "K25");
+
             // All column formatting
             columnConfig = [
                 { width: 12, align: { horizontal: 'right',  vertical: 'center' } },  // Time (s)
@@ -3915,6 +3919,8 @@ async function DonwloadExcel_LoadDataPage() {
             WorkSheet["J12"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
             WorkSheet["J21"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
             WorkSheet["J22"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J25"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
+            WorkSheet["J26"].s = {font: { bold: true, sz: 14 }, align: { horizontal: 'left',  vertical: 'center' }};
 
         }
 

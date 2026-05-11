@@ -875,12 +875,6 @@ async function Plotly_Graph_Update(ChNum) {
 
         if (ChannelList[ChNum].Results.HVSR.IsAnalysisCompleted) {
 
-
-            const f_plot     = ChannelList[ChNum].Results.HVSR.f.slice(1);
-            const HV_plot    = ChannelList[ChNum].Results.HVSR.HV.slice(1);
-            const upper_plot = HV_plot.map((v, i) => v * Math.exp(+f_plot[i]));
-            const lower_plot = HV_plot.map((v, i) => v * Math.exp(-f_plot[i]));
-
             traces[0].x           = ChannelList[ChNum].Results.HVSR.f;
             traces[0].y           = ChannelList[ChNum].Results.HVSR.HV;
             traces[0].mode        = 'lines',
@@ -915,13 +909,11 @@ async function Plotly_Graph_Update(ChNum) {
             traces[2].name        = '<b><b>';   // legend title
             traces[2].showlegend  = false;      // Show legend
 
-            layout_update.yaxis.type            = "log";
+            layout_update.yaxis.type            = "linear";
+            layout_update.yaxis.rangemode       = 'tozero';
             layout_update.xaxis.type            = "log";
-
-            layout_update.yaxis.dtick           = 1;
             layout_update.xaxis.dtick           = 1;
-
-            layout_update.xaxis.range      = [ChannelList[ChNum].Results.HVSR.f[1], ChannelList[ChNum].Results.HVSR.f.at(-1)];
+            layout_update.xaxis.range           = [ChannelList[ChNum].Results.HVSR.f[1], ChannelList[ChNum].Results.HVSR.f.at(-1)];
 
             layout_update.yaxis.title.text      = '<b>H/V Amplitude</b>';
             layout_update.yaxis2.showticklabels = false;
@@ -1467,6 +1459,11 @@ function Plotly_Clear_Graph(ChNum) {
     layout_update.xaxis.autorange  = true;
     layout_update.yaxis.autorange  = true;
     layout_update.yaxis2.autorange = true;
+
+    layout_update.xaxis.rangemode  = 'normal';
+    layout_update.yaxis.rangemode  = 'normal';
+    layout_update.yaxis2.rangemode = 'normal';
+
 
     // Delete shapes
     layout_update.shapes[0].x0 = 0;

@@ -5436,10 +5436,11 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     // Each recording is divided into overlapping segments of RWL samples with OVS overlap.
     // Each segment is multiplied by a normalised Hamming window before the NFFT-point FFT
     // is applied to reduce spectral leakage. The two horizontal Fourier amplitude spectra
-    // are smoothed using Konno-Ohmachi (b=40) and combined into a single horizontal spectrum
-    // according to Option, then divided by the vertical spectrum to form the H/V ratio for
-    // that segment. Segment-averaged H/V spectra and their log-space standard deviations
-    // are returned together with the frequency vector.
+    // are combined into a single horizontal spectrum according to Option, then divided by
+    // the vertical spectrum to form the H/V ratio for that segment. Segment-averaged H/V
+    // spectra and their log-space standard deviations are returned together with the
+    // frequency vector. Konno-Ohmachi smoothing (b=40) is applied once to the final mean
+    // H/V curve after averaging across all segments.
     //
     // Parameters:
     //   EW     : East-West  recording (1D array)
@@ -5457,21 +5458,22 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     //            3 → Arithmetic mean  (EW+NS)/2
     //
     // Returns: [HV, Std, f]
-    //   HV  : Segment-averaged H/V spectral ratio (1D array, one-sided, length = nFreq)
+    //   HV  : Segment-averaged and Konno-Ohmachi smoothed H/V spectral ratio
+    //         (1D array, one-sided, length = nFreq)
     //   Std : Standard deviation of log(H/V) across segments (1D array, same length)
     //         Plot bounds as: upper = HV * exp(+Std), lower = HV * exp(-Std)
     //   f   : Frequency vector in Hz (1D array, same length as HV)
     //
     // Notes:
     //   - Segments containing NaN values in any component are silently skipped.
-    //   - Konno-Ohmachi smoothing (b=40) is applied to each segment's one-sided Fourier
-    //     amplitude spectra before computing the H/V ratio. Weights are precomputed once
-    //     using a sparse typed-array representation (±2 octaves) to minimise memory usage.
     //   - The Hamming window is normalised so that its power equals 1 (sum(Win²) = RWL),
     //     keeping the amplitude scale consistent across different window shapes.
     //   - H/V values are always positive (ratio of two positive spectra) and are
     //     log-normally distributed. The standard deviation is therefore computed in
     //     log space. Plot bounds: upper = HV * exp(+Std), lower = HV * exp(-Std).
+    //   - Konno-Ohmachi smoothing is applied once to the final mean H/V curve using
+    //     a sparse flat typed-array representation with ±2 octave truncation and
+    //     symmetric weight computation to minimise memory and computation time.
     //
     // Reference:
     //   SESAME European project (2004). Guidelines for the implementation of the H/V
@@ -5484,7 +5486,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     // Author   : Dr. Yavuz Kaya, P.Eng.
     // Modified : 06.May.2026
 
-    // ── Input validation
+    // Input validation
     if (!Array.isArray(EW)) { throw new Error("HVSR: EW[] must be an array."); }
     if (!Array.isArray(NS)) { throw new Error("HVSR: NS[] must be an array."); }
     if (!Array.isArray(UD)) { throw new Error("HVSR: UD[] must be an array."); }
@@ -5492,7 +5494,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         throw new Error("HVSR: Dimensions of EW[], NS[] and UD[] arrays are inconsistent.");
     }
 
-    // ── Default arguments
+    // Default arguments
     if (RWL    == null) { RWL    = Math.max(2, Math.floor(EW.length / 8)); }
     if (OVS    == null) { OVS    = Math.floor(RWL * 0.25);                 }
     if (FSamp  == null) { FSamp  = 1;                                      }
@@ -5503,25 +5505,23 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         throw new Error("HVSR: Input arguments are inconsistent: (RWL <= 0) || (RWL > EW.length) || (RWL > NFFT) || (OVS >= RWL) || (OVS < 0) || (NFFT < 2) || (FSamp <= 0)");
     }
 
-    // ── One-sided spectrum length and frequency vector
-    const nFreq      = IsEven(NFFT) ? (NFFT / 2) + 1 : (NFFT + 1) / 2;
-    const df         = FSamp / NFFT;
-    const f          = LinSpace(0, (nFreq - 1) * df, nFreq);
+    // One-sided spectrum length and frequency vector
+    const nFreq = IsEven(NFFT) ? (NFFT / 2) + 1 : (NFFT + 1) / 2;
+    const df    = FSamp / NFFT;
+    const f     = LinSpace(0, (nFreq - 1) * df, nFreq);
 
-    // ── Precompute Konno-Ohmachi weights (one-sided, sparse, typed arrays)
-    const b          = 40;
+    // Pre-allocate accumulators
+    const HV_sum     = new Float64Array(nFreq);
+    const LogHV_sum  = new Float64Array(nFreq);
+    const LogHV_sum2 = new Float64Array(nFreq);
+    const Var_raw    = new Float64Array(nFreq);  // Log-space standard deviation
 
-    // ── Pre-allocate accumulators (one-sided length only)
-    const HV_sum     = new Float64Array(nFreq);   // Σ HV[k]        across segments
-    const LogHV_sum  = new Float64Array(nFreq);   // Σ log(HV[k])   across segments
-    const LogHV_sum2 = new Float64Array(nFreq);   // Σ log(HV[k])²  across segments
-
-    // ── Normalised Hamming window
+    // Normalised Hamming window
     const DW  = RWL - OVS;
     let   Win = Hamming(RWL);
     Win = Multiply(Win, Math.sqrt(RWL / Sum(Pow(Win, 2))));
 
-    // ── Segment loop 
+    // Segment loop
     let K  = 0;
     let a1 = 0;
     let a2 = RWL - 1;
@@ -5532,7 +5532,6 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         const NS1 = GetRange(NS, a1, a2);
         const UD1 = GetRange(UD, a1, a2);
 
-        // Skip segments containing NaN in any component
         if (IsContainNaN(EW1) || IsContainNaN(NS1) || IsContainNaN(UD1)) {
             a1 += DW; a2 += DW; continue;
         }
@@ -5549,7 +5548,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         const [Re2, Im2] = FFT(NS1, null, NFFT);
         const [Re3, Im3] = FFT(UD1, null, NFFT);
 
-        // Fourier amplitude spectra — trim to one-sided before smoothing
+        // Fourier amplitude spectra — trim to one-sided
         let [Mag1] = FFT_MagPhase(Re1, Im1);
         let [Mag2] = FFT_MagPhase(Re2, Im2);
         let [Mag3] = FFT_MagPhase(Re3, Im3);
@@ -5565,10 +5564,10 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             const m3 = Mag3[i];
 
             let H;
-            if      (Option === 0) { H = Math.sqrt(m1 * m2);           }   // Geometric mean
-            else if (Option === 1) { H = Math.sqrt(m1*m1 + m2*m2);     }   // Vector sum
-            else if (Option === 2) { H = Math.sqrt((m1*m1 + m2*m2)/2); }   // Quadratic mean
-            else                   { H = (m1 + m2) / 2;                }   // Arithmetic mean
+            if      (Option === 0) { H = Math.sqrt(m1 * m2);           }
+            else if (Option === 1) { H = Math.sqrt(m1*m1 + m2*m2);     }
+            else if (Option === 2) { H = Math.sqrt((m1*m1 + m2*m2)/2); }
+            else                   { H = (m1 + m2) / 2;                }
 
             const hv     = H / m3;
             const log_hv = hv > 0 ? Math.log(hv) : 0;
@@ -5578,134 +5577,94 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             LogHV_sum2[i] += log_hv * log_hv;
         }
 
-        a1 += DW;
-        a2 += DW;
-        K++;
+        a1 += DW; a2 += DW; K++;
+       
     }
-
-    // ── Compute mean H/V and log-space standard deviation
-    let   HV  = new Array(nFreq).fill(0);
-    const Std = new Array(nFreq).fill(0);
 
     if (K > 0) {
         for (let i = 0; i < nFreq; i++) {
-            HV[i] = HV_sum[i] / K;
-        }
-
-        if (K > 1) {
-            for (let i = 0; i < nFreq; i++) {
+            HV_sum[i] /= K;
+            
+            if (K > 1) {
                 const log_mean = LogHV_sum[i] / K;
                 const log_var  = (LogHV_sum2[i] - K * log_mean * log_mean) / (K - 1);
-                Std[i]         = Math.sqrt(Math.max(0, log_var));
+                Var_raw[i] = Math.max(0, log_var);
             }
         }
     }
 
-    // Apply Konno-Ohmachi smoothing to all three components simultaneously
-    let t1 = performance.now();
+    // Apply Konno-Ohmachi smoothing once to the mean curve
+    const b = 40;
+    const [HV, Var_smoothed] = SmoothKOLog(f, HV_sum, Var_raw, b);
+    const Std                = Var_smoothed.map(v => Math.sqrt(Math.max(0, v)));
 
-    const KO_weights = PrecomputeKOWeights(f, b);          console.log(`Elapsed: ${(performance.now() - t1).toFixed(2)} ms`);
+    // Return results 
+    return [Array.from(HV), Std, Array.from(f)];
 
-    t1 = performance.now();
-    HV = ApplyKOWeights(HV, KO_weights);                   console.log(`Elapsed: ${(performance.now() - t1).toFixed(2)} ms`);
 
-    return [HV, Std, Array.from(f)];
-
-    // ── Helper: precompute sparse Konno-Ohmachi weights
-    function PrecomputeKOWeights(f, b) {
-
-        if (b == null) { b = 40; }
-        const nFreq = f.length;
-
-        // Precompute log10(f[i]) once for all frequencies
-        const log10f = new Float64Array(nFreq);
-        for (let i = 0; i < nFreq; i++) {
-            log10f[i] = f[i] > 0 ? Math.log10(f[i]) : -Infinity;
+    // Helper function
+    function SmoothKOLog(f, spec1, spec2, b) {
+        const n = f.length;
+        const smoothed1 = new Float64Array(n);
+        const smoothed2 = new Float64Array(n);
+        
+        const log10f = new Float64Array(n);
+        for (let i = 0; i < n; i++) {
+            log10f[i] = f[i] > 0 ? Math.log10(f[i]) : -1e10;
         }
 
-        // Pre-allocate a temporary buffer for the worst-case number of entries
-        const tmpIdx = new Int32Array(nFreq);
-        const tmpWts = new Float32Array(nFreq);
+        // Optimization: Track the 'window' indices to avoid O(N^2)
+        let left = 0;
 
-        const log10_4   = Math.log10(4);    // ±2 octave limits in log10 space
-        const log10_025 = Math.log10(0.25); // = -log10_4
-
-        const weights = [];
-
-        for (let ic = 0; ic < nFreq; ic++) {
-
-            const fc = f[ic];
-
-            if (fc <= 0) { weights.push(null); continue; }
-
-            const log10fc = log10f[ic];
-
-            // Binary search for the lower bound: find first i where log10f[i] >= log10fc + log10_025
-            const lo_val = log10fc + log10_025;   // log10(fc * 0.25)
-            const hi_val = log10fc + log10_4;     // log10(fc * 4.0)
-
-            let lo = 1;   // skip DC bin at index 0
-            let hi = nFreq - 1;
-            while (lo < hi) {
-                const mid = (lo + hi) >> 1;
-                if (log10f[mid] < lo_val) lo = mid + 1; else hi = mid;
+        for (let i = 0; i < n; i++) {
+            if (f[i] <= 0) {
+                smoothed1[i] = spec1[i];
+                smoothed2[i] = spec2[i];
+                continue;
             }
 
-            let count = 0;
-            let wsum  = 0;
+            const log10fc = log10f[i];
+            const lo_val = log10fc - 0.602; // -2 octaves
+            const hi_val = log10fc + 0.602; // +2 octaves
 
-            for (let i = lo; i < nFreq; i++) {
-                if (log10f[i] > hi_val) break;   // past upper bound — stop early
+            // Move the 'left' pointer to the start of the relevant frequency range
+            while (left < n && log10f[left] < lo_val) {
+                left++;
+            }
 
-                let w;
-                if (i === ic) {
-                    w = 1.0;
+            let numer1 = 0;
+            let numer2 = 0;
+            let denom  = 0;
+
+            // Only iterate through the bins that fall within the +/- 2 octave range
+            for (let j = left; j < n; j++) {
+                if (log10f[j] > hi_val) break;
+
+                let weight;
+                if (i === j) {
+                    weight = 1.0;
                 } else {
-                    const x = b * (log10f[i] - log10fc);  // b * log10(f[i]/fc)
+                    const x = b * (log10f[j] - log10fc);
                     const s = Math.sin(x) / x;
-                    w       = s * s * s * s;
+                    weight = s * s * s * s;
                 }
 
-                tmpIdx[count] = i;
-                tmpWts[count] = w;
-                wsum  += w;
-                count++;
+                numer1 += weight * spec1[j];
+                numer2 += weight * spec2[j];
+                denom  += weight;
             }
 
-            // Normalise and trim to exact size
-            const idx = new Int32Array(count);
-            const wts = new Float32Array(count);
-            if (wsum > 0) {
-                for (let j = 0; j < count; j++) {
-                    idx[j] = tmpIdx[j];
-                    wts[j] = tmpWts[j] / wsum;
-                }
+            if (denom > 0) {
+                smoothed1[i] = numer1 / denom;
+                smoothed2[i] = numer2 / denom;
+            } else {
+                smoothed1[i] = spec1[i];
+                smoothed2[i] = spec2[i];
             }
-
-            weights.push({ idx, wts, count });
+            
         }
 
-        return weights;
-    }
-
-    // ── Helper: apply precomputed weights to three spectra simultaneously
-    function ApplyKOWeights(Spec, weights) {
-        const nFreq = Spec.length;
-        const SM    = new Array(nFreq).fill(0);
-
-        for (let ic = 0; ic < nFreq; ic++) {
-            const entry = weights[ic];
-
-            if (entry === null) { SM[ic] = Spec[ic]; continue; }
-
-            const { idx, wts, count } = entry;
-            let s = 0;
-            for (let j = 0; j < count; j++) {
-                s += wts[j] * Spec[idx[j]];
-            }
-            SM[ic] = s;
-        }
-        return SM;
+        return [smoothed1, smoothed2];
     }
 }
 //-----------------------------------------------------------------------------------------------
