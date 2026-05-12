@@ -168,6 +168,7 @@ async function Load_Files(ev) {
         }
     }
 
+    // Read the content of the file
     async function ReadFileContent(File_Blob) {
 
         // decleration of variables 
@@ -185,14 +186,23 @@ async function Load_Files(ev) {
             
             // Appends each channel in the file into the ChannelList[]
             // Also, appends each channel to the Table on the home-page
-            if      ( fileExt == "VIF" )                          { Read_VIF( FileName, delta, dataview ); }
-            else if ((fileExt == "V1"  ) || (fileExt == "RAW"))   { Read_V1(  FileName, delta, dataview ); }
-            else if ((fileExt == "MSD" ) || (fileExt == "MSEED")) { Read_MSD( FileName, delta, dataview ); }
-            else if ( fileExt == "TXT" )                          { Read_TXT( FileName, delta, dataview ); }
-            else if ( fileExt == "ASC" )                          { Read_ASC( FileName, delta, dataview ); }
-            else if ( fileExt == "DAT" )                          { Read_DAT( FileName, delta, dataview ); }
+            if      ( fileExt == "VIF" )                          { Read_VIF_BCSIMS( FileName, delta, dataview ); }
+            else if ((fileExt == "V1"  ) || (fileExt == "RAW"))   { Read_V1_COSMOS(  FileName, delta, dataview ); }
+            else if ((fileExt == "MSD" ) || (fileExt == "MSEED")) { Read_MSD(        FileName, delta, dataview ); }
+            else if ( fileExt == "TXT" )                          { Read_TXT(        FileName, delta, dataview ); }
+            else if ( fileExt == "ASC" )                          { Read_ASC(        FileName, delta, dataview ); }
+            else if ( fileExt == "DAT" ) {
+                
+                // Check if it matches the '=>' sync character from your existing Read_DAT
+                let isType1 = dataview.getUint16(66, true) === 0x3E3D;
+
+                if (isType1) { Read_DAT_GEOSIG(FileName, delta, dataview);  } 
+                else         { Read_DAT_Free(FileName, delta, dataview);    }
+            }
         });
     }
+
+    
     
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -371,7 +381,6 @@ async function Add_To_Table(Channel) {
         if (fileListIndex === -1) {
             // FileList item not found
             throw new Error(`List item "${fileListId}" not found in Files & Channels`);
-            // return -1;
         }
 
         // From that point, find the last consecutive "Ch" item
@@ -536,7 +545,7 @@ async function Add_To_Table(Channel) {
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
-async function Read_DAT(FileName, delta, dataview) {
+async function Read_DAT_GEOSIG(FileName, delta, dataview) {
 
     // Decleration of variables 
     let DateTime, DateTime_previous, DateTime_current, Data=[], NumSamp_previous, NumSamp_current, Flags, Karar, Opt={}
@@ -617,10 +626,11 @@ async function Read_DAT(FileName, delta, dataview) {
     res.time           = Data.map((vv,ii) => ii / FSamp);   // Time array of the digitized data
 
     // Calculate Statictics
-    temp1    = Statistics(res.data, res.ScaleFactor);
-    res.Peak = temp1.Peak;
-    res.Mean = temp1.Mean;
-    res.RMS  = temp1.RMS;
+    temp1        = Statistics(res.data, res.ScaleFactor);
+    res.Peak     = temp1.Peak;
+    res.Mean     = temp1.Mean;
+    res.RMS      = temp1.RMS;
+    res.Residual = res.data.at(-1) * res.ScaleFactor;
 
     // Add to the Main Table and Tree View
     await Add_To_Table( res );
@@ -757,7 +767,95 @@ async function Read_DAT(FileName, delta, dataview) {
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
-async function Read_VIF(FileName, delta, dataview) {
+async function Read_DAT_Free(FileName, delta, dataview) {
+    const decoder = new TextDecoder("utf-8");
+    const uint8 = new Uint8Array(dataview.buffer);
+
+    let start = 0;
+    let Data = [];
+
+    // 1. Scan the buffer for lines
+    for (let i = 0; i < uint8.length; i++) {
+
+        // Look for newline character (LF = 10)
+        if (uint8[i] === 10 || i === uint8.length - 1) {
+            // Extract just this line's bytes and convert to string
+            let lineBytes = uint8.subarray(start, i);
+            let line = decoder.decode(lineBytes).trim();
+            
+            if (line.length > 0) {
+                // Split line into numbers
+                let values = line.split(/\s+/).map(Number);
+                Data.push(values);
+            }
+            start = i + 1;
+        }
+    }
+
+    if (Data.length === 0) return;
+
+    // 2. Map the row-based data into your Channel structures
+    const numChannels  = Data[0].length;
+    const numSamples   = Data.length;
+    const FSamp        = 100;                         // Unknaow, so FSamp = 100Hz is assumed. 
+    const TypeAndUnits = 1;                           // Unknown, so it is assumed that this channel contains Acc readings of 'g' unit.
+    let   temp1        = TypeAndUnit( TypeAndUnits );
+    const temp2        = IntervalTypeAndUnit( 1 );    // Type And Unit number - refer to the list (Time series)
+    const DateTime     = new Date().toISOString();
+
+    for (let col = 0; col < numChannels; col++) {
+        let res            = new Channel();
+        res.FileName       = FileName;
+        res.TableName      = FileName.replace(/[-.]/g, '_');
+        res.FileListName   = 'FileList_' + res.TableName;
+        res.ChNum          = col;
+        res.NumSamples     = numSamples;                        // Number of digitized data points
+        res.ScaleFactor    = 1;                                 // User defined Scale Factor - Taken 1.0 if not specified
+
+        res.Orientation    = 'N/A';                             // Orientation of channel
+        res.DateTime       = DateTime;                          // Date&Time of the first sample
+        res.Duration       = numSamples / FSamp;                // Total duration in seconds
+        res.DateTime_End   = ComputeEndDateTime(res.DateTime, res.Duration); // Date&Time of the last sample in the record
+        res.Lat            = undefined;                         // Latitude coordinate of the sensor
+        res.Long           = undefined;                         // Longitude coordinate of the sensor
+        res.FSamp          = FSamp;                             // Sampling Frequency in Hz
+
+        res.delt           = 1/FSamp;                  // Time interval of the digitized record in seconds
+        res.TypeAndUnits   = TypeAndUnits;             // Type And Unit number - refer to the list
+        res.Type           = temp1.Type;               // Type of sensor reading - number
+        res.TypeString     = temp1.Type_String;        // Type of sensor reading - string
+        res.Unit           = temp1.Unit;               // Unit of sensor reading - number
+        res.UnitString     = temp1.Unit_String;        // Unit of sensor reading - string
+
+        res.IntervalTypeAndUnit = temp2.IntervalTypeAndUnit;  // Type And Unit number - refer to the list
+        res.IntervalType        = temp2.Type;                 // (0-1)
+        res.IntervalTypeString  = temp2.Type_String;          // (Time, Spectral Period, etc.)
+        res.IntervalUnit        = temp2.Unit;                 // (0-2)
+        res.IntervalUnitString  = temp2.Unit_String;          // (Second, DateTime, etc.)
+
+        res.data = [];
+        for (let row = 0; row < numSamples; row++) { 
+            res.data.push(Data[row][col]);                     // Digitized data
+        } 
+        res.time           =  res.data.map((vv,ii) => ii / FSamp);   // Time array of the digitized data
+        
+
+        // Calculate Statictics
+        temp1        = Statistics(res.data, res.ScaleFactor);
+        res.Peak     = temp1.Peak;
+        res.Mean     = temp1.Mean;
+        res.RMS      = temp1.RMS;
+        res.Residual = res.data.at(-1) * res.ScaleFactor;
+
+        // Add to the Main Table and Tree View
+        await Add_To_Table( res );
+
+    }
+}
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+async function Read_VIF_BCSIMS(FileName, delta, dataview) {
     // Read the header information
     // These variables only exist within this block {...}. Does not exist out of this function.
     let nVersion, Year, Month, Day, Hour, Minute, Second, MilliSec, NanoSec;
@@ -918,7 +1016,7 @@ async function Read_VIF(FileName, delta, dataview) {
     }
 }
 //-------------------------------------------------------------------------------------------------------------
-async function Read_V1(FileName, delta, dataview) {
+async function Read_V1_COSMOS(FileName, delta, dataview) {
     let data=[],Time=[], ChannelNum=[], InstFreq=[], InstPeriod=[], InstDamp=[], delt=[], FSamp=[];
     let Lat=[], Long=[], StationNo=[], NumSamples=[], Azimuth, Orientation=[], DateTime=[], StationName=[], EqeTitleName=[];
     let ScaleFactor=[], IsVertical=[], TypeAndUnits=[], Type=[], Unit=[], UnitString=[], TypeString=[], Duration=[];

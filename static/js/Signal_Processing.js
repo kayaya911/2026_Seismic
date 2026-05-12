@@ -2144,9 +2144,9 @@ async function Channel_HVSR() {
     }
 
     // STEP 8: Compute Parameters
-    let RWL      = Math.max(2, Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength));  // Length of running window in samples
-    let OVS      = Math.floor(RWL * HVSR_Par.OverlapRatio);                             // Length of overlap in samples 
-    let NFFT     = Data[0].length;                                                      // Length of Fourier Transform
+     let RWL      = Math.max(2, NextPow2(Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength)));  // Length of running window in samples
+    let OVS      = Math.floor(RWL * HVSR_Par.OverlapRatio);                                       // Length of overlap in samples 
+    let NFFT     = Data[0].length;                                                                // Length of Fourier Transform
     let Option   = HVSR_Par.CombinationType;
     let HV       = [];
     let std      = [];
@@ -5524,6 +5524,8 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     let a2 = RWL - 1;
 
     while (a2 < EW.length) {
+
+        console.log(a2, EW.length)
 
         const EW1 = GetRange(EW, a1, a2);
         const NS1 = GetRange(NS, a1, a2);
