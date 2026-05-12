@@ -20,7 +20,7 @@
         "Once data files are loaded, each channel is listed in the <b>Files &amp; Channels</b> sidebar tree on the left, where it can be selected for analysis and display. Use the blue checkbox next to each channel to include it in the analysis, and the green checkbox to toggle its graph on or off. Multiple channels can be selected for analysis and display simultaneously.",
         "When the green checkbox for a channel is enabled, its time-history waveform is plotted in the graph panel below the channel table. Each graph is accompanied by a summary statistics table showing the Peak absolute value, Mean, RMS, and Residual of the signal, along with a Unit dropdown that allows the graph unit to be changed independently of the channel metadata. Multiple channels can be plotted simultaneously, with each appearing as a separate graph in the panel."
       ],
-      "parameters": [ ],
+      "parameters": [],
       "details":[
             "The response spectrum is defined as...",
             "[math]S_a(T, \\xi) = \\max_t | \\ddot{u}(t) + \\ddot{u}_g(t) |[/math]",

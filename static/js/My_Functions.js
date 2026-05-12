@@ -73,59 +73,42 @@ function OnLoad() {
 
 }
 //-----------------------------------------------------------------------------------------------
-
-
 async function LoadHelpContent() {
     const panel = document.getElementById('panel4');
     if (!panel) return;
 
     panel.innerHTML = '<p style="padding:1rem; color: #888">Loading help...</p>';
 
-    if (!document.getElementById('help-print-styles')) {
+    // Inject enhanced CSS for sub-section contrast and correct font sizes
+    if (!document.getElementById('help-nested-styles')) {
         const style = document.createElement('style');
-        style.id = 'help-print-styles';
+        style.id = 'help-nested-styles';
         style.innerHTML = `
+            .help-nested-accordion { 
+                margin-top: 1rem; 
+                border: 1px solid #e0e0e0; 
+                border-radius: 6px; 
+                overflow: hidden;
+                background-color: #fcfcfc; /* The requested background contrast */
+            }
+            .help-nested-item { border-bottom: 1px solid #eee; }
+            .help-nested-item:last-child { border-bottom: none; }
+            .help-nested-header { 
+                width: 100%; display: flex; justify-content: space-between; align-items: center;
+                padding: 0.7rem 1rem; background: #f8f9fa; border: none; cursor: pointer;
+                font-size: 0.95rem !important; /* Overwrites main accordion header size */
+                font-weight: 600; text-align: left; color: #444; transition: all 0.2s;
+            }
+            .help-nested-header:hover { background: #f0f2f5; color: #000; }
+            .help-nested-body { display: none; padding: 1.2rem; background: #ffffff; border-top: 1px solid #eee; }
+            .help-nested-item.open .help-nested-body { display: block; }
+            .help-nested-item.open .help-nested-header { background: #eef2ff; color: #3a5bd9; }
+
             @media print {
-                /* Force Table of Contents to its own page */
-                .help-toc {
-                    page-break-after: always !important;
-                    break-after: page !important;
-                }
-
-                /* Force the Main Title/Intro to start on a new page */
-                .help-title {
-                    page-break-before: always !important;
-                    break-before: page !important;
-                    margin-top: 0 !important;
-                }
-
-                /* Force every Accordion Section to start on a new page */
-                .help-accordion-item {
-                    page-break-before: always !important;
-                    break-before: page !important;
-                    display: block !important;
-                    border: none !important;
-                }
-
-                .help-accordion-body { 
-                    display: block !important; 
-                    padding: 0 !important;
-                }
-
-                .help-accordion-icon { display: none !important; }
-                
-                .help-accordion-header { 
-                    background: none !important; 
-                    border-bottom: 1px solid #000 !important; 
-                    pointer-events: none;
-                    padding-left: 0 !important;
-                }
-
-                .help-container { padding: 0; }
-                .help-accordion { border: none !important; }
-                
-                /* Clean up UI elements for print */
-                .help-toc::after, .help-accordion-item::after { content: none !important; }
+                .help-nested-body { display: block !important; padding: 0 !important; }
+                .help-nested-header svg { display: none !important; }
+                .help-nested-header { background: none !important; border-bottom: 1px solid #000 !important; pointer-events: none; padding-left: 0 !important; color: #000 !important; }
+                .help-nested-accordion { border: none !important; }
             }
         `;
         document.head.appendChild(style);
@@ -135,59 +118,53 @@ async function LoadHelpContent() {
         const res = await fetch('./static/data/help.json');
         const data = await res.json();
         RenderHelp(panel, data);
+        
+        // Render LaTeX equations after content is loaded
+        if (window.MathJax) { MathJax.typesetPromise(); }
     } catch (e) {
         panel.innerHTML = '<p style="padding:1rem; color:red">Could not load help.</p>';
     }
 
     function RenderHelp(panel, data) {
-
-        //  <p class="help-cover-subtitle">for</p>
-
         let html = `
         <div class="help-cover-page">
             <div class="help-cover-center">
-                <p class="help-cover-title">Seismic Data Analysis Webtool</p>
+                <p class="help-cover-title">${data.title} Webtool</p>
                 <p class="help-cover-title">User Guide</p>
             </div>
             <div class="help-cover-footer">
-                <p class="help-cover-datetime">${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })} &nbsp;|&nbsp; ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</p>
+                <p class="help-cover-datetime">${new Date().toLocaleDateString('en-GB', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
                 <p class="help-cover-location">Vancouver, Canada</p>
             </div>
-        </div>`;
-        
-        html += `<div class="help-container">`;
-        
-        // 1. Table of Contents
-        html += `<div class="help-toc">
-                    <h3>Table of Contents</h3>
-                    <ul>
-                        <li><a href="#help-top">1. ${data.title}</a></li>`;
+        </div>
+        <div class="help-container">
+            <div class="help-toc">
+                <h3>Table of Contents</h3>
+                <ul><li><a href="#help-top">1. ${data.title}</a></li>`;
         
         data.sections.forEach((section, index) => {
             html += `<li><a href="#help-${section.id}">${index + 2}. ${section.heading}</a></li>`;
         });
         html += `</ul></div>`;
 
-        // 2. Title and Intro (Main Section 1)
         html += `<h2 class="help-title" id="help-top">1. ${data.title}</h2>`;
-        
         if (Array.isArray(data.intro)) {
             data.intro.forEach(line => {
                 const isIndent = line.startsWith('[indent]');
                 const text = isIndent ? line.slice(8).trim() : line;
                 html += `<p class="help-intro ${isIndent ? 'help-intro-indent' : ''}">${text}</p>`;
             });
-        } else {
-            html += `<p class="help-intro">${data.intro}</p>`;
         }
 
-        // 3. Sections (Accordion Items)
         html += `<div class="help-accordion">`;
         data.sections.forEach((section, index) => {
+            const sectionNum = index + 2;
+            let subIndex = 1; 
+
             html += `
                 <div class="help-accordion-item" id="help-${section.id}">
                     <button class="help-accordion-header" onclick="ToggleHelpSection(this)">
-                        <span>${index + 2}. ${section.heading}</span>
+                        <span>${sectionNum}. ${section.heading}</span>
                         <svg class="help-accordion-icon" viewBox="0 0 24 24"><path d="M7 10l5 5 5-5z"/></svg>
                     </button>
                     <div class="help-accordion-body">`;
@@ -200,23 +177,41 @@ async function LoadHelpContent() {
                     html += `<p class="help-intro ${isIndent ? 'help-intro-indent' : ''}">${text}</p>`;
                 });
             }
-            if (section.parameters) html += RenderParameters(section.parameters);
-            if (section.subsections) {
-                section.subsections.forEach(sub => {
-                    html += `<div class="help-subsection"><h4 class="help-subsection-heading">${sub.heading}</h4>`;
-                    if (sub.parameters) html += RenderParameters(sub.parameters);
-                    html += `</div>`;
-                });
+
+            html += `<div class="help-nested-accordion">`;
+
+            if (section.parameters && section.parameters.length > 0) {
+                html += CreateNestedItem(`${sectionNum}.${subIndex++} Parameters`, RenderParameters(section.parameters));
             }
-            if (section.notes) {
-                html += `<ul class="help-notes">`;
-                section.notes.forEach(note => html += `<li>${note}</li>`);
-                html += `</ul>`;
+
+            if (section.details && section.details.length > 0) {
+                let detailsHtml = section.details.map(d => {
+                    let processed = d.replace(/\[math\]/g, '\\(').replace(/\[\/math\]/g, '\\)');
+                    return `<p class="help-param-desc" style="margin-bottom:0.8rem">${processed}</p>`;
+                }).join('');
+                html += CreateNestedItem(`${sectionNum}.${subIndex++} Details`, detailsHtml);
             }
-            html += `</div></div>`;
+
+            if (section.notes && section.notes.length > 0) {
+                let notesHtml = `<ul class="help-notes">` + section.notes.map(n => `<li>${n}</li>`).join('') + `</ul>`;
+                html += CreateNestedItem(`${sectionNum}.${subIndex++} Notes`, notesHtml);
+            }
+
+            html += `</div></div></div>`;
         });
         html += `</div></div>`;
         panel.innerHTML = html;
+    }
+
+    function CreateNestedItem(title, content) {
+        return `
+            <div class="help-nested-item">
+                <button class="help-nested-header" onclick="ToggleNestedSection(event, this)">
+                    <span>${title}</span>
+                    <svg class="help-accordion-icon" viewBox="0 0 24 24" style="width:1rem; height:1rem;"><path d="M7 10l5 5 5-5z"/></svg>
+                </button>
+                <div class="help-nested-body">${content}</div>
+            </div>`;
     }
 
     function RenderParameters(params) {
@@ -230,19 +225,9 @@ async function LoadHelpContent() {
             if (p.description) html += `<p class="help-param-desc">${p.description}</p>`;
             html += `</td></tr>`;
         });
-        html += `</table>`;
-        return html;
-    }
-
-    function ToggleHelpSection(header) {
-        const item = header.parentElement;
-        const isOpen = item.classList.contains("open");
-        document.querySelectorAll(".help-accordion-item.open").forEach(el => el.classList.remove("open"));
-        if (!isOpen) item.classList.add("open");
+        return html + `</table>`;
     }
 }
-
-
 //-----------------------------------------------------------------------------------------------
 function IsElementExists(id) {
     // Return true is an element with id exists
@@ -1338,6 +1323,11 @@ function Toggle_Tables_SingleTable() {
 //-----------------------------------------------------------------------------------------------
 function ToggleHelpSection(header) {
     header.parentElement.classList.toggle("open");
+}
+//-----------------------------------------------------------------------------------------------
+function ToggleNestedSection(event, btn) {
+    if (event) event.stopPropagation();
+    btn.parentElement.classList.toggle("open");
 }
 //-----------------------------------------------------------------------------------------------
 function ProgressBar_Update(msg, msg_color) {

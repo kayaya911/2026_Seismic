@@ -114,7 +114,7 @@
     background: #eef1ff;
     color: #3a5bd9;
     border-radius: 1.0rem;
-    padding: 0.0625rem 0.0rem;
+    padding: 0.0625rem 0.4375rem;
     white-space: nowrap;
 }
 
@@ -231,59 +231,6 @@
 .help-accordion-item.open .help-accordion-body {
     display: block;
 }
-
-
-
-
-/* Nested Accordion Styles */
-.help-nested-accordion {
-    margin-top: 1rem;
-    border: 1px solid #eee;
-    border-radius: 4px;
-}
-
-.help-nested-item {
-    border-bottom: 1px solid #eee;
-}
-
-.help-nested-item:last-child {
-    border-bottom: none;
-}
-
-.help-nested-header {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    padding: 0.5rem 1rem;
-    background: #fafafa;
-    border: none;
-    cursor: pointer;
-    font-size: 1.2rem !important;
-    font-weight: 500;
-    text-align: left;
-}
-
-.help-nested-header:hover {
-    background: #f0f0f0;
-}
-
-.help-nested-body {
-    display: none;
-    padding: 1rem;
-    background: #f5f5f5;
-}
-
-.help-nested-item.open .help-nested-body {
-    display: block;
-}
-
-.help-nested-item.open .help-nested-header {
-    background: #f4f6ff;
-    color: #3a5bd9;
-}
-
-
-
 
 /* Cover Page (screen: hidden) */
 .help-cover-page {
