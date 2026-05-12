@@ -2136,27 +2136,27 @@ async function Channel_HVSR() {
         
     }
 
-    // STEP 9: HVSR parameters    
+    // STEP 7: HVSR parameters    
     if (HVSR_Par.WindowLength > HVSR_Status.OverlappedSegment_Length) { 
         ProgressBar_Update( 'Window length must be smaller than overlapped duration!', 'red');
         DisableButtons(false);
         return;
     }
 
-    // STEP 9: Power Spectral Density
-    let RWL    = Math.max(2, Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength));  // Length of running window in samples
-    let OVS    = Math.floor(RWL * HVSR_Par.OverlapRatio);                             // Length of overlap in samples 
-    let NFFT   = Data[0].length;                                                      // Length of Fourier Transform
-    let Option = HVSR_Par.CombinationType;
-    let HV     = [];
-    let std    = [];
-    let f      = [];
+    // STEP 8: Compute Parameters
+    let RWL      = Math.max(2, Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength));  // Length of running window in samples
+    let OVS      = Math.floor(RWL * HVSR_Par.OverlapRatio);                             // Length of overlap in samples 
+    let NFFT     = Data[0].length;                                                      // Length of Fourier Transform
+    let Option   = HVSR_Par.CombinationType;
+    let HV       = [];
+    let std      = [];
+    let f        = [];
 
-    // STEP 10: Compute the H/V Spectral Ratio
+    // STEP 9: Compute the H/V Spectral Ratio
     [HV, std, f] = HVSR(Data[0], Data[1], Data[2], RWL, OVS, HVSR_Status.FSamp, NFFT, Option);
 
 
-    // STEP 11: Collect computed HVSR
+    // STEP 10: Collect computed HVSR
     HVSR_Par.HV                         = HV;
     HVSR_Par.f                          = f;
     HVSR_Par.Std                        = std;
@@ -2170,25 +2170,22 @@ async function Channel_HVSR() {
     HVSR_Par.Azimuth                    = HVSR_Status.Azimuth; 
     HVSR_Par.FileName                   = HVSR_Status.FileName; 
 
-    // STEP 12: Store Filter Parameters
+    // STEP 11: Store Filter Parameters
     HVSR_Par.FiltPar = FiltPar;
 
-    // STEP 13: Flag Successfully Completion
+    // STEP 12: Flag Successfully Completion
     HVSR_Par.IsAnalysisCompleted = true;
 
-    // STEP 14: Store Results on the fist channel
+    // STEP 13: Store Results on the fist channel
     ChannelList[0].Results.HVSR = HVSR_Par;
 
-    // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    // STEP 14: Update Visualization - Refresh Plotly graph to show Integrated waveforms
     await Plotly_Graph_Update(0);
 
-    // STEP 16: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
     ProgressBar_Update( 'H/V Spectral Ratio -- 100% completed!', 'black');
 
-    // STEP 17:
-    await sleep(5);
-
-    // STEP 11: Enable CALCULATE Button
+    // STEP 16: Enable CALCULATE Button
     DisableButtons(false);
 
 
@@ -5617,6 +5614,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         let left = 0;
 
         for (let i = 0; i < n; i++) {
+
             if (f[i] <= 0) {
                 smoothed1[i] = spec1[i];
                 smoothed2[i] = spec2[i];
