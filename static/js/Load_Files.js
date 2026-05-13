@@ -188,6 +188,7 @@ async function Load_Files(ev) {
             // Also, appends each channel to the Table on the home-page
             if      ( fileExt == "VIF" )                          { Read_VIF_BCSIMS( FileName, delta, dataview ); }
             else if ((fileExt == "V1"  ) || (fileExt == "RAW"))   { Read_V1_COSMOS(  FileName, delta, dataview ); }
+            else if  (fileExt == "V1C" )                          { Read_V1c_COSMOS( FileName, delta, dataview ); }
             else if ((fileExt == "MSD" ) || (fileExt == "MSEED")) { Read_MSD(        FileName, delta, dataview ); }
             else if ( fileExt == "TXT" )                          { Read_TXT(        FileName, delta, dataview ); }
             else if ( fileExt == "ASC" )                          { Read_ASC(        FileName, delta, dataview ); }
@@ -197,7 +198,7 @@ async function Load_Files(ev) {
                 let isType1 = dataview.getUint16(66, true) === 0x3E3D;
 
                 if (isType1) { Read_DAT_GEOSIG(FileName, delta, dataview);  } 
-                else         { Read_DAT_Free(FileName, delta, dataview);    }
+                else         { Read_DAT_Free(  FileName, delta, dataview);  }
             }
         });
     }
@@ -216,7 +217,7 @@ async function Add_To_Table(Channel) {
 
     // Declare variables
     let table1, table2, numOfRows, numOfCols, chk, th, td, row, cell, select, Type_ID, opt, i, j;
-    let Type_List, Unit_List, Unit_ID, Scale_ID, input;
+    let Type_List, Unit_List, Unit_ID, Scale_ID, FSamp_ID, input;
     let UL_el, li_el, label, checkbox1, checkbox2, divCount
 
     // Get the list of TypeList and UnitList
@@ -439,9 +440,25 @@ async function Add_To_Table(Channel) {
 
     // 4th column (Sampling Frequency in Hz) - Insert an empty row first and populate it ---------------------------
     i = 3;
-    cell = row.insertCell(i);
-    cell.innerHTML = Number(Channel.FSamp).toFixed(3);
-    cell.title     = Number(Channel.FSamp).toFixed(3);
+    // cell = row.insertCell(i);
+    // cell.innerHTML = Number(Channel.FSamp).toFixed(3);
+    // cell.title     = Number(Channel.FSamp).toFixed(3);
+
+
+    cell   = row.insertCell(i);
+    FSamp_ID        = "FSamp_ID_" + Channel.Unique_ID;
+    input           = document.createElement('input');
+    input.title     = "Sampling Frequency, Hz";
+    input.type      = "number";
+    input.style     = "width: 100%; text-align: right"
+    input.value     = Channel.FSamp;
+    input.id        = FSamp_ID;
+    input.setAttribute('onchange', "ChannelFSamp_Update(this)" );
+    input.setAttribute('onfocus', "this.oldValue = this.value;" );
+    cell.appendChild(input);
+
+
+
 
     // 5th colum (Channel Type) - Insert an empty row first and populate it ----------------------------------------
     i = 4;
@@ -850,6 +867,10 @@ async function Read_DAT_Free(FileName, delta, dataview) {
         // Add to the Main Table and Tree View
         await Add_To_Table( res );
 
+        // Update the ProgressBar per channel (Unlike other type of channels)
+        await UpdateProgress(delta/numChannels, "ProgressBar_Label");
+        await sleep(5);
+
     }
 }
 //-------------------------------------------------------------------------------------------------------------
@@ -1094,7 +1115,7 @@ async function Read_V1_COSMOS(FileName, delta, dataview) {
         if (Ind != -1) {
             // This is the information line before the recordings start
             // Format: (8f9.6)   n=8,  m=9,  d=6
-            // 8f9.6 means 8 columns, each column includes 9 numbers with 6 decimal numbers
+            // 8f9.6 means 8 columns, each column includes 9 characters (numbers) with 6 decimal numbers
             n = parseInt( Temp[Ind + 3] );
             m = parseInt( Temp[Ind + 5] );
             d = parseInt( Temp[Ind + 7] );
@@ -1159,7 +1180,7 @@ async function Read_V1_COSMOS(FileName, delta, dataview) {
             FGetL(dataview);
         }
 
-        temp                     = IntervalTypeAndUnit( 1 );   // Type And Unit number - refer to the list
+        temp                        = IntervalTypeAndUnit( 1 );   // Type And Unit number - refer to the list
         IntervalTypeAndUnits[ChNum] = temp.IntervalTypeAndUnit;
         IntervalType[ChNum]         = temp.Type;                  // (0-1)
         IntervalTypeString[ChNum]   = temp.Type_String;           // (Time, Spectral Period, etc.)
@@ -1211,6 +1232,8 @@ async function Read_V1_COSMOS(FileName, delta, dataview) {
         await Add_To_Table( res );
     }
 
+
+    // Helper functions
     function Str2Float(Str, n) {
         // This function converts each consecutive n-character in Str[] array into an Float number
         let i, j, S=[], L=[];
@@ -1295,6 +1318,182 @@ async function Read_V1_COSMOS(FileName, delta, dataview) {
         }
         return val;
     }
+}
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------
+async function Read_V1c_COSMOS( FileName, delta, dataview ) { 
+    let TNumByte, header=[], EndOfFile=false;
+    let i, Ind=0, IntHeaderNum=[], RealHeaderNum=[], data=[];
+
+    let H1, TypeOfData, FormatVersion, NumOfLines, NumIntegerValues, NumRealValues, NumCommentLines;
+    let count_Integer, widthChar_Integer, repeatCount, fieldWidth, decimalPlace, TypeUnit, Scale;
+
+    let NumOfDataVelues;
+
+    TNumByte = dataview.byteLength;
+
+    // First Line in header
+    H1               = FGetL(dataview);
+    TypeOfData       = H1.substring(  0,  24); 
+    FormatVersion    = H1.substring( 35,  40); 
+    NumOfLines       = Number(H1.substring( 46,  48)); 
+
+    // Read the rest of header lines
+    for (i = 0; i < NumOfLines-1; i++) {
+        header = header.concat( FGetL(dataview) );
+    }
+    
+    // Read Integer-header values
+    H1                = FGetL(dataview);                   // First line in Integer-header string
+    NumIntegerValues  = Number(H1.substring(  0,   4));    // Number of values in Integer Header
+    NumOfLines        = Number(H1.substring( 37,  40));    // Number of lines of Integer Header values that follow.
+    [count_Integer, widthChar_Integer] = extractFormat(H1.substring( 56,  80));
+
+    for (i = 0; i < NumOfLines; i++) {
+        IntHeaderNum.push(parseFixedIntegers(FGetL(dataview), count_Integer, widthChar_Integer));
+    }
+
+    // Read Real-header values
+    H1              = FGetL(dataview);                      // First line in Real-header string
+    NumRealValues   = Number(H1.substring(  0,   4));       // Number of values in Real Header.
+    NumOfLines      = Number(H1.substring( 34,  37));       // Number of lines of Real Header values that follow.
+   [repeatCount, fieldWidth, decimalPlace] = extractFormatNumbers(H1.substring( 53,  80));
+
+    for (i = 0; i < NumOfLines; i++) {
+        RealHeaderNum.push(parseFixedWidthFloats(FGetL(dataview), repeatCount, fieldWidth, decimalPlace));
+    }
+
+    // Comments 
+    H1                = FGetL(dataview);
+    NumCommentLines   = Number(H1.substring(  0,   4));     // Number of comment lines that follow
+    for (i = 0; i < NumCommentLines; i++){
+        FGetL(dataview);
+    }
+
+    // Data Values Section 
+    H1                = FGetL(dataview);
+    NumOfDataVelues   = Number(H1.substring(  0,   8));    // Number of data points following;
+    [TypeUnit, Scale] = ParseDatunitCode(H1.substring( 59,  61));
+    [repeatCount, fieldWidth, decimalPlace] = extractFormatNumbers(H1.substring( 70,  80));
+    for (i = 0; i < NumOfDataVelues; i++){
+        data.push(Number( FGetL(dataview) ));
+    }
+    
+    
+
+
+
+    // heper functions 
+    function FGetL(dataview) {
+        // This function reads the file byte-by-byte until the next Line Feed (\n)
+        // Converts the bytes read to a string and returns it
+        let dat=[], content;
+
+        while (true) {
+            // Break the while-loop if EndOfFile
+            if (EndOfFile) { break; }
+
+            // Read Signed Integer of one-byte
+            content = Read_Int8( dataview );
+
+            // If the content is Carriage Return (\r), then continue reading, but do not include it in the dat[] array
+            if (content == 13) { continue; }
+
+            // If the content is a Line Feed (\n), then EndOfFile is reached, so break the while-loop and return the dat[] array
+            if (content == 10) { break; }
+
+            // Append the content to the dat[] array
+            dat.push(content);
+        };
+
+        // Convert dat[] array into string and return
+        return String.fromCharCode.apply(null, dat);
+
+    }
+    function Read_Int8(dataview) {
+        // This function reads the next 1-byte and returns it
+
+        // Return an empty string it is EndOfFile
+        if (EndOfFile) { return ''; }
+
+        // Read the one-byte
+        let content = dataview.getInt8( Ind );
+
+        // Increase the Ind-byte index by 1
+        Ind++;
+
+        // Check EndOfFile
+        if (Ind >= TNumByte) { EndOfFile = true; }
+
+        // Return the content of the 1-byte read
+        return content;
+    }
+    function extractFormat(str) {
+        // str = (10I8)
+        const match = str.match(/\((\d+)I(\d+)\)/);
+        
+        if (!match) { return [-1, -1]; }
+
+        let count = parseInt(match[1]);   // 10
+        let width = parseInt(match[2]);   // 8
+
+        return [count, width]
+    }
+    function parseFixedIntegers(str, count, width) {
+        const results = [];
+        for (let i = 0; i < count; i++) {
+            const chunk = str.slice(i * width, (i + 1) * width);
+            results.push(parseInt(chunk, 10));
+        }
+        return results;
+    }
+    function extractFormatNumbers(str) {
+        // Remove parentheses and letters, then split on '.' to handle decimal notation
+        const match = str.match(/\((\d+)[A-Z](\d+)\.(\d+)\)/i);
+
+        if (!match) { return [-1, -1, -1]; }
+        
+        let repeatCount  =  parseInt(match[1]); // repeat count → 5
+        let fieldWidth   =  parseInt(match[2]); // field width  → 15
+        let decimalPlace =  parseInt(match[3]); // decimal places → 6
+
+        return [repeatCount, fieldWidth, decimalPlace];
+    }
+    function parseFixedWidthFloats(str, repeatCount, fieldWidth, decimalPlace) {
+        const values = [];
+        for (let i = 0; i < repeatCount; i++) {
+            const field = str.substring(i * fieldWidth, (i + 1) * fieldWidth);
+            values.push(parseFloat(field));
+        }
+        return values;
+    }
+    function ParseDatunitCode(str) {
+        //
+	    if       (str === "01" ) { TypeUnit =  1; Scale = 1;              }    // sec
+        else if  (str === "02" ) { TypeUnit =  1; Scale = 1;              }    // g
+        else if  (str === "03" ) { TypeUnit =  1; Scale = 1;              }    // sec & g
+        else if  (str === "04" ) { TypeUnit =  3; Scale = 1;              }    // cm/s2
+        else if  (str === "05" ) { TypeUnit = 13; Scale = 1;              }    // cm/s
+        else if  (str === "06" ) { TypeUnit = 23; Scale = 1;              }    // cm
+        else if  (str === "07" ) { TypeUnit =  3; Scale = 2.54;           }    // in/s2  to  cm/s2
+        else if  (str === "08" ) { TypeUnit = 13; Scale = 2.54;           }    // in/s   to  cm/s
+        else if  (str === "09" ) { TypeUnit = 23; Scale = 2.54;           }    // in     to  cm
+        else if  (str === "10" ) { TypeUnit =  3; Scale = 1;              }    // gal    to  cm/s2
+        else if  (str === "11" ) { TypeUnit =  1; Scale = 0.001;          }    // mg     to  g
+        else if  (str === "12" ) { TypeUnit =  1; Scale = 1e-6;           }    // µg     to  g
+        else if  (str === "10" ) { TypeUnit =  1; Scale = 1;              }    // deg/sec/sec
+        else if  (str === "10" ) { TypeUnit =  1; Scale = 1;              }    // deg/sec
+        else if  (str === "10" ) { TypeUnit =  1; Scale = 1;              }    // deg
+        else if  (str === "50" ) { TypeUnit =  1; Scale = 1;              }    // counts
+        else if  (str === "51" ) { TypeUnit =  1; Scale = 1;              }    // volts
+        else if  (str === "52" ) { TypeUnit =  1; Scale = 1;              }    // mvolts
+        else if  (str === "60" ) { TypeUnit = 81; Scale = 6894.757293168; }    // psi       to N/m2
+        else if  (str === "80" ) { TypeUnit = 31; Scale = 1e-6;           }    // µstrain   to strain
+
+        return [TypeUnit, Scale];
+    }
+
 }
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------

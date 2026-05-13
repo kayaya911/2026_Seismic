@@ -866,6 +866,35 @@ function ChannelList_TabelID(tableName) {
     }
     return indices;
 }
+function ChannelFSamp_Update(el) {
+    
+    // Declaration of variables
+    let ChNum, FSamp, temp;
+
+    // Obtain the channel Number
+    ChNum = ChannelList_UniqueID( el.id.replace("FSamp_ID_", "") );
+
+    // Get the Sampling frequency 
+    FSamp = Number(document.getElementById(el.id).value);
+
+    // Check if FSamp is greater than zero
+    if (FSamp <= 0)                              { 
+        el.value = el.oldValue; 
+        ProgressBar_Update('Invalid value - Sampling Frequency must be greater than 0 !', 'red');
+        return;
+    } 
+
+    // Updates the ScaleFactor
+    ChannelList[ChNum].FSamp = FSamp;
+    ChannelList[ChNum].delt  = 1 / FSamp;
+
+    // Delete Results for this channel beacuse the FSamp is changed by user 
+    ChannelList[ChNum].DeleteResults();
+
+    // Update Plotly-Graphs if applicable
+    if (IsElementExists(el.id.replace('FSamp_ID_','Div_ID_'))) { Plotly_Graph_Update(ChNum); }
+
+}
 //-----------------------------------------------------------------------------------------------
 function ChannelScaleFactor_Update(el) {
 
@@ -878,7 +907,7 @@ function ChannelScaleFactor_Update(el) {
     // Obtain the channel Number
     ChNum = ChannelList_UniqueID( el.id.replace("Scale_ID_", "") );
 
-    // Ge the user-specified scale factor
+    // Get the user-specified scale factor
     Scale_Fac = Number(document.getElementById(el.id).value);
 
     // Updates the ScaleFactor
