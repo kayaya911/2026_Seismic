@@ -1448,6 +1448,10 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
     // Add to the Main Table and Tree View
     await Add_To_Table( res );
 
+    // Update the ProgressBar per channel (Unlike other type of channels)
+    await UpdateProgress(delta, "ProgressBar_Label");
+    await sleep(5);
+
     // heper functions 
     function FGetL(dataview) {
         // This function reads the file byte-by-byte until the next Line Feed (\n)
