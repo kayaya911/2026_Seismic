@@ -521,7 +521,7 @@ async function Add_To_Table(Channel) {
     cell.title     = Channel.Orientation;
 
 
-    // Add Infor to Right-Click Menu -------------------------------------------------------------------------------
+    // Add Info to Right-Click Menu -------------------------------------------------------------------------------
     if (!Get_UL_List('Right_Click_ul_Sampling',1).includes(Channel.FSamp.toFixed(2))) { 
         // Sampling Rate is not in the list - Add to the list
         Add_li('Right_Click_ul_Sampling',    'FSamp_' + Channel.FSamp.toFixed(2),    Channel.FSamp.toFixed(2) + ' Hz', false);
@@ -816,7 +816,7 @@ async function Read_DAT_Free(FileName, delta, dataview) {
     const numSamples   = Data.length;
     const FSamp        = 100;                         // Unknaow, so FSamp = 100Hz is assumed. 
     const TypeAndUnits = 1;                           // Unknown, so it is assumed that this channel contains Acc readings of 'g' unit.
-    let   temp1        = TypeAndUnit( TypeAndUnits );
+    const  temp1        = TypeAndUnit( TypeAndUnits );
     const temp2        = IntervalTypeAndUnit( 1 );    // Type And Unit number - refer to the list (Time series)
     const DateTime     = new Date().toISOString();
 
@@ -856,12 +856,11 @@ async function Read_DAT_Free(FileName, delta, dataview) {
         } 
         res.time           =  res.data.map((vv,ii) => ii / FSamp);   // Time array of the digitized data
         
-
         // Calculate Statictics
-        temp1        = Statistics(res.data, res.ScaleFactor);
-        res.Peak     = temp1.Peak;
-        res.Mean     = temp1.Mean;
-        res.RMS      = temp1.RMS;
+        let temp3        = Statistics(res.data, res.ScaleFactor);
+        res.Peak     = temp3.Peak;
+        res.Mean     = temp3.Mean;
+        res.RMS      = temp3.RMS;
         res.Residual = res.data.at(-1) * res.ScaleFactor;
 
         // Add to the Main Table and Tree View
@@ -1393,7 +1392,7 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
 
     let Lat     = RealHeaderNum[0][0];
     let Long    = RealHeaderNum[0][1];
-    let Azimuth = AzimuthDet(RealHeaderNum[9][1]);
+    let Azimuth = AzimuthDet(RealHeaderNum[9][1]).toString();
 
     let delt  = RealHeaderNum[6][3];
     let FSamp = 1 / delt;

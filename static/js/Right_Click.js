@@ -109,6 +109,9 @@ function Right_Click(el) {
         Array.from(document.getElementById('Right_Click_ul_Type').querySelectorAll('li input[type="checkbox"]')).forEach( item => { item.checked = false; });
         Array.from(document.getElementById('Right_Click_ul_Azimuth').querySelectorAll('li input[type="checkbox"]')).forEach( item => { item.checked = false; });
 
+        // Uncheck id='Right_Click_Select_All_Analysis'
+        if (result.length != 0) { document.getElementById('Right_Click_Select_All_Analysis').checked = false; }
+        
 
     } else if (el.id.includes('Type_')) {
 
@@ -129,6 +132,8 @@ function Right_Click(el) {
         Array.from(document.getElementById('Right_Click_ul_Sampling').querySelectorAll('li input[type="checkbox"]')).forEach( item => { item.checked = false; });
         Array.from(document.getElementById('Right_Click_ul_Azimuth').querySelectorAll('li input[type="checkbox"]')).forEach( item => { item.checked = false; });
 
+        // Uncheck id='Right_Click_Select_All_Analysis'
+        if (result.length != 0) { document.getElementById('Right_Click_Select_All_Analysis').checked = false; }
 
     } else if (el.id.includes('Azimuth_')) {
 
@@ -149,6 +154,8 @@ function Right_Click(el) {
         Array.from(document.getElementById('Right_Click_ul_Sampling').querySelectorAll('li input[type="checkbox"]')).forEach( item => { item.checked = false; });
         Array.from(document.getElementById('Right_Click_ul_Type').querySelectorAll('li input[type="checkbox"]')).forEach( item => { item.checked = false; });
         
+        // Uncheck id='Right_Click_Select_All_Analysis'
+        if (result.length != 0) { document.getElementById('Right_Click_Select_All_Analysis').checked = false; }
     }
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------

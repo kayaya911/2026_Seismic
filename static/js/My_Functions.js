@@ -8,7 +8,7 @@
 // Declaration of global variable
 let ChannelList        = [];
 let PageNo             = 0;
-let MaxPlotly_Graphs   = 6;  // This variable should not be less than 8
+let MaxPlotly_Graphs   = 10;  // This variable should not be less than 8
 let Current_Plotly_Num = 0;
 let IsOnHelpPage       = false;
 let targetRow          = 0;
