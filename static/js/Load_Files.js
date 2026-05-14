@@ -1323,21 +1323,18 @@ async function Read_V1_COSMOS(FileName, delta, dataview) {
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
 async function Read_V1c_COSMOS( FileName, delta, dataview ) { 
-    let TNumByte, header=[], EndOfFile=false;
-    let i, Ind=0, IntHeaderNum=[], RealHeaderNum=[], data=[];
+    let TNumByte, EndOfFile=false;
+    let i, Ind=0, header=[], IntHeaderNum=[], RealHeaderNum=[], data=[], Time=[];
+    let H1, NumOfLines, NumCommentLines, NumOfDataValues;
+    let count_Integer, widthChar_Integer, repeatCount, fieldWidth, decimalPlace;
+    let Type, Scale, temp1, temp2, Duration;
 
-    let H1, TypeOfData, FormatVersion, NumOfLines, NumIntegerValues, NumRealValues, NumCommentLines;
-    let count_Integer, widthChar_Integer, repeatCount, fieldWidth, decimalPlace, TypeUnit, Scale;
-
-    let NumOfDataVelues;
-
+    // Total number of bytes in the file 
     TNumByte = dataview.byteLength;
 
     // First Line in header
-    H1               = FGetL(dataview);
-    TypeOfData       = H1.substring(  0,  24); 
-    FormatVersion    = H1.substring( 35,  40); 
-    NumOfLines       = Number(H1.substring( 46,  48)); 
+    H1         = FGetL(dataview);
+    NumOfLines = Number(H1.substring( 46,  48)); 
 
     // Read the rest of header lines
     for (i = 0; i < NumOfLines-1; i++) {
@@ -1346,7 +1343,6 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
     
     // Read Integer-header values
     H1                = FGetL(dataview);                   // First line in Integer-header string
-    NumIntegerValues  = Number(H1.substring(  0,   4));    // Number of values in Integer Header
     NumOfLines        = Number(H1.substring( 37,  40));    // Number of lines of Integer Header values that follow.
     [count_Integer, widthChar_Integer] = extractFormat(H1.substring( 56,  80));
 
@@ -1356,7 +1352,6 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
 
     // Read Real-header values
     H1              = FGetL(dataview);                      // First line in Real-header string
-    NumRealValues   = Number(H1.substring(  0,   4));       // Number of values in Real Header.
     NumOfLines      = Number(H1.substring( 34,  37));       // Number of lines of Real Header values that follow.
    [repeatCount, fieldWidth, decimalPlace] = extractFormatNumbers(H1.substring( 53,  80));
 
@@ -1367,22 +1362,91 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
     // Comments 
     H1                = FGetL(dataview);
     NumCommentLines   = Number(H1.substring(  0,   4));     // Number of comment lines that follow
-    for (i = 0; i < NumCommentLines; i++){
-        FGetL(dataview);
-    }
+    for (i = 0; i < NumCommentLines; i++){ FGetL(dataview); }
 
     // Data Values Section 
     H1                = FGetL(dataview);
-    NumOfDataVelues   = Number(H1.substring(  0,   8));    // Number of data points following;
-    [TypeUnit, Scale] = ParseDatunitCode(H1.substring( 59,  61));
+    NumOfDataValues   = Number(H1.substring(  0,   8));    // Number of data points following;
     [repeatCount, fieldWidth, decimalPlace] = extractFormatNumbers(H1.substring( 70,  80));
-    for (i = 0; i < NumOfDataVelues; i++){
+    for (i = 0; i < NumOfDataValues; i++){
         data.push(Number( FGetL(dataview) ));
     }
-    
-    
 
+    // Date&Time
+    let Year     = IntHeaderNum[3][9];
+    let Month    = IntHeaderNum[4][1];
+    let Day      = IntHeaderNum[4][2];
+    let Hour     = IntHeaderNum[4][3];
+    let Minute   = IntHeaderNum[4][4];
+    let Second   = RealHeaderNum[5][4];
+    let DateTime = ToString(Year,4) + "-" + ToString(Month, 2) + "-" + ToString(Day, 2) + "T" + ToString(Hour, 2) + ":" + ToString(Minute, 2) + ":" + Second.toFixed(3);
 
+    // Date Type, Unit, Sacle factor
+    let Physical_Parameter  = IntHeaderNum[0][1];    // Table-1
+    let Units_Of_Data       = IntHeaderNum[0][2];    // Table 2
+    let Type_Of_Record      = IntHeaderNum[0][4];    // Table 3
+
+    [Type, Scale] = TypeUnit(Physical_Parameter, Units_Of_Data, Type_Of_Record);
+
+    temp1 = TypeAndUnit(Type);
+    temp2 = IntervalTypeAndUnit(1);
+
+    let Lat     = RealHeaderNum[0][0];
+    let Long    = RealHeaderNum[0][1];
+    let Azimuth = AzimuthDet(RealHeaderNum[9][1]);
+
+    let delt  = RealHeaderNum[6][3];
+    let FSamp = 1 / delt;
+    Time      = data.map((v,i) => i * delt );
+    Duration  = Time.at(-1);
+
+    let SensorNaturalFrequency = RealHeaderNum[7][4];  // Sensor natural frequency (Hz)
+    let SensorNaturalPeriod    = 1 / SensorNaturalFrequency; 
+    let SensorDamping          = RealHeaderNum[8][0];  // Sensor damping (fraction of critical)
+    let SensorSensitivity      = RealHeaderNum[8][1];  // Sensor sensitivity (for accelerometer, in volts/g (cm/g if film record);  for other sensors, in volts pe 0    motion unit given in Ihdr(3)).
+
+    // Create new Channel Object and populate it
+    let res = new Channel();
+    
+    res.FileName            = FileName;                                        // FileName
+    res.TableName           = FileName.replace(/[-.]/g, '_');
+    res.FileListName        = 'FileList_' + res.TableName;
+    res.ChNum               = 0;                                               // Channel number
+    res.NumSamples          = NumOfDataValues;                                 // Number of digitized data points
+    res.ScaleFactor         = Scale;                                           // User defined Scale Factor - Taken 1.0 if not specified
+    res.Orientation         = Azimuth;                                         // Orientation of channel
+    res.DateTime            = DateTime;                                        // Date&Time of the first sample
+    res.Duration            = Duration;                                        // Total duration in seconds
+    res.DateTime_End        = ComputeEndDateTime(res.DateTime, res.Duration);  // Date&Time of the last sample in the record
+    res.Lat                 = Lat;                                             // Latitude coordinate of the sensor
+    res.Long                = Long;                                            // Longitude coordinate of the sensor
+    res.FSamp               = FSamp;                                           // Sampling Frequency in Hz
+    res.delt                = delt;                                            // Time interval of the digitized record in seconds
+    res.TypeAndUnits        = Type;                                            // Type And Unit number - refer to the list
+    res.Type                = temp1.Type;                                      // Type of sensor reading - number
+    res.TypeString          = temp1.Type_String;                               // Type of sensor reading - string
+    res.Unit                = temp1.Unit;                                      // Unit of sensor reading - number
+    res.UnitString          = temp1.Unit_String;                               // Unit of sensor reading - string
+    res.IntervalTypeAndUnit = temp2.IntervalTypeAndUnit;                       // Type And Unit number - refer to the list
+    res.IntervalType        = temp2.Type;                                      // (0-1)
+    res.IntervalTypeString  = temp2.Type_String;                               // (Time, Spectral Period, etc.)
+    res.IntervalUnit        = temp2.Unit;                                      // (0-2)
+    res.IntervalUnitString  = temp2.Unit_String;                               // (Second, DateTime, etc.)
+    res.InstFreq            = SensorNaturalFrequency;                          // Natural frequency of transducer (in Hz).
+    res.InstPeriod          = SensorNaturalPeriod;                             // Natural period of transducer (in seconds).
+    res.InstDamp            = SensorDamping;                                   // Damping ratio of transducer (fraction of critical).
+    res.data                = data;                                            // Digitized data
+    res.time                = Time;                                            // Time array of the digitized data
+
+    // Calculate Statictics
+    temp1         = Statistics(res.data, res.ScaleFactor);
+    res.Peak     = temp1.Peak;
+    res.Mean     = temp1.Mean;
+    res.RMS      = temp1.RMS;
+    res.Residual = res.data.at(-1) * res.ScaleFactor;
+
+    // Add to the Main Table and Tree View
+    await Add_To_Table( res );
 
     // heper functions 
     function FGetL(dataview) {
@@ -1468,32 +1532,104 @@ async function Read_V1c_COSMOS( FileName, delta, dataview ) {
         }
         return values;
     }
-    function ParseDatunitCode(str) {
-        //
-	    if       (str === "01" ) { TypeUnit =  1; Scale = 1;              }    // sec
-        else if  (str === "02" ) { TypeUnit =  1; Scale = 1;              }    // g
-        else if  (str === "03" ) { TypeUnit =  1; Scale = 1;              }    // sec & g
-        else if  (str === "04" ) { TypeUnit =  3; Scale = 1;              }    // cm/s2
-        else if  (str === "05" ) { TypeUnit = 13; Scale = 1;              }    // cm/s
-        else if  (str === "06" ) { TypeUnit = 23; Scale = 1;              }    // cm
-        else if  (str === "07" ) { TypeUnit =  3; Scale = 2.54;           }    // in/s2  to  cm/s2
-        else if  (str === "08" ) { TypeUnit = 13; Scale = 2.54;           }    // in/s   to  cm/s
-        else if  (str === "09" ) { TypeUnit = 23; Scale = 2.54;           }    // in     to  cm
-        else if  (str === "10" ) { TypeUnit =  3; Scale = 1;              }    // gal    to  cm/s2
-        else if  (str === "11" ) { TypeUnit =  1; Scale = 0.001;          }    // mg     to  g
-        else if  (str === "12" ) { TypeUnit =  1; Scale = 1e-6;           }    // µg     to  g
-        else if  (str === "10" ) { TypeUnit =  1; Scale = 1;              }    // deg/sec/sec
-        else if  (str === "10" ) { TypeUnit =  1; Scale = 1;              }    // deg/sec
-        else if  (str === "10" ) { TypeUnit =  1; Scale = 1;              }    // deg
-        else if  (str === "50" ) { TypeUnit =  1; Scale = 1;              }    // counts
-        else if  (str === "51" ) { TypeUnit =  1; Scale = 1;              }    // volts
-        else if  (str === "52" ) { TypeUnit =  1; Scale = 1;              }    // mvolts
-        else if  (str === "60" ) { TypeUnit = 81; Scale = 6894.757293168; }    // psi       to N/m2
-        else if  (str === "80" ) { TypeUnit = 31; Scale = 1e-6;           }    // µstrain   to strain
+    function ToString(val, n, Opt) {
+        let Len, F, i;
 
-        return [TypeUnit, Scale];
+        if (Opt==null) {Opt = true;}
+
+        val = String(val);
+        Len = val.length;
+        if (Len < n) {
+             F = n - Len;
+            if (Opt) {for (i=0; i<F; i++) { val = '0' + val;  } }
+            else     {for (i=0; i<F; i++) { val = val + '0';  } }
+        }
+        return val;
     }
+    function TypeUnit(Physical_Parameter, Units_Of_Data, Type_Of_Record) {
 
+
+        let Type  = 1;
+        let Scale = 1;
+
+        if      ([1, 10].includes(Physical_Parameter)) { 
+
+            // Acceleration (1)
+            // Angular acceleration (10)
+
+            if (Units_Of_Data ==  2) { Type =  1; Scale = 1;     } 
+            if (Units_Of_Data ==  4) { Type =  3; Scale = 1;     }
+            if (Units_Of_Data ==  7) { Type =  3; Scale = 2.54;  }
+            if (Units_Of_Data == 10) { Type =  3; Scale = 1;     }
+            if (Units_Of_Data == 11) { Type =  1; Scale = 1e-3;  }
+            if (Units_Of_Data == 12) { Type =  1; Scale = 1e-6;  }
+            if (Units_Of_Data == 23) { Type =  1; Scale = 1;     }
+            if (Units_Of_Data == 50) { Type =  1; Scale = 1;     }
+            if (Units_Of_Data == 51) { Type =  1; Scale = 1;     }
+            if (Units_Of_Data == 52) { Type =  1; Scale = 1;     }
+
+        }
+        else if ([2, 11].includes(Physical_Parameter)) { 
+
+            // Velocity (2)
+            // Angular velocity (11)
+            
+            if (Units_Of_Data ==  5) { Type =  13; Scale = 1;     } 
+            if (Units_Of_Data ==  8) { Type =  13; Scale = 2.54;  } 
+            if (Units_Of_Data == 24) { Type =  13; Scale = 1;     } 
+
+        } 
+        else if ([3, 4, 12].includes(Physical_Parameter)) { 
+
+            // Displacement (absolute) 3
+            // Displacement (relative) 4
+            // Angular dispacement (12)
+
+            if (Units_Of_Data ==  6) { Type =  23; Scale = 1;     } 
+            if (Units_Of_Data ==  9) { Type =  23; Scale = 2.54;  } 
+            if (Units_Of_Data == 25) { Type =  23; Scale = 1;     } 
+
+        } 
+        else if ([20, 21].includes(Physical_Parameter)) { 
+
+            // Presure absolute (20)
+            // Presure relative (21)
+
+            if (Units_Of_Data == 60) { Type =  81; Scale = 6894.76; } 
+
+        } 
+        else if ([30, 31].includes(Physical_Parameter)) { 
+
+            // Volumetric strain (30)
+            // Linear Strain (31)
+
+            if ([60].includes(Units_Of_Data)) { Type =  31; Scale = 1e-6; } 
+        } 
+
+        // return 
+        return [Type, Scale];
+
+    }
+    function AzimuthDet(Az) {
+
+        if ((Az >= 1) && (Az <=360)) { return Az; }
+
+        if (Az == 400) { return "UP";       }
+        if (Az == 401) { return "DOWN";     }
+        if (Az == 402) { return "VERTICAL"; }
+
+        if (Az == 500) { return "RADIAL";     }
+        if (Az == 501) { return "TRANSVERSE"; }
+
+        if (Az == 600) { return "LONG";     }
+        if (Az == 601) { return "TANG";     }
+
+        if (Az == 700) { return "H1";     }
+        if (Az == 701) { return "H2";     }
+
+        return "N/A"
+
+    }
 }
 //-------------------------------------------------------------------------------------------------------------
 //-------------------------------------------------------------------------------------------------------------
