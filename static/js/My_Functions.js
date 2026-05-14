@@ -1129,6 +1129,16 @@ function Toggle_Sidebar_SelectAllChannels_For_Analysis() {
         // Chage the File-icon on TreeView if needed
         TreeView_File_SVG_Change(Indx);
     }
+
+    // Deselect the following checkboxes on rightClick Menu
+    //   1- Select By Sampling Rate
+    //   1- Select By Channel Tyep
+    //   1- Select By Channel Orientation
+    if (status) { 
+        document.querySelectorAll('#Right_Click_ul_Sampling input').forEach(box => { box.checked = false; });
+        document.querySelectorAll('#Right_Click_ul_Type input').forEach(box => { box.checked = false; });
+        document.querySelectorAll('#Right_Click_ul_Azimuth input').forEach(box => { box.checked = false; });
+    }
 }
 //-----------------------------------------------------------------------------------------------
 async function Toggle_SidebBar_SelectAllChannels_For_Plotting() {

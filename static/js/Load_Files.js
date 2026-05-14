@@ -816,9 +816,9 @@ async function Read_DAT_Free(FileName, delta, dataview) {
     const numSamples   = Data.length;
     const FSamp        = 100;                         // Unknaow, so FSamp = 100Hz is assumed. 
     const TypeAndUnits = 1;                           // Unknown, so it is assumed that this channel contains Acc readings of 'g' unit.
-    const  temp1        = TypeAndUnit( TypeAndUnits );
+    const temp1        = TypeAndUnit( TypeAndUnits );
     const temp2        = IntervalTypeAndUnit( 1 );    // Type And Unit number - refer to the list (Time series)
-    const DateTime     = new Date().toISOString();
+    const DateTime     = new Date().toISOString().replace("Z", "");
 
     for (let col = 0; col < numChannels; col++) {
         let res            = new Channel();
@@ -4267,7 +4267,7 @@ async function DonwloadExcel_LoadDataPage() {
             // Populate frequency and H/V amplitude
             header = [  "Frequency (Hz)",
                         "HVSR_Mean Amplitude",
-                        "HVSR_Std",
+                        "HVSR_Std_logNormal",
                     ];
             data =  [   ChannelList[i].Results.HVSR.f,  
                         ChannelList[i].Results.HVSR.HV,

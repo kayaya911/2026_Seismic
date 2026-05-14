@@ -1197,7 +1197,7 @@ function HVSR_Parameters() {
 }
 function HVSR_Table_Check() {
     
-    let tbody, i, OverlappedSegment_Length;
+    let tbody, i, OverlappedSegment_Length, OverlappedSegment_Sample;
     let ChNum      = new Array(3).fill(0);
     let FSamp      = new Array(3).fill(0);
     let DT_Start   = new Array(3).fill(0);
@@ -1255,7 +1255,8 @@ function HVSR_Table_Check() {
 
     // Length of the overlpped segment in seconds
     OverlappedSegment_Length = DiffInSeconds(latest, earliest);  // In seconds 
-
+    OverlappedSegment_Sample = Math.floor(FSamp[0] * OverlappedSegment_Length);
+    
     if (!isFinite(OverlappedSegment_Length)) {
         ProgressBar_Update( 'Check Date&Time values !', 'red');
         return Result;
@@ -1273,7 +1274,7 @@ function HVSR_Table_Check() {
 
             // Compute the number of samples to trim for synchronization
             Trim_Start[i] = Math.floor( DiffInSeconds(DT_Start[i], latest) * FSamp[i] ); // Number of samples to trim from the begining of the record 
-            Trim_End[i]   = Math.floor( DiffInSeconds(earliest, DT_End[i]) * FSamp[i] ); // Number of samples to trim from the end of the record 
+            //Trim_End[i]   = Math.floor( DiffInSeconds(earliest, DT_End[i]) * FSamp[i] ); // Number of samples to trim from the end of the record 
             
         }
         // No Issues found 
@@ -1281,8 +1282,9 @@ function HVSR_Table_Check() {
         return {
             IsValid                     : true, 
             Trim_Start                  : Trim_Start,               // Number of samples to trim from the begining of the record 
-            Trim_End                    : Trim_End,                 // Number of samples to trim from the end of the record 
+            //Trim_End                    : Trim_End,                 // Number of samples to trim from the end of the record 
             OverlappedSegment_Length    : OverlappedSegment_Length, // Length of the overlapped segment (3 waveforms) in seconds 
+            OverlappedSegment_Sample    : OverlappedSegment_Sample, // Number of samples in the overlapped segment
             FSamp                       : FSamp[0],
             earliest                    : earliest,
             latest                      : latest,

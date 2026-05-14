@@ -882,7 +882,7 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].yaxis       = "y1",
             traces[0].visible     = true;
             traces[0].opacity     = 1.00;
-            traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+            traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
             traces[0].name        = '<b><b>';   // legend title
             traces[0].showlegend  = false;      // Show legend
             
@@ -890,27 +890,33 @@ async function Plotly_Graph_Update(ChNum) {
             traces[1].x           = ChannelList[ChNum].Results.HVSR.f;
             traces[1].y           = ChannelList[ChNum].Results.HVSR.HV.map((v, i) => v * Math.exp(ChannelList[ChNum].Results.HVSR.Std[i]));
             traces[1].mode        = 'lines',
-            traces[1].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[1].marker      = { color: 'black', size: 5, symbol: 'circle' },
             traces[1].yaxis       = "y1",
             traces[1].visible     = true;
             traces[1].opacity     = 1.00;
-            traces[1].line        = {color: 'black', width: 1.00, dash: 'dash' };
+            traces[1].line        = {color: 'black', width: 0.80, dash: 'dash' };
             traces[1].name        = '<b><b>';   // legend title
             traces[1].showlegend  = false;      // Show legend
 
             traces[2].x           = ChannelList[ChNum].Results.HVSR.f;
             traces[2].y           = ChannelList[ChNum].Results.HVSR.HV.map((v, i) => v * Math.exp(-ChannelList[ChNum].Results.HVSR.Std[i]));
             traces[2].mode        = 'lines',
-            traces[2].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[2].marker      = { color: 'black', size: 5, symbol: 'circle' },
             traces[2].yaxis       = "y1",
             traces[2].visible     = true;
             traces[2].opacity     = 1.00;
-            traces[2].line        = {color: 'black', width: 1.00, dash: 'dash' };
+            traces[2].line        = {color: 'black', width: 0.80, dash: 'dash' };
             traces[2].name        = '<b><b>';   // legend title
             traces[2].showlegend  = false;      // Show legend
 
             layout_update.yaxis.type            = "linear";
-            layout_update.yaxis.rangemode       = 'tozero';
+            layout_update.yaxis.autorange       = false;
+            layout_update.yaxis.range           = [0, 1.05 * Max(traces[1].y.slice(1)).val];
+
+            layout_update.yaxis2.type            = "linear";
+            layout_update.yaxis2.autorange       = false;
+            layout_update.yaxis2.range           = [0, 1.05 * Max(traces[1].y.slice(1)).val];
+
             layout_update.xaxis.type            = "log";
             layout_update.xaxis.dtick           = 1;
             layout_update.xaxis.range           = [ChannelList[ChNum].Results.HVSR.f[1], ChannelList[ChNum].Results.HVSR.f.at(-1)];
@@ -935,7 +941,6 @@ async function Plotly_Graph_Update(ChNum) {
 
     // Update the graph
     Plotly.update(PlotArea_ID, traces, layout_update);
-
 
 }
 //-------------------------------------------------------------------------------------------------------------

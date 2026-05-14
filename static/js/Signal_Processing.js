@@ -2126,7 +2126,9 @@ async function Channel_HVSR() {
 
         // Sub-STEP 5: Trim the begining and the end of the waveform if applicable for synchronization
         if(HVSR_Status.Trim_Start[i] != 0)  { Ug = Truncate(Ug,  Ug.length - HVSR_Status.Trim_Start[i],  false ) };  // Truncates elements from the begining of the waveform
-        if(HVSR_Status.Trim_End[i]   != 0)  { Ug = Truncate(Ug,  Ug.length - HVSR_Status.Trim_End[i],    true  ) };  // Truncates elements from the end of the waveform
+
+        // Truncate the Ug array to get the fist sampels up to HVSR_Status.OverlappedSegment_Sample
+        Ug = Truncate(Ug, HVSR_Status.OverlappedSegment_Sample,  true);  
 
         // Sub-STEP 6: Apply the scale factor
         Ug = Multiply(Ug,   ChannelList[ChNum[i]].ScaleFactor);
@@ -2144,9 +2146,9 @@ async function Channel_HVSR() {
     }
 
     // STEP 8: Compute Parameters
-     let RWL      = Math.max(2, NextPow2(Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength)));  // Length of running window in samples
+    let RWL      = Math.max(2, NextPow2(Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength)));  // Length of running window in samples
     let OVS      = Math.floor(RWL * HVSR_Par.OverlapRatio);                                       // Length of overlap in samples 
-    let NFFT     = Data[0].length;                                                                // Length of Fourier Transform
+    let NFFT     = RWL;                                                                           // Length of Fourier Transform
     let Option   = HVSR_Par.CombinationType;
     let HV       = [];
     let std      = [];
@@ -5488,6 +5490,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     if (!Array.isArray(NS)) { throw new Error("HVSR: NS[] must be an array."); }
     if (!Array.isArray(UD)) { throw new Error("HVSR: UD[] must be an array."); }
     if ((EW.length !== NS.length) || (EW.length !== UD.length)) {
+        console.log(EW.length, NS.length, UD.length)
         throw new Error("HVSR: Dimensions of EW[], NS[] and UD[] arrays are inconsistent.");
     }
 
@@ -5508,10 +5511,10 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     const f     = LinSpace(0, (nFreq - 1) * df, nFreq);
 
     // Pre-allocate accumulators
-    const HV_sum     = new Float64Array(nFreq);
+    const HV_mean    = new Float64Array(nFreq);
     const LogHV_sum  = new Float64Array(nFreq);
     const LogHV_sum2 = new Float64Array(nFreq);
-    const Var_raw    = new Float64Array(nFreq);  // Log-space standard deviation
+    const Std_log    = new Float64Array(nFreq);  // Log-normal standard deviation
 
     // Normalised Hamming window
     const DW  = RWL - OVS;
@@ -5524,8 +5527,6 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     let a2 = RWL - 1;
 
     while (a2 < EW.length) {
-
-        console.log(a2, EW.length)
 
         const EW1 = GetRange(EW, a1, a2);
         const NS1 = GetRange(NS, a1, a2);
@@ -5547,20 +5548,12 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         const [Re2, Im2] = FFT(NS1, null, NFFT);
         const [Re3, Im3] = FFT(UD1, null, NFFT);
 
-        // Fourier amplitude spectra — trim to one-sided
-        let [Mag1] = FFT_MagPhase(Re1, Im1);
-        let [Mag2] = FFT_MagPhase(Re2, Im2);
-        let [Mag3] = FFT_MagPhase(Re3, Im3);
-
-        Mag1 = GetRange(Mag1, 0, nFreq - 1);
-        Mag2 = GetRange(Mag2, 0, nFreq - 1);
-        Mag3 = GetRange(Mag3, 0, nFreq - 1);
-
         // Combine horizontals, compute H/V, accumulate
         for (let i = 0; i < nFreq; i++) {
-            const m1 = Mag1[i];
-            const m2 = Mag2[i];
-            const m3 = Mag3[i];
+
+            const m1 = Math.sqrt(Re1[i] * Re1[i] + Im1[i] * Im1[i]);
+            const m2 = Math.sqrt(Re2[i] * Re2[i] + Im2[i] * Im2[i]);
+            const m3 = Math.sqrt(Re3[i] * Re3[i] + Im3[i] * Im3[i]);
 
             let H;
             if      (Option === 0) { H = Math.sqrt(m1 * m2);           }
@@ -5571,7 +5564,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             const hv     = H / m3;
             const log_hv = hv > 0 ? Math.log(hv) : 0;
 
-            HV_sum[i]     += hv;
+            HV_mean[i]    += hv;
             LogHV_sum[i]  += log_hv;
             LogHV_sum2[i] += log_hv * log_hv;
         }
@@ -5579,33 +5572,32 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
         a1 += DW; a2 += DW; K++;
        
     }
-
+        
+    // After the segment loop:
     if (K > 0) {
         for (let i = 0; i < nFreq; i++) {
-            HV_sum[i] /= K;
+            HV_mean[i] /= K;  // Mean of HV
             
             if (K > 1) {
-                const log_mean = LogHV_sum[i] / K;
-                const log_var  = (LogHV_sum2[i] - K * log_mean * log_mean) / (K - 1);
-                Var_raw[i] = Math.max(0, log_var);
+                const log_mean = LogHV_sum[i] / K;                            // Mean of log-normal distribution
+                const log_var  = (LogHV_sum2[i] / K -  log_mean * log_mean);  // Variance of log-normal distribution
+                Std_log[i]     = Math.sqrt(Math.max(0, log_var));             // Standard devication of log-normal distribution
             }
         }
     }
 
-    // Apply Konno-Ohmachi smoothing once to the mean curve
+    // Apply Konno-Ohmachi smoothing once for the HV_mean
     const b = 40;
-    const [HV, Var_smoothed] = SmoothKOLog(f, HV_sum, Var_raw, b);
-    const Std                = Var_smoothed.map(v => Math.sqrt(Math.max(0, v)));
+    const HV = SmoothKOLog(f, HV_mean, b);
 
     // Return results 
-    return [Array.from(HV), Std, Array.from(f)];
+    return [Array.from(HV), Std_log, Array.from(f)];
 
 
     // Helper function
-    function SmoothKOLog(f, spec1, spec2, b) {
+    function SmoothKOLog(f, spec1, b) {
         const n = f.length;
         const smoothed1 = new Float64Array(n);
-        const smoothed2 = new Float64Array(n);
         
         const log10f = new Float64Array(n);
         for (let i = 0; i < n; i++) {
@@ -5619,13 +5611,12 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
 
             if (f[i] <= 0) {
                 smoothed1[i] = spec1[i];
-                smoothed2[i] = spec2[i];
                 continue;
             }
 
             const log10fc = log10f[i];
-            const lo_val = log10fc - 0.602; // -2 octaves
-            const hi_val = log10fc + 0.602; // +2 octaves
+            const lo_val  = log10fc - 0.602; // -2 octaves
+            const hi_val  = log10fc + 0.602; // +2 octaves
 
             // Move the 'left' pointer to the start of the relevant frequency range
             while (left < n && log10f[left] < lo_val) {
@@ -5633,7 +5624,6 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             }
 
             let numer1 = 0;
-            let numer2 = 0;
             let denom  = 0;
 
             // Only iterate through the bins that fall within the +/- 2 octave range
@@ -5650,21 +5640,18 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
                 }
 
                 numer1 += weight * spec1[j];
-                numer2 += weight * spec2[j];
                 denom  += weight;
             }
 
             if (denom > 0) {
                 smoothed1[i] = numer1 / denom;
-                smoothed2[i] = numer2 / denom;
             } else {
                 smoothed1[i] = spec1[i];
-                smoothed2[i] = spec2[i];
             }
             
         }
 
-        return [smoothed1, smoothed2];
+        return smoothed1;
     }
 }
 //-----------------------------------------------------------------------------------------------
