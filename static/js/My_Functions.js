@@ -1132,8 +1132,8 @@ function Toggle_Sidebar_SelectAllChannels_For_Analysis() {
 
     // Deselect the following checkboxes on rightClick Menu
     //   1- Select By Sampling Rate
-    //   1- Select By Channel Tyep
-    //   1- Select By Channel Orientation
+    //   2- Select By Channel Tyep
+    //   3- Select By Channel Orientation
     if (status) { 
         document.querySelectorAll('#Right_Click_ul_Sampling input').forEach(box => { box.checked = false; });
         document.querySelectorAll('#Right_Click_ul_Type input').forEach(box => { box.checked = false; });
