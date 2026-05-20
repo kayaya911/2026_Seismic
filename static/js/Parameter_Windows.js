@@ -1168,11 +1168,12 @@ function SM_Par_BracketedDuration_Change() {
 //-----------------------------------------------------------------------------------------------
 function HVSR_Parameters() {
     
-    let WindowLength, OverlapRatio, CombinationType, CombinationType_string;
+    let WindowLength, OverlapRatio, CombinationType, CombinationType_string, Bandwidth_Coefficient;
     
-    WindowLength      = Number(document.getElementById('HVSR_WindowLength').value);
-    OverlapRatio      = Number(document.getElementById('HVSR_OverlapRatio').value);
-    CombinationType   = document.getElementById('HVSR_CombinationType').selectedIndex;
+    WindowLength            = Number(document.getElementById('HVSR_WindowLength').value);
+    OverlapRatio            = Number(document.getElementById('HVSR_OverlapRatio').value);
+    CombinationType         = document.getElementById('HVSR_CombinationType').selectedIndex;
+    Bandwidth_Coefficient   = Number(document.getElementById('HVSR_Bandwidth_Coefficient').value);
 
     if      (CombinationType == 0) { CombinationType_string = "Geometric Mean"; } 
     else if (CombinationType == 1) { CombinationType_string = "Vector Sum";     }
@@ -1186,6 +1187,7 @@ function HVSR_Parameters() {
         OverlapRatio             : OverlapRatio,
         CombinationType          : CombinationType,
         CombinationType_string   : CombinationType_string,
+        Bandwidth_Coefficient    : Bandwidth_Coefficient,
         HV                       : undefined,
         Std                      : undefined,
         f                        : undefined,
@@ -1274,7 +1276,6 @@ function HVSR_Table_Check() {
 
             // Compute the number of samples to trim for synchronization
             Trim_Start[i] = Math.floor( DiffInSeconds(DT_Start[i], latest) * FSamp[i] ); // Number of samples to trim from the begining of the record 
-            //Trim_End[i]   = Math.floor( DiffInSeconds(earliest, DT_End[i]) * FSamp[i] ); // Number of samples to trim from the end of the record 
             
         }
         // No Issues found 
@@ -1282,7 +1283,6 @@ function HVSR_Table_Check() {
         return {
             IsValid                     : true, 
             Trim_Start                  : Trim_Start,               // Number of samples to trim from the begining of the record 
-            //Trim_End                    : Trim_End,                 // Number of samples to trim from the end of the record 
             OverlappedSegment_Length    : OverlappedSegment_Length, // Length of the overlapped segment (3 waveforms) in seconds 
             OverlappedSegment_Sample    : OverlappedSegment_Sample, // Number of samples in the overlapped segment
             FSamp                       : FSamp[0],
@@ -1340,6 +1340,18 @@ function HVSR_OverlapRatio_Change() {
         ProgressBar_Update('', 'black');
     }
 }
+function HVSR_Bandwidth_Coefficient_Change() {
+    // Declaration of variables
+    let x  = document.getElementById('HVSR_Bandwidth_Coefficient');
+
+    if ((Number(x.value) <= 0) || (Number(x.value) > 100)) { 
+        document.getElementById('HVSR_Bandwidth_Coefficient').value = x.oldValue; 
+        ProgressBar_Update('Invalid value - Bandwidth coefficient (b) must be between 0 and 100 !', 'red');
+    }
+    else {
+        document.getElementById('HVSR_Bandwidth_Coefficient').value        = String(Number(x.value));
+        document.getElementById('HVSR_Bandwidth_Coefficient').defaultValue = String(Number(x.value));
+        ProgressBar_Update('', 'black');
+    }
+}
 //-----------------------------------------------------------------------------------------------
-
-

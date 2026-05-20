@@ -925,6 +925,8 @@ async function Plotly_Graph_Update(ChNum) {
             layout_update.yaxis2.showticklabels = false;
             layout_update.yaxis2.title.text     = "";
 
+            layout_update.xaxis.title.text      = '<b>Frequency (Hz)</b>';
+
             // Show Baseline-Row in InforBar
             document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.HVSR.FiltPar.BaselineCorrection_String;
 
@@ -1468,6 +1470,8 @@ function Plotly_Clear_Graph(ChNum) {
     layout_update.xaxis.rangemode  = 'normal';
     layout_update.yaxis.rangemode  = 'normal';
     layout_update.yaxis2.rangemode = 'normal';
+
+    layout_update.xaxis.title.text = '';
 
 
     // Delete shapes

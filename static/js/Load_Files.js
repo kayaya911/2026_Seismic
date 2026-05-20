@@ -2211,7 +2211,7 @@ async function Read_MSD(FileName, delta, dataview) {
             for (i = 0; i < NumSample; i++) { d[bN][Indx] = dataview.getFloat64(Block_Offset, be);  Block_Offset+=8;  Indx++; }
 
             // Trim data
-            d[bN] = Vector_Truncate(d[bN], NumberOfSamples[bN]);
+            d[bN] = Truncate(d[bN], NumberOfSamples[bN]);
         }
         else if (BB.EncodingFormat == 10) {
 
@@ -2378,7 +2378,7 @@ async function Read_MSD(FileName, delta, dataview) {
     }
 
     // Compile channel data
-    MergeChannels()
+    MergeChannels();
 
     // Update the ProgressBar per channel (Unlike other type of channels)
     await UpdateProgress(delta, "ProgressBar_Label");
@@ -2386,44 +2386,40 @@ async function Read_MSD(FileName, delta, dataview) {
 
     async function MergeChannels() {
 
-        let i, j, jj, Ind, Ind1, temp, temp2, DateTime, DeltaSample, Azimuth=[], indices=[], data=[], time=[], NumOfChannel;
+        let i, j, jj, Ind, Ind1, temp, temp2, DateTime, DeltaSample, indices=[], data=[], time=[];
         let FSamp, delt;
 
-        Azimuth      = [...new Set(ChannelIdentifier)];
-        NumOfChannel = Azimuth.length;
+        let IndexArray = findMatchingIndices(ChannelIdentifier, StationIdentifierCode, LocationIdentifier, NetworkCode);
 
-        for (i=0; i < NumOfChannel; i++) {
+        for (i=0; i < IndexArray.length; i++) {
 
             // Create new Channel Object and populate it
             let res = new Channel();
 
-            indices = [];
+            indices = IndexArray[i];
             data    = [];
             time    = [];
+            Ind      = indices[0];
 
-            // this.Azimuth[i][0]; // General sampling rate and the response band of the instrument (H: High_Broad_Band, Sample Rate:  ≥ 80 to < 250, and Corner Period (sec): ≥ 10 sec.)
-            // this.Azimuth[i][1]; // Instrument Code (N: Acceleration Sensor, H: High-gain seismometer, L: Low-gain seismometer)
-            // this.Azimuth[i][2]; // Instrument orientation (Z, N, E: Traditional (Vertical, North-South, East-West)
+            // this.ChannelIdentifier[i][0]; // General sampling rate and the response band of the instrument (H: High_Broad_Band, Sample Rate:  ≥ 80 to < 250, and Corner Period (sec): ≥ 10 sec.)
+            // this.ChannelIdentifier[i][1]; // Instrument Code (N: Acceleration Sensor, H: High-gain seismometer, L: Low-gain seismometer)
+            // this.ChannelIdentifier[i][2]; // Instrument orientation (Z, N, E: Traditional (Vertical, North-South, East-West)
 
             // Determine Channel Type and Unit
-            if      (Azimuth[i][1] == 'H') { temp = TypeAndUnit(1);   }    // H: High-gain seismometer
-            else if (Azimuth[i][1] == 'L') { temp = TypeAndUnit(1);   }    // L: Low-gain seismometer
-            else if (Azimuth[i][1] == 'N') { temp = TypeAndUnit(1);   }    // N: Accelerometer
-            else if (Azimuth[i][1] == 'A') { temp = TypeAndUnit(122); }    // A: Tilt
-            else if (Azimuth[i][1] == 'D') { temp = TypeAndUnit(81);  }    // D: Pressure
-            else if (Azimuth[i][1] == 'I') { temp = TypeAndUnit(71);  }    // I: Humidity
-            else if (Azimuth[i][1] == 'K') { temp = TypeAndUnit(61);  }    // K: Temperature
-            else if (Azimuth[i][1] == 'S') { temp = TypeAndUnit(31);  }    // S: Linear Strain
-            else if (Azimuth[i][1] == 'V') { temp = TypeAndUnit(31);  }    // V: Volumetric Strain
-            else if ((Azimuth[i][1] == 'W') && (Azimuth[i][2] == 'S')) { temp = TypeAndUnit(51); }    // W: Wind - Speed
-            else if ((Azimuth[i][1] == 'W') && (Azimuth[i][2] == 'D')) { temp = TypeAndUnit(41); }    // D: Wind - Direction
+            if      (ChannelIdentifier[Ind][1] == 'H') { temp = TypeAndUnit(1);   }    // H: High-gain seismometer
+            else if (ChannelIdentifier[Ind][1] == 'L') { temp = TypeAndUnit(1);   }    // L: Low-gain seismometer
+            else if (ChannelIdentifier[Ind][1] == 'N') { temp = TypeAndUnit(1);   }    // N: Accelerometer
+            else if (ChannelIdentifier[Ind][1] == 'A') { temp = TypeAndUnit(122); }    // A: Tilt
+            else if (ChannelIdentifier[Ind][1] == 'D') { temp = TypeAndUnit(81);  }    // D: Pressure
+            else if (ChannelIdentifier[Ind][1] == 'I') { temp = TypeAndUnit(71);  }    // I: Humidity
+            else if (ChannelIdentifier[Ind][1] == 'K') { temp = TypeAndUnit(61);  }    // K: Temperature
+            else if (ChannelIdentifier[Ind][1] == 'S') { temp = TypeAndUnit(31);  }    // S: Linear Strain
+            else if (ChannelIdentifier[Ind][1] == 'V') { temp = TypeAndUnit(31);  }    // V: Volumetric Strain
+            else if ((ChannelIdentifier[Ind][1] == 'W') && (ChannelIdentifier[Ind][2] == 'S')) { temp = TypeAndUnit(51); }    // W: Wind - Speed
+            else if ((ChannelIdentifier[Ind][1] == 'W') && (ChannelIdentifier[Ind][2] == 'D')) { temp = TypeAndUnit(41); }    // D: Wind - Direction
             else { temp = TypeAndUnit(1); }     // N: Accelerometer
 
-            // find indices of each channel
-            ChannelIdentifier.filter( function (v, ii) { if (v == Azimuth[i] ) { indices.push(ii); } });
-
             // Start merging block-by-block
-            Ind = indices[0];
             for (jj=0; jj<d[Ind].length; jj++) { data.push(d[Ind][jj]); }
 
             // Assume Sampling rate is same across all blocks
@@ -2469,7 +2465,7 @@ async function Read_MSD(FileName, delta, dataview) {
             res.TableName           = FileName.replace(/[-.]/g, '_');
             res.FileListName        = 'FileList_' + res.TableName;
             res.DateTime            = DateTime;
-            res.Orientation         = Azimuth[i];
+            res.Orientation         = ChannelIdentifier[Ind];
             res.ScaleFactor         = 1;
             res.ChNum               = i;
             res.TypeAndUnits        = temp.TypeAndUnit;
@@ -2499,7 +2495,24 @@ async function Read_MSD(FileName, delta, dataview) {
 
             // Add to the Main Table and Tree View
             await Add_To_Table( res );
+            await sleep(5);
         }
+    }
+
+    function findMatchingIndices(ChannelIdentifier, StationIdentifierCode, LocationIdentifier, NetworkCode) {
+        const groups = {};
+
+        for (let i = 0; i < ChannelIdentifier.length; i++) {
+            const key = `${ChannelIdentifier[i]}|${StationIdentifierCode[i]}|${LocationIdentifier[i]}|${NetworkCode[i]}`;
+
+            if (!groups[key]) {
+                groups[key] = [];
+            }
+            groups[key].push(i);
+        }
+
+        // Return only groups that appear more than once (actual duplicates)
+        return Object.values(groups).filter(indices => indices.length > 1);
     }
 
     function toNBit(num, nbit, skipBit) {

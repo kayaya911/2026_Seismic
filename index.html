@@ -7,7 +7,7 @@
         <title>Seismic Data Analysis</title>
 
         <!-- Favicon link -->
-        <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="./static/pic/favicon.png">
 
         <!-- Open Graph tags (used by WhatsApp, Facebook, LinkedIn) -->
         <meta property="og:title"           content="Seismic Data Analysis">
@@ -110,7 +110,7 @@
                 </div>
                 
                 <div class="Header_Buttons_Menu_Div" onclick="document.getElementById('LoadInputFiles').click();">
-                    <input class="Header_Buttons_Menu" id="LoadInputFiles" type="file" accept=".vif, .txt, .v1, .v1c, .raw, .msd, .txt, .asc, .dat" style="display:none;" title="Open File" multiple></input>
+                    <input class="Header_Buttons_Menu" id="LoadInputFiles" type="file" accept=".vif, .txt, .v1, .v1c, .raw, .msd, .mseed, .txt, .asc, .dat" style="display:none;" title="Open File" multiple></input>
                     <button class="Header_Buttons_Menu" id="LoadFilesButton" title="Open File" >
                         <svg class="Header_Button_Svg" focusable="false" viewBox="0 0 476.664 476.664">
                             <path d="M454.571,138.49c2.452,0,4.847,0.418,7.249,0.749v-35.784c0-12.205-9.888-22.096-22.087-22.096H222.557   c-18.598,0-33.681-15.082-33.681-33.679v-2.522c0-12.206-9.888-22.096-22.095-22.096H36.931c-12.2,0-22.087,9.89-22.087,22.096   v94.081c2.402-0.331,4.798-0.749,7.249-0.749H454.571z"/>
@@ -520,58 +520,61 @@
 
                         <!-- H/V Parameters -->
                         <div class="Parameters" id="Parameters_HVSR">
-
+                            
                             <table class="table-sm Parameters2-Table" id="HVSR_Parameters_Table">
                                 <colgroup>
+                                    <col style="width:  0%">
                                     <col style="width: 50%">
-                                    <col style="width: 10%">
-                                    <col style="width: 35%">
-                                    <col style="width:  5%">
+                                    <col style="width:  0%">
+                                    <col style="width:  0%">
+                                    <col style="width:  0%">
                                     <col style="width:  0%">
                                 </colgroup>
-                                
+
                                 <thead>
                                     <tr>
+                                        <th></th>
                                         <th>File Name</th>
                                         <th>ChNum</th>
+                                        <th>FSamp</th>
                                         <th>Date&Time</th>
                                         <th>Azimuth</th>
-                                        <th></th>
                                     </tr>
                                 </thead>
 
                                 <tbody class="table-group-divider overflow-y-scroll">
                                     
-                                    <tr onclick="TabelsRowlClick(0)" value="">
+                                    <tr onclick="TabelsRowClick(0)" value="">
+                                        <td><b>H1</b></td>
                                         <td>N/A</td>
                                         <td id="HVSR_ChannelNum_1"></td>
+                                        <td id="HVSR_FSamp_1"></td>
                                         <td id="HVSR_DateTime_1"></td>
                                         <td id="HVSR_Azimuth_1"></td>
-                                        <td>H1</td>
                                     </tr>
 
-                                    <tr onclick="TabelsRowlClick(1)" value="">
+                                    <tr onclick="TabelsRowClick(1)" value="">
+                                        <td><b>H2</b></td>
                                         <td>N/A</td>
                                         <td id="HVSR_ChannelNum_2"></td>
+                                        <td id="HVSR_FSamp_2"></td>
                                         <td id="HVSR_DateTime_2"></td>
                                         <td id="HVSR_Azimuth_2"></td>
-                                        <td>H2</td>
                                     </tr>
 
-                                    <tr onclick="TabelsRowlClick(2)" value="">
+                                    <tr onclick="TabelsRowClick(2)" value="">
+                                        <td><b>V</b></td>
                                         <td>N/A</td>
                                         <td id="HVSR_ChannelNum_3"></td>
+                                        <td id="HVSR_FSamp_3"></td>
                                         <td id="HVSR_DateTime_3"></td>
                                         <td id="HVSR_Azimuth_3"></td>
-                                        <td>V</td>
                                     </tr>
 
                                 </tbody>
                             </table>
-                            
                             <br>
-
-                            <table class="table-sm Parameters-Table" id="HVSR_Parameters_Table">
+                            <table class="table-sm Parameters-Table" id="HVSR_Parameters2_Table">
                                 <tbody class="table-group-divider overflow-y-scroll">
                                     
                                     <tr>
@@ -602,6 +605,10 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <td>Konno-Ohmachi Bandwidth Coefficient (b)</td>
+                                        <td><input title="Konno-Ohmachi Bandwidth Coefficient (b)" id="HVSR_Bandwidth_Coefficient" type="number" onfocus="this.oldValue = this.value;" onchange="HVSR_Bandwidth_Coefficient_Change()" value="40" step="1"/></td>
+                                    </tr>
+                                    <tr>
                                         <td>Overlapped Duration, s</td>
                                         <td id="HVSR_OverlappedDuration"></td>
                                     </tr>
@@ -610,7 +617,10 @@
                             </table>
                         </div>
 
+                        <!-- Drift Parameters -->
+                        <div class="Parameters" id="Parameters_Drift">
 
+                        </div>
 
                         <!-- SETTINGS -->
                         <!-- Newmark Integration Settings -->
@@ -802,6 +812,7 @@
                     <span class="Analysis_Menu_li_Span">Settings</span>
                 </a>
                 </li>
+
             </ul>
         </div>
 

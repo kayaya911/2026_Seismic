@@ -2153,9 +2153,10 @@ async function Channel_HVSR() {
     let HV       = [];
     let std      = [];
     let f        = [];
+    let b        = HVSR_Par.Bandwidth_Coefficient;
 
     // STEP 9: Compute the H/V Spectral Ratio
-    [HV, std, f] = HVSR(Data[0], Data[1], Data[2], RWL, OVS, HVSR_Status.FSamp, NFFT, Option);
+    [HV, std, f] = HVSR(Data[0], Data[1], Data[2], RWL, OVS, HVSR_Status.FSamp, NFFT, b, Option);
 
 
     // STEP 10: Collect computed HVSR
@@ -5428,18 +5429,19 @@ function HousnerSpectralIntensity(data, delt, ksi, T) {
     return Trapz(SPv, T) / 2.4;
 }
 //-----------------------------------------------------------------------------------------------
-function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
+function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, b, Option) {
     // Computes the average Horizontal-to-Vertical Spectral Ratio (HVSR) of three-component
     // ambient noise or ground motion recordings using Welch's overlapping-segment method.
     //
     // Each recording is divided into overlapping segments of RWL samples with OVS overlap.
-    // Each segment is multiplied by a normalised Hamming window before the NFFT-point FFT
-    // is applied to reduce spectral leakage. The two horizontal Fourier amplitude spectra
-    // are combined into a single horizontal spectrum according to Option, then divided by
-    // the vertical spectrum to form the H/V ratio for that segment. Segment-averaged H/V
-    // spectra and their log-space standard deviations are returned together with the
-    // frequency vector. Konno-Ohmachi smoothing (b=40) is applied once to the final mean
-    // H/V curve after averaging across all segments.
+    // Each segment is multiplied by a normalised Hanning window before the NFFT-point FFT
+    // is applied to reduce spectral leakage. The window is normalised by its mean (Coherent Gain)
+    // to preserve absolute Fourier Amplitude Spectra (FAS) dimensions. 
+    //
+    // Konno-Ohmachi smoothing (b=20) is applied independently to the NS, EW, and V spectra 
+    // of EACH individual segment BEFORE they are combined horizontally and divided to form 
+    // the segment's H/V curve. Log-space standard deviations are extracted from the window distributions.
+    // This is a standard procedure decribed in SESAME 2004.
     //
     // Parameters:
     //   EW     : East-West  recording (1D array)
@@ -5450,6 +5452,7 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     //            Must satisfy 0 ≤ OVS < RWL  (default: floor(RWL*0.25))
     //   FSamp  : Sampling frequency in Hz (default: 1)
     //   NFFT   : FFT length per segment; must satisfy NFFT ≥ RWL  (default: NextPow2(RWL))
+    //   b      : Bandwidth coefficient for Konno-Ohmachi smoothing window
     //   Option : Method for combining the two horizontal amplitude spectra
     //            0 → Geometric mean   √(EW·NS)             (SESAME 2004 recommendation)
     //            1 → Vector sum       √(EW²+NS²)           (default)
@@ -5457,26 +5460,32 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     //            3 → Arithmetic mean  (EW+NS)/2
     //
     // Returns: [HV, Std, f]
-    //   HV  : Segment-averaged and Konno-Ohmachi smoothed H/V spectral ratio
-    //         (1D array, one-sided, length = nFreq)
+    //   HV  : Konno-Ohmachi smoothed, segment-averaged H/V spectral ratio (1D array, length = nFreq)
     //   Std : Standard deviation of log(H/V) across segments (1D array, same length)
     //         Plot bounds as: upper = HV * exp(+Std), lower = HV * exp(-Std)
     //   f   : Frequency vector in Hz (1D array, same length as HV)
     //
     // Notes:
     //   - Segments containing NaN values in any component are silently skipped.
-    //   - The Hamming window is normalised so that its power equals 1 (sum(Win²) = RWL),
-    //     keeping the amplitude scale consistent across different window shapes.
-    //   - H/V values are always positive (ratio of two positive spectra) and are
-    //     log-normally distributed. The standard deviation is therefore computed in
-    //     log space. Plot bounds: upper = HV * exp(+Std), lower = HV * exp(-Std).
-    //   - Konno-Ohmachi smoothing is applied once to the final mean H/V curve using
-    //     a sparse flat typed-array representation with ±2 octave truncation and
-    //     symmetric weight computation to minimise memory and computation time.
+    //   - The Hanning window is normalised so that its mean equals 1,
+    //   - H/V values are always positive (ratio of two positive spectra) and are therfore
+    //     log-normally distributed.
+    //   - Konno-Ohmachi smoothing is applied using a sparse flat typed-array 
+    //     representation with ±2 octave truncation and symmetric weight computation 
+    //     to minimise memory and computation time.
+    //   - The value assigned to Bandwidth coefficient (b) for Konno-Ohmachi 
+    //     smoothing directly dictates how broad or narrow the smoothing window 
+    //     is on a logarithmic scale.  
+    //       * Smaller b-values provide a more linear correlation between H/V peak 
+    //         ratios and sub-surface velocity contrasts. However, too small a value 
+    //         can overly flatten the curve and elongate (shift) the peak period.  
+    //       * Larger b-values reduce the elongation/shift in the peak period, keeping 
+    //         the smoothed peak frequency highly accurate to the site's true fundamental period. 
+    //         However, the linear relationship with velocity contrasts begins to disappear.  
     //
     // Reference:
     //   SESAME European project (2004). Guidelines for the implementation of the H/V
-    //   spectral ratio technique on ambient vibrations. WP12 - Deliverable D23.12.
+    //   spectral ratio technique on ambient vibrations.
     //
     //   Konno, K. and Ohmachi, T. (1998). Ground-motion characteristics estimated from
     //   spectral ratio between horizontal and vertical components of microtremor.
@@ -5510,16 +5519,31 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     const df    = FSamp / NFFT;
     const f     = LinSpace(0, (nFreq - 1) * df, nFreq);
 
+    // Pre-calculate unchangeable base base-10 logarithmic frequency profiles
+    const log10f = new Float64Array(nFreq);
+    for (let i = 0; i < nFreq; i++) { 
+        log10f[i] = f[i] > 0 ? Math.log10(f[i]) : -1e10;
+    }
+
     // Pre-allocate accumulators
     const HV_mean    = new Float64Array(nFreq);
     const LogHV_sum  = new Float64Array(nFreq);
     const LogHV_sum2 = new Float64Array(nFreq);
     const Std_log    = new Float64Array(nFreq);  // Log-normal standard deviation
 
-    // Normalised Hamming window
+    // Pre-allocate working temporary vectors to prevent mid-loop allocations
+    const magEW  = new Float64Array(nFreq);
+    const magNS  = new Float64Array(nFreq);
+    const magUD  = new Float64Array(nFreq);
+    const destEW = new Float64Array(nFreq);
+    const destNS = new Float64Array(nFreq);
+    const destUD = new Float64Array(nFreq);
+
+    // Normalizes the Hanning window so that the average equals 1.0. 
+    // This is used beacuse we are calculating standard Fourier Amplitude Spectra NOT power spectral density function
     const DW  = RWL - OVS;
-    let   Win = Hamming(RWL);
-    Win = Multiply(Win, Math.sqrt(RWL / Sum(Pow(Win, 2))));
+    let   Win = Hann(RWL);
+    Win = Divide(Win, Mean(Win));
 
     // Segment loop
     let K  = 0;
@@ -5536,24 +5560,33 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             a1 += DW; a2 += DW; continue;
         }
 
-        // Apply normalised Hamming window in-place
+        // Apply normalised Hanning window in-place
         for (let i = 0; i < RWL; i++) {
             EW1[i] *= Win[i];
             NS1[i] *= Win[i];
             UD1[i] *= Win[i];
         }
 
-        // Compute FFT
+        // Compute FFT of each component
         const [Re1, Im1] = FFT(EW1, null, NFFT);
         const [Re2, Im2] = FFT(NS1, null, NFFT);
         const [Re3, Im3] = FFT(UD1, null, NFFT);
 
-        // Combine horizontals, compute H/V, accumulate
+        for (let i = 0; i < nFreq; i++) {
+            magEW[i] = Math.sqrt(Re1[i] * Re1[i] + Im1[i] * Im1[i]);
+            magNS[i] = Math.sqrt(Re2[i] * Re2[i] + Im2[i] * Im2[i]);
+            magUD[i] = Math.sqrt(Re3[i] * Re3[i] + Im3[i] * Im3[i]);
+        }
+        
+        // Apply Konno-Ohmachi smoothing for each Fourier Amplitude spectrum 
+        Konno_Ohmachi_Smoothing(f, log10f, magEW, magNS, magUD, destEW, destNS, destUD, b);
+
+        // Combine horizontals magnitudes and compute H/V spectral ratio
         for (let i = 0; i < nFreq; i++) {
 
-            const m1 = Math.sqrt(Re1[i] * Re1[i] + Im1[i] * Im1[i]);
-            const m2 = Math.sqrt(Re2[i] * Re2[i] + Im2[i] * Im2[i]);
-            const m3 = Math.sqrt(Re3[i] * Re3[i] + Im3[i] * Im3[i]);
+            const m1 = destEW[i];
+            const m2 = destNS[i];
+            const m3 = destUD[i];
 
             let H;
             if      (Option === 0) { H = Math.sqrt(m1 * m2);           }
@@ -5561,10 +5594,13 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             else if (Option === 2) { H = Math.sqrt((m1*m1 + m2*m2)/2); }
             else                   { H = (m1 + m2) / 2;                }
 
-            const hv     = H / m3;
-            const log_hv = hv > 0 ? Math.log(hv) : 0;
+            // Guard against division by zero and negative ratios
+            let log_hv = 0;
+            if (m3 > 0 && H > 0) {
+                const hv = H / m3;
+                log_hv = Math.log(hv);
+            }
 
-            HV_mean[i]    += hv;
             LogHV_sum[i]  += log_hv;
             LogHV_sum2[i] += log_hv * log_hv;
         }
@@ -5576,41 +5612,33 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
     // After the segment loop:
     if (K > 0) {
         for (let i = 0; i < nFreq; i++) {
-            HV_mean[i] /= K;  // Mean of HV
+            // Take the arithmetic mean of log-normal HVSR curves
+            // Then convert it back by Exp()
+            HV_mean[i] = Math.exp( LogHV_sum[i] / K);
             
             if (K > 1) {
-                const log_mean = LogHV_sum[i] / K;                            // Mean of log-normal distribution
-                const log_var  = (LogHV_sum2[i] / K -  log_mean * log_mean);  // Variance of log-normal distribution
-                Std_log[i]     = Math.sqrt(Math.max(0, log_var));             // Standard devication of log-normal distribution
+                const log_mean = LogHV_sum[i] / K;                                               // Mean of log-normal distribution
+                const log_var  = (LogHV_sum2[i] - (LogHV_sum[i] * LogHV_sum[i]) / K) / (K -1);   // Variance of log-normal distribution --- using Bessel's Correction (K - 1)
+                Std_log[i]     = Math.sqrt(Math.max(0, log_var));                                // Standard devication of log-normal distribution
             }
         }
     }
 
-    // Apply Konno-Ohmachi smoothing once for the HV_mean
-    const b = 40;
-    const HV = SmoothKOLog(f, HV_mean, b);
-
     // Return results 
-    return [Array.from(HV), Std_log, Array.from(f)];
+    return [Array.from(HV_mean), Array.from(Std_log), Array.from(f)];
 
 
     // Helper function
-    function SmoothKOLog(f, spec1, b) {
-        const n = f.length;
-        const smoothed1 = new Float64Array(n);
-        
-        const log10f = new Float64Array(n);
-        for (let i = 0; i < n; i++) {
-            log10f[i] = f[i] > 0 ? Math.log10(f[i]) : -1e10;
-        }
-
-        // Optimization: Track the 'window' indices to avoid O(N^2)
-        let left = 0;
+    function Konno_Ohmachi_Smoothing(f, log10f, spec1, spec2, spec3, d1, d2, d3,  b) {
+        const n  = f.length;
+        let left = 0;           // Optimization: Track the 'window' indices to avoid O(N^2)
 
         for (let i = 0; i < n; i++) {
 
             if (f[i] <= 0) {
-                smoothed1[i] = spec1[i];
+                d1[i] = spec1[i];
+                d2[i] = spec2[i];
+                d3[i] = spec3[i];
                 continue;
             }
 
@@ -5618,12 +5646,14 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
             const lo_val  = log10fc - 0.602; // -2 octaves
             const hi_val  = log10fc + 0.602; // +2 octaves
 
-            // Move the 'left' pointer to the start of the relevant frequency range
+            // Standard O(N) sliding window tracker without early break vulnerabilities
             while (left < n && log10f[left] < lo_val) {
                 left++;
             }
 
             let numer1 = 0;
+            let numer2 = 0;
+            let numer3 = 0;
             let denom  = 0;
 
             // Only iterate through the bins that fall within the +/- 2 octave range
@@ -5636,22 +5666,20 @@ function HVSR(EW, NS, UD, RWL, OVS, FSamp, NFFT, Option) {
                 } else {
                     const x = b * (log10f[j] - log10fc);
                     const s = Math.sin(x) / x;
-                    weight = s * s * s * s;
+                    weight = s * s * s * s;        // [sin(x)/x]^4 filter profile
                 }
 
                 numer1 += weight * spec1[j];
+                numer2 += weight * spec2[j];
+                numer3 += weight * spec3[j];
                 denom  += weight;
             }
 
-            if (denom > 0) {
-                smoothed1[i] = numer1 / denom;
-            } else {
-                smoothed1[i] = spec1[i];
-            }
+            d1[i] = denom > 0 ? numer1 / denom : spec1[i];
+            d2[i] = denom > 0 ? numer2 / denom : spec2[i];
+            d3[i] = denom > 0 ? numer3 / denom : spec3[i];
             
         }
-
-        return smoothed1;
     }
 }
 //-----------------------------------------------------------------------------------------------
@@ -6101,7 +6129,7 @@ function PowerSpectralDensity(data, RWL, OVS, FSamp, NFFT, WinOption, OneSided, 
         // Multiply with the Windowing function, if applicable
         if (WinOption) { for (let i = 0; i < Re.length; i++) { Re[i] *= Win[i]; } }
 
-        // Apply window and compute FFT
+        // Compute FFT
         [Re, Im] = FFT(Re, null, NFFT); 
 
         // Accumulate squared magnitude in-place (avoids creating a temporary array)

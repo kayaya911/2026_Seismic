@@ -281,16 +281,17 @@ function InfoBarShowHide(status) {
 async function AnalysisMenu_Selection(a) {
 
     // First, hide ALL parameter sections
-    document.getElementById("Table_Channel_Div").style.display      = "none";
-    document.getElementById("Parameters_Filter").style.display      = "none";
-    document.getElementById("Parameters_Integration").style.display = "none";
-    document.getElementById("Parameters_SDOF").style.display        = "none";
-    document.getElementById("Parameters_ResSpec").style.display     = "none";
-    document.getElementById("Parameters_ResSpec2").style.display    = "none";
-    document.getElementById("Parameters_Spectrum").style.display    = "none";
-    document.getElementById("Parameters_SM_Par").style.display      = "none";  
-    document.getElementById("Parameters_HVSR").style.display        = "none";
-    document.getElementById("Parameters_Newmark").style.display     = "none";
+    document.getElementById("Table_Channel_Div").style.display        = "none";
+    document.getElementById("Parameters_Filter").style.display        = "none";
+    document.getElementById("Parameters_Integration").style.display   = "none";
+    document.getElementById("Parameters_SDOF").style.display          = "none";
+    document.getElementById("Parameters_ResSpec").style.display       = "none";
+    document.getElementById("Parameters_ResSpec2").style.display      = "none";
+    document.getElementById("Parameters_Spectrum").style.display      = "none";
+    document.getElementById("Parameters_SM_Par").style.display        = "none";  
+    document.getElementById("Parameters_HVSR").style.display          = "none";
+    document.getElementById("Parameters_Drift").style.display         = "none";
+    document.getElementById("Parameters_Newmark").style.display       = "none";
     InfoBarShowHide('flex'); 
 
     // Run_Button on Header
@@ -354,6 +355,13 @@ async function AnalysisMenu_Selection(a) {
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  SM Paremeters";
         
         PageNo = 6;
+    }
+    else if (a.id == "MainMenu_Drift") {
+        // Drift
+        document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Drift";
+
+        PageNo = 7;
     }
     else if (a.id == "MainMenu_HV") {
         // H/V Spectral Ratio
@@ -438,10 +446,11 @@ function Channel_DoubleClick(lb) {
 
     // Update table
     const tbody = document.querySelector("#HVSR_Parameters_Table tbody");
-    tbody.rows[targetRow].cells[0].innerHTML = ChannelList[ChNum].FileName;
-    tbody.rows[targetRow].cells[1].innerHTML = ChannelList[ChNum].ChNum;
-    tbody.rows[targetRow].cells[2].innerHTML = ChannelList[ChNum].DateTime.replace("T", " ");
-    tbody.rows[targetRow].cells[3].innerHTML = ChannelList[ChNum].Orientation;
+    tbody.rows[targetRow].cells[1].innerHTML = ChannelList[ChNum].FileName;
+    tbody.rows[targetRow].cells[2].innerHTML = ChannelList[ChNum].ChNum;
+    tbody.rows[targetRow].cells[3].innerHTML = ChannelList[ChNum].FSamp;
+    tbody.rows[targetRow].cells[4].innerHTML = ChannelList[ChNum].DateTime.replace("T", " ");
+    tbody.rows[targetRow].cells[5].innerHTML = ChannelList[ChNum].Orientation;
     tbody.rows[targetRow].value = Unique_ID;
 
     // Remove class - no highlight of rows
@@ -458,7 +467,7 @@ function Channel_DoubleClick(lb) {
 
 }
 //-----------------------------------------------------------------------------------------------
-function TabelsRowlClick(rowIndex) {
+function TabelsRowClick(rowIndex) {
     targetRow = rowIndex;
 
     // Highlight the clicked row
