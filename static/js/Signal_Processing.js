@@ -82,7 +82,7 @@ function Rectwin(M) {
 //-----------------------------------------------------------------------------------------------
 function Arias(data, delt, g) {
     // Computes the Arias Intensity as defined by Arias (1970).
-    // The unit of Arias Intensity is m/s, provided that data[] has units of m/s².
+    // The unit of Arias Intensity is m/s, provided that data[] has units of m/s.
     //
     // Parameters:
     //   data : 1D array of acceleration values (m/s²)
@@ -1992,7 +1992,7 @@ async function Channel_Parameters() {
         temp    = Convert_Units_Data([1],  1,  Or_Data.Unit,  false);    // from m/s2 to Or_Data.Unit
 
         // STEP 9: Arias intensity
-        [AI, AI_MaxVal, T1_ai, T2_ai, Ts] = Arias(Ug, ChannelList[i].delt, (9.81*temp.Data[0])  );
+        [AI, AI_MaxVal, T1_ai, T2_ai, Ts] = Arias(Ug, ChannelList[i].delt, (9.81*temp.Data[0]));
 
         // STEP 10: Bracketed Duration
         [T1_bd, T2_bd, Td] = BracketedDuration(Ug, ChannelList[i].delt, (SM_Par.BracketedDuration*9.81*temp.Data[0]) );
@@ -2087,6 +2087,238 @@ async function Channel_Parameters() {
 
 }
 //-----------------------------------------------------------------------------------------------
+async function Channel_Drif() {
+
+    // STEP 1: Check Drift table 
+    let Drift_Status = Drift_Table_Check();
+    if (Drift_Status.IsValid == false ) { return; }
+
+    // STEP 2: Declaration of variables 
+    let i, ChNum=[], Data=[], Ug, FiltPar, Drift_Par={}, Drift=[], temp;
+
+    // STEP 3: Disable CALCULATE Button during processing (if applicable)
+    // Prevents user from triggering multiple simultaneous Drift operations
+    DisableButtons(true);
+    ProgressBar_Update( 'Computing Drift...', 'red');
+    await sleep(5);
+
+    // STEP 4: Get Filter-Parameters
+    FiltPar  = Filter_Parameters();
+
+    // STEP 5: Get the Drift Table-body
+    const tbody = document.querySelector("#Drift_Parameters_Table tbody");
+
+    // STEP 6: Loop over each channel
+    for (i=0; i < tbody.rows.length; i++) { 
+
+        // Sub-STEP 1: 
+        ChNum[i] = ChannelList_UniqueID(tbody.rows[i].value);
+        
+        // Sub-STEP 2: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        FiltPar = Filter_Is_Stable(ChannelList[ChNum[i]], FiltPar);
+        
+        // Sub-STEP 3: Skip this Channel if filter is unstable
+        if (FiltPar.ErrorMessage != undefined) { 
+            let Msg = '';
+            if (i ==0) { Msg = "C1";} else if (i==1) { Msg = "C2"; }
+            ProgressBar_Update( 'Drift - Unstable filter for '+ Msg + '.', 'red'); 
+        }
+
+        // Sub-STEP 4: Get the waveform 
+        Ug = ChannelList[ChNum[i]].data;
+
+        // Sub-STEP 5: Trim the begining and the end of the waveform if applicable for synchronization
+        if(Drift_Status.Trim_Start[i] != 0)  { Ug = Truncate(Ug,  Ug.length - Drift_Status.Trim_Start[i],  false ) };  // Truncates elements from the begining of the waveform
+
+        // Truncate the Ug array to get the fist sampels up to Drift_Status.OverlappedSegment_Sample
+        Ug = Truncate(Ug, Drift_Status.OverlappedSegment_Sample,  true);  
+
+        // Sub-STEP 6: Apply the scale factor
+        Ug = Multiply(Ug,   ChannelList[ChNum[i]].ScaleFactor);
+
+        // Sub-STEP 7: Apply Baseline correction and filtering 
+        Data[i] = BaselineAndFilter(Ug, FiltPar);
+        
+    }
+
+    // STEP 8: Check the Units of C1 and C2
+    // If the unit across C1 and C2 are different, convert units to a common unit
+    if (Drift_Status.Unit[0] != Drift_Status.Unit[1]) { 
+        temp = Convert_Units_Data(Data[1], Drift_Status.Unit[1], Drift_Status.Unit[0], false);  
+        Data[1] = temp.Data; 
+    }
+
+    // Compute the Drift between two channels 
+    Drift = Subtract(Data[0], Data[1]);
+
+    // STEP 11: Collect computed HVSR
+    Drift_Par.Drift   = Drift;
+    Drift_Par.time    = Drift.map((v,ii) =>  ii / Drift_Status.FSamp);  // FSamp is the same across C1 and C2
+
+    // STEP 12: Store Filter Parameters
+    Drift_Par.FiltPar = FiltPar;
+
+    // STEP 13: Flag Successfully Completion
+    Drift_Par.IsAnalysisCompleted = true;
+
+    // STEP 14: Store Results on the fist channel
+    ChannelList[0].Results.Drift = Drift_Par;
+
+    // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    await Plotly_Graph_Update(0);
+
+    // STEP 16: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    ProgressBar_Update( 'Drift -- 100% completed!', 'black');
+
+    // STEP 17: Enable CALCULATE Button
+    DisableButtons(false);
+
+
+    // Helper functions
+    // Baseline correction and filtering 
+    function BaselineAndFilter(FilteredData, FiltPar) {
+        // Apply baseline Correction and Filtering 
+
+        // Apply Detrend if applicable
+        if (FiltPar.BaselineCorrection != 0) { 
+            if      (FiltPar.BaselineCorrection == 1) { FilteredData = Detrend(FilteredData, 0); } // Remove mean
+            else if (FiltPar.BaselineCorrection == 2) { FilteredData = Detrend(FilteredData, 1); } // Remove linear trend
+            else if (FiltPar.BaselineCorrection == 3) { FilteredData = Detrend(FilteredData, 2); } // Remove quadratic trend
+            else if (FiltPar.BaselineCorrection == 4) { FilteredData = Detrend(FilteredData, 3); } // Remove cubic trend
+        }
+
+        // Apply filter
+        if (FiltPar.FilterName !=0) {
+            if (FiltPar.ZeroPhase) { FilteredData = FiltFilt(FiltPar.b,   FiltPar.a,   FilteredData).y; } // Zero-phase filtering (Forward and backward)
+            else                   { FilteredData = Filter(  FiltPar.b,   FiltPar.a,   FilteredData).y; } // Single-pass filtering
+        }
+        // Return Filtered data 
+        return FilteredData;
+
+    }
+    async function UX_Update(i) {
+        
+        let perc;
+
+        perc = ((i+1)/ChannelList.length*100).toFixed(0);
+
+        if (perc != 100) {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'red');
+        } else {
+            ProgressBar_Update( 'SM Parameters -- ' + (perc).toString() + '% completed!', 'black');
+        }
+    }
+
+
+}
+//-----------------------------------------------------------------------------------------------
+async function Channel_Drif__() {
+
+    // Disable CALCULATE Button during processing (if applicable)
+    // Prevents user from triggering multiple simultaneous Drift computations
+    DisableButtons(true);
+    ProgressBar_Update( 'Computing Drifts...', 'red');
+    await sleep(5);
+
+    // Declaration of variables 
+    let tables, table, i, tbody, FiltPar, Ug=[], Data=[], Drift=[];
+
+    // Get filter settings
+    FiltPar  = Filter_Parameters();
+
+    // List of tables 
+    tables = [...document.querySelectorAll('#Parameters_Drift table.Drift-HSVR-main-table')];
+
+    // Loop over each table 
+    for (i=0; i<tables.length; i++) {
+
+        
+        // STEP XX: Check HVSR table 
+        let Drift_Table_Status = Drift_Table_Check(i);
+        if (Drift_Table_Status.IsValid == false ) { DisableButtons(false); continue; }
+
+        // Sub-STEP XX: Check filter stability - Verify filter poles are inside unit circle (stable filter)
+        FiltPar = Filter_Is_Stable(ChannelList[Drift_Table_Status.ChNum[0]], FiltPar);
+
+        // Sub-STEP 3: Skip this Channel if filter is unstable
+        if (FiltPar.ErrorMessage != undefined) { continue; }
+
+        for (let j=0; j<2; j++) {
+
+            let ChNum = Drift_Table_Status.ChNum[j];
+
+            // Sub-STEP 4: Get the waveform 
+            Ug = ChannelList[ChNum].data;
+
+            // Sub-STEP 5: Trim the begining and the end of the waveform if applicable for synchronization
+            if(Drift_Table_Status.Trim_Start[j] != 0)  { Ug = Truncate(Ug,  Ug.length - Drift_Table_Status.Trim_Start[j],  false ) };  // Truncates elements from the begining of the waveform
+
+            // Truncate the Ug array to get the fist sampels up to HVSR_Status.OverlappedSegment_Sample
+            Ug = Truncate(Ug, Drift_Table_Status.OverlappedSegment_Sample,  true);  
+
+            // Sub-STEP 6: Apply the scale factor
+            Ug = Multiply(Ug,   ChannelList[ChNum].ScaleFactor);
+
+            // Sub-STEP 7: Apply Baseline correction and filtering 
+            Data[j] = BaselineAndFilter(Ug, FiltPar);
+        }
+
+        // Update the Drift table
+        tables[i].tBodies[0].rows[0].cells[6].innerHTML = Drift_Table_Status.OverlappedSegment_Length.toString();
+
+        // Both data array must be in the same unit 
+        //let temp1 = Convert_Units_Data(Data[0], Or_Data.Unit, Out, Opt);
+        //Or_Data = TypeAndUnit(ChannelList[ChNum].TypeAndUnits); 
+
+        // Compute the Drift between two channels 
+        Drift = Subtract( Data[0], Data[1] );
+
+        // STEP 13: Collect computed SM parameters
+        Drift_Par.Drift        = Drift;
+
+        // STEP 14: Store Filter Parameters
+        Drift_Par.FiltPar = FiltPar;
+
+        // STEP 15: Flag Successfully Completion
+        Drift_Par.IsAnalysisCompleted = true;
+
+        // STEP 16: Store Results 
+        //ChannelList[i].Results.Drift = SM_Par;
+
+        
+        console.log(Drift)
+    }
+
+    
+
+    // Enable CALCULATE Button
+    DisableButtons(false);
+
+    // Helper functions
+    // Baseline correction and filtering 
+    function BaselineAndFilter(FilteredData, FiltPar) {
+        // Apply baseline Correction and Filtering 
+
+        // Apply Detrend if applicable
+        if (FiltPar.BaselineCorrection != 0) { 
+            if      (FiltPar.BaselineCorrection == 1) { FilteredData = Detrend(FilteredData, 0); } // Remove mean
+            else if (FiltPar.BaselineCorrection == 2) { FilteredData = Detrend(FilteredData, 1); } // Remove linear trend
+            else if (FiltPar.BaselineCorrection == 3) { FilteredData = Detrend(FilteredData, 2); } // Remove quadratic trend
+            else if (FiltPar.BaselineCorrection == 4) { FilteredData = Detrend(FilteredData, 3); } // Remove cubic trend
+        }
+
+        // Apply filter
+        if (FiltPar.FilterName !=0) {
+            if (FiltPar.ZeroPhase) { FilteredData = FiltFilt(FiltPar.b,   FiltPar.a,   FilteredData).y; } // Zero-phase filtering (Forward and backward)
+            else                   { FilteredData = Filter(  FiltPar.b,   FiltPar.a,   FilteredData).y; } // Single-pass filtering
+        }
+        // Return Filtered data 
+        return FilteredData;
+
+    }
+
+}
+//-----------------------------------------------------------------------------------------------
 async function Channel_HVSR() {
 
     // STEP 1: Check HVSR table 
@@ -2094,7 +2326,7 @@ async function Channel_HVSR() {
     if (HVSR_Status.IsValid == false ) { return; }
 
     // STEP 2: Declaration of variables 
-    let i, ChNum=[], Data=[], Ug, FiltPar, HVSR_Par;
+    let i, ChNum=[], Data=[], Ug, FiltPar, HVSR_Par, temp;
 
     // STEP 3: Disable CALCULATE Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous Response Spectrum operations
@@ -2102,7 +2334,7 @@ async function Channel_HVSR() {
     ProgressBar_Update( 'Computing H/V Spectral Ratio...', 'red');
     await sleep(5);
 
-    // STEP 4: Get Filter-Parameters and ResSpectrum-Parameters
+    // STEP 4: Get Filter-Parameters and HVSR-Parameters
     FiltPar  = Filter_Parameters();
     HVSR_Par = HVSR_Parameters();
    
@@ -2119,7 +2351,12 @@ async function Channel_HVSR() {
         FiltPar = Filter_Is_Stable(ChannelList[ChNum[i]], FiltPar);
         
         // Sub-STEP 3: Skip this Channel if filter is unstable
-        if (FiltPar.ErrorMessage != undefined) { continue; }
+        if (FiltPar.ErrorMessage != undefined) { 
+            let Msg = '';
+            if (i ==0) { Msg = "H1";} else if (i==1) { Msg = "H2"; } else if (i==2) {Msg}
+            ProgressBar_Update( 'HVSR - Unstable filter for C'+ Msg + '.', 'red');
+            return; 
+        }
 
         // Sub-STEP 4: Get the waveform 
         Ug = ChannelList[ChNum[i]].data;
@@ -2145,7 +2382,22 @@ async function Channel_HVSR() {
         return;
     }
 
-    // STEP 8: Compute Parameters
+    // STEP 8: Check the Units of H1, H2, V
+    // If the unit across H1, H2 and V are different, convert units to a common unit
+    if ([...new Set(HVSR_Status.Unit)].length != 1) {
+
+        // Use the unit of the H1 as the common unit
+        let Target_Unit = HVSR_Status.Unit[0];
+
+        // Check the Unit of H2
+        if (HVSR_Status.Unit[1] != Target_Unit) { temp = Convert_Units_Data(Data[1], HVSR_Status.Unit[1], Target_Unit, false);  Data[1] = temp.Data; }
+
+        // Check the Unit of V
+        if (HVSR_Status.Unit[2] != Target_Unit) { temp = Convert_Units_Data(Data[2], HVSR_Status.Unit[2], Target_Unit, false);  Data[2] = temp.Data; }
+    }
+
+
+    // STEP 9: Compute Parameters
     let RWL      = Math.max(2, NextPow2(Math.floor(HVSR_Status.FSamp * HVSR_Par.WindowLength)));  // Length of running window in samples
     let OVS      = Math.floor(RWL * HVSR_Par.OverlapRatio);                                       // Length of overlap in samples 
     let NFFT     = RWL;                                                                           // Length of Fourier Transform
@@ -2155,11 +2407,11 @@ async function Channel_HVSR() {
     let f        = [];
     let b        = HVSR_Par.Bandwidth_Coefficient;
 
-    // STEP 9: Compute the H/V Spectral Ratio
+    // STEP 10: Compute the H/V Spectral Ratio
     [HV, std, f] = HVSR(Data[0], Data[1], Data[2], RWL, OVS, HVSR_Status.FSamp, NFFT, b, Option);
 
 
-    // STEP 10: Collect computed HVSR
+    // STEP 11: Collect computed HVSR
     HVSR_Par.HV                         = HV;
     HVSR_Par.f                          = f;
     HVSR_Par.Std                        = std;
@@ -2173,22 +2425,22 @@ async function Channel_HVSR() {
     HVSR_Par.Azimuth                    = HVSR_Status.Azimuth; 
     HVSR_Par.FileName                   = HVSR_Status.FileName; 
 
-    // STEP 11: Store Filter Parameters
+    // STEP 12: Store Filter Parameters
     HVSR_Par.FiltPar = FiltPar;
 
-    // STEP 12: Flag Successfully Completion
+    // STEP 13: Flag Successfully Completion
     HVSR_Par.IsAnalysisCompleted = true;
 
-    // STEP 13: Store Results on the fist channel
+    // STEP 14: Store Results on the fist channel
     ChannelList[0].Results.HVSR = HVSR_Par;
 
-    // STEP 14: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
     await Plotly_Graph_Update(0);
 
-    // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
+    // STEP 16: Update Visualization - Refresh Plotly graph to show Integrated waveforms
     ProgressBar_Update( 'H/V Spectral Ratio -- 100% completed!', 'black');
 
-    // STEP 16: Enable CALCULATE Button
+    // STEP 17: Enable CALCULATE Button
     DisableButtons(false);
 
 
@@ -12916,7 +13168,7 @@ function Subtract(a, b) {
     // Author   : Dr. Yavuz Kaya, P.Eng.;
     // Modified : 25.Jan.2026
     // OK to use
-    
+
     // Case 1: a is a number
     if (typeof a === 'number') {
         if (typeof b === 'number')   { return a - b;                           }

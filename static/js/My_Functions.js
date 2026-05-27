@@ -6,17 +6,21 @@
 "use strict";
 
 // Declaration of global variable
-let ChannelList        = [];
-let PageNo             = 0;
-let MaxPlotly_Graphs   = 10;  // This variable should not be less than 8
-let Current_Plotly_Num = 0;
-let IsOnHelpPage       = false;
-let targetRow          = 0;
-
+let ChannelList             = [];
+let PageNo                  = 0;
+let MaxPlotly_Graphs        = 10;  // This variable should not be less than 8
+let Current_Plotly_Num      = 0;
+let IsOnHelpPage            = false;
+let targetRow               = 0;
+let targetRow_Drift         = 0;
 
 //-----------------------------------------------------------------------------------------------
 function OnLoad() {
 
+    // Upload data file message 
+    ProgressBar_Update('Please upload seismic data files for analysis !', 'red');
+
+    // Initalization 
     initResizablePanels();
     initHorizontalResizer();
     initHamburgerMenu();
@@ -59,7 +63,6 @@ function OnLoad() {
 
     // Help page
     LoadHelpContent();
-
 
     // Catch all unhandled errors globally 
     window.addEventListener('error',              (e) => { AppError(e.error || e.message); });
@@ -359,6 +362,7 @@ async function AnalysisMenu_Selection(a) {
     else if (a.id == "MainMenu_Drift") {
         // Drift
         document.getElementById("Parameters_Filter").style.display = "flex";
+        document.getElementById('Parameters_Drift').style.display = 'flex';
         document.getElementById("Logo_Text").innerHTML = "Seismic Data Analysis  -  Drift";
 
         PageNo = 7;
@@ -383,7 +387,7 @@ async function AnalysisMenu_Selection(a) {
 
     
     // Show the first graph on the screen and the turn off the rest of the graphs 
-    if (PageNo == 8) {
+    if ((PageNo == 7) || (PageNo == 8)) {
         for (let i=0; i<ChannelList.length; i++) { 
             if ((i!=0) && ChannelList[i].PlotGraph) { document.getElementById("Div_ID_"+ChannelList[i].Unique_ID).style.display = 'none';  } 
         }
@@ -399,6 +403,7 @@ async function Anlysis_Button() {
     else if ( PageNo == 4) { await Channel_ResponseSpectrum();  } // Response Spectrum Page
     else if ( PageNo == 5) { await Channel_Spectrum();          } // Spectrum Page
     else if ( PageNo == 6) { await Channel_Parameters();        } // Strong Motion Parameters
+    else if ( PageNo == 7) { await Channel_Drif();              } // Drift
     else if ( PageNo == 8) { await Channel_HVSR();              } // H/V Spectral Ratio
 }
 //-----------------------------------------------------------------------------------------------
@@ -429,8 +434,8 @@ function Channel_Click(checkbox) {
 //-----------------------------------------------------------------------------------------------
 function Channel_DoubleClick(lb) {
     
-    // Return if not in H/V page
-    if (PageNo != 8) { return; }
+    // Return if not in H/V page AND not in Drift page
+    if ((PageNo != 8) && (PageNo != 7)) { return; }
 
     // Get the Unique_ID of the double-clicked element
     let Unique_ID = lb.getAttribute("for").replace('FileTreeView_Checkbox_','');
@@ -438,32 +443,73 @@ function Channel_DoubleClick(lb) {
     // Get the channel number
     let ChNum = ChannelList_UniqueID(Unique_ID);
 
-    // Reject all measurment types other than Acceleration type 
-    if (ChannelList[ChNum].Type != 0) { 
-        ProgressBar_Update( 'Invalid channel type: expected acceleration, got ' + ChannelList[ChNum].TypeString +'.', 'red');
-        return;
-    } else { ProgressBar_Update( '', 'red'); }
 
-    // Update table
-    const tbody = document.querySelector("#HVSR_Parameters_Table tbody");
-    tbody.rows[targetRow].cells[1].innerHTML = ChannelList[ChNum].FileName;
-    tbody.rows[targetRow].cells[2].innerHTML = ChannelList[ChNum].ChNum;
-    tbody.rows[targetRow].cells[3].innerHTML = ChannelList[ChNum].FSamp;
-    tbody.rows[targetRow].cells[4].innerHTML = ChannelList[ChNum].DateTime.replace("T", " ");
-    tbody.rows[targetRow].cells[5].innerHTML = ChannelList[ChNum].Orientation;
-    tbody.rows[targetRow].value = Unique_ID;
+    if (PageNo == 8) {
+        // H/V Page 
 
-    // Remove class - no highlight of rows
-    for (let row of tbody.rows) { row.classList.remove("row-armed"); }
+        // Reset the row 
+        const tbody = document.querySelector("#HVSR_Parameters_Table tbody");
+        tbody.rows[targetRow].cells[1].innerHTML = 'N/A';
+        tbody.rows[targetRow].cells[2].innerHTML = '';
+        tbody.rows[targetRow].cells[3].innerHTML = '';
+        tbody.rows[targetRow].cells[4].innerHTML = '';
+        tbody.rows[targetRow].cells[5].innerHTML = '';
+        tbody.rows[targetRow].cells[6].innerHTML = '';
+        tbody.rows[targetRow].value = Unique_ID;
 
-    // Update targetRow
-    if (targetRow < 2) { targetRow++; } else { targetRow = 0; }
+        // Reject all measurment types other than Acceleration or Velocity 
+        if ((ChannelList[ChNum].Type != 0) && (ChannelList[ChNum].Type != 1)) { 
+            ProgressBar_Update( 'Invalid channel type: expected acceleration or velocity, got ' + ChannelList[ChNum].TypeString +' instead.', 'red');
+            return;
+        } else { ProgressBar_Update( '', 'red'); }
 
-    // Add class - highligths the row 
-    tbody.rows[targetRow].classList.add("row-armed"); 
+        // Update the row
+        tbody.rows[targetRow].cells[1].innerHTML = ChannelList[ChNum].FileName;
+        tbody.rows[targetRow].cells[2].innerHTML = ChannelList[ChNum].UnitString;
+        tbody.rows[targetRow].cells[3].innerHTML = ChannelList[ChNum].ChNum;
+        tbody.rows[targetRow].cells[4].innerHTML = ChannelList[ChNum].FSamp;
+        tbody.rows[targetRow].cells[5].innerHTML = ChannelList[ChNum].DateTime.replace("T", " ");
+        tbody.rows[targetRow].cells[6].innerHTML = ChannelList[ChNum].Orientation;
+        tbody.rows[targetRow].value = Unique_ID;
 
-    // Update User interface about the Overlapped Duration
-    document.getElementById('HVSR_OverlappedDuration').innerHTML = HVSR_Table_Check().OverlappedSegment_Length;
+        // Remove class - no highlight of rows
+        for (let row of tbody.rows) { row.classList.remove("row-armed"); }
+
+        // Update targetRow
+        if (targetRow < 2) { targetRow++; } else { targetRow = 0; }
+
+        // Add class - highligths the row 
+        tbody.rows[targetRow].classList.add("row-armed"); 
+
+        // Update User interface about the Overlapped Duration
+        document.getElementById('HVSR_OverlappedDuration').innerHTML = HVSR_Table_Check().OverlappedSegment_Length;
+
+    }
+    else if (PageNo == 7) {
+        // Drift Page 
+
+        const tbody = document.querySelector("#Drift_Parameters_Table tbody");
+        tbody.rows[targetRow_Drift].cells[1].innerHTML = ChannelList[ChNum].FileName;
+        tbody.rows[targetRow_Drift].cells[2].innerHTML = ChannelList[ChNum].UnitString;
+        tbody.rows[targetRow_Drift].cells[3].innerHTML = ChannelList[ChNum].ChNum;
+        tbody.rows[targetRow_Drift].cells[4].innerHTML = ChannelList[ChNum].FSamp;
+        tbody.rows[targetRow_Drift].cells[5].innerHTML = ChannelList[ChNum].DateTime.replace("T", " ");
+        tbody.rows[targetRow_Drift].cells[6].innerHTML = ChannelList[ChNum].Orientation;
+        tbody.rows[targetRow_Drift].value = Unique_ID;
+
+        // Remove class - no highlight of rows
+        for (let row of tbody.rows) { row.classList.remove("row-armed"); }
+
+        // Update targetRow
+        if (targetRow_Drift < 1) { targetRow_Drift++; } else { targetRow_Drift = 0; }
+
+        // Add class - highligths the row 
+        tbody.rows[targetRow_Drift].classList.add("row-armed"); 
+
+        // Update User interface about the Overlapped Duration
+        document.getElementById('Drift_OverlappedDuration').innerHTML = Drift_Table_Check().OverlappedSegment_Length;
+
+    }
 
 }
 //-----------------------------------------------------------------------------------------------
@@ -875,6 +921,7 @@ function ChannelList_TabelID(tableName) {
     }
     return indices;
 }
+//-----------------------------------------------------------------------------------------------
 function ChannelFSamp_Update(el) {
     
     // Declaration of variables
@@ -939,7 +986,7 @@ function ChannelScaleFactor_Update(el) {
 function ChannelType_Update(el, Opt) {
 
     // Declaration of variables
-    let N=24, j, Indx, Indx2, Indx3, opt, temp, TempList, ChNum, Unit_ID, tt;
+    let N=24, i, j, Indx, Indx2, Indx3, opt, temp, TempList, ChNum, Unit_ID, tt, tbody;
 
     if (Opt) {
         // Channel type has been altered
@@ -977,7 +1024,7 @@ function ChannelType_Update(el, Opt) {
         ChNum = ChannelList_UniqueID(el.id.replace("Unit_ID_", ""));
 
         // Index of the selected channel unit
-        Indx3 = document.getElementById(el.id).selectedIndex; 
+        Indx3 = document.getElementById(el.id).selectedIndex;
 
         // Obtain the unit number of the fist item in the unit-list
         Indx2 = List_Units(Indx, false).UnitNum[Indx3];
@@ -1012,6 +1059,40 @@ function ChannelType_Update(el, Opt) {
 
         // Update Plotly Graph
         Plotly_Graph_Update(ChNum); 
+    }
+
+    // Check if this channel is included in the Drift or HVSR tables 
+    // If it is included delete the row from those tables
+    tbody = document.querySelector("#Drift_Parameters_Table tbody");
+    for (i=0; i < tbody.rows.length; i++) { 
+
+        // It is included in the Drift table 
+        // Delete columns
+        if (ChNum == ChannelList_UniqueID( tbody.rows[i].value )) {
+            tbody.rows[i].cells[1].innerHTML = 'N/A';
+            tbody.rows[i].cells[2].innerHTML = '';
+            tbody.rows[i].cells[3].innerHTML = '';
+            tbody.rows[i].cells[4].innerHTML = '';
+            tbody.rows[i].cells[5].innerHTML = '';
+            tbody.rows[i].cells[6].innerHTML = '';
+            tbody.rows[i].value = '';
+        } 
+    }
+    
+    tbody = document.querySelector("#HVSR_Parameters_Table tbody");
+    for (i=0; i < tbody.rows.length; i++) { 
+
+        // It is included in the HVSR table 
+        // Delete columns
+        if (ChNum == ChannelList_UniqueID( tbody.rows[i].value )) {
+            tbody.rows[i].cells[1].innerHTML = 'N/A';
+            tbody.rows[i].cells[2].innerHTML = '';
+            tbody.rows[i].cells[3].innerHTML = '';
+            tbody.rows[i].cells[4].innerHTML = '';
+            tbody.rows[i].cells[5].innerHTML = '';
+            tbody.rows[i].cells[6].innerHTML = '';
+            tbody.rows[i].value = '';
+        } 
     }
 
     //------------------------------------------------------------------------------------------
@@ -1410,3 +1491,6 @@ function DisableButtons(status) {
 
 }
 //-----------------------------------------------------------------------------------------------
+
+
+

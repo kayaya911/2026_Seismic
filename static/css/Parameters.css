@@ -60,6 +60,11 @@
     max-width: 45rem;
 }
 
+#Parameters_Drift {
+    min-width: 45rem;
+    max-width: 45rem;
+}
+
 .Parameters-Table, .Parameters2-Table {
     border-style: hidden;
     border-collapse: collapse; 

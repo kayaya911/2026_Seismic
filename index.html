@@ -34,6 +34,7 @@
         <link rel="stylesheet" href="./static/css/PlotlyGraphs.css"         />
         <link rel="stylesheet" href="./static/css/Right_Click_Menu.css"     />
         <link rel="stylesheet" href="./static/css/RootPar.css"              />
+        <link rel="stylesheet" href="./static/css/DriftAndHVSR.css"         />
         <link rel="stylesheet" href="./static/css/helpPage.css"             />
 
         <!-- LOAD ALL FUNCTIONS-->
@@ -129,7 +130,6 @@
                     <label for="Header_Download">Download</label>
                 </div>
 
-
                 <div class="Header_Buttons_Menu_Div" onclick="InfoBarShowHide()">
                     <button class="Header_Buttons_Info" id="Header_Info"  title="Analysis Status">
                         <svg class="Header_Button_Svg" viewBox="0 0 23.625 23.625">
@@ -146,8 +146,8 @@
 
         <!--- MAIN CONTENT --->
         <div class="main-wrapper">
-            <!--- SIDEBAR --->
             <div id="sidebar" class="sidebar">
+                 <!--- SIDEBAR  (Files and Channels) --->
                 <div class="TreeView" id="TreeView">
                     <div class='TreeView_Title'>
                         <span>Files & Channels</span>
@@ -161,16 +161,18 @@
                 <div class="resize-handle-bar"></div>
             </div>
             
+
             <!--- RESIZABLE CONTAINER --->
             <div id="content"  class="resizable-container content">
                 <div class="resizable-panels-wrapper">
+
                     
                     <!--- HELPER PAGE --->
                     <div class="resizable-panel-4" id="panel4"></div>
 
 
                     <div class="resizable-panel" id="panel1">
-                    
+
                         <!-- Table of Channels -->
                         <div class="Table_Channel_Div" id="Table_Channel_Div" >
                             <table class="main-table" id="Table_FileNames">
@@ -529,12 +531,14 @@
                                     <col style="width:  0%">
                                     <col style="width:  0%">
                                     <col style="width:  0%">
+                                    <col style="width:  0%">
                                 </colgroup>
 
                                 <thead>
                                     <tr>
                                         <th></th>
                                         <th>File Name</th>
+                                        <th>Unit</th>
                                         <th>ChNum</th>
                                         <th>FSamp</th>
                                         <th>Date&Time</th>
@@ -547,6 +551,7 @@
                                     <tr onclick="TabelsRowClick(0)" value="">
                                         <td><b>H1</b></td>
                                         <td>N/A</td>
+                                        <td id="HVSR_Unit_1"></td>
                                         <td id="HVSR_ChannelNum_1"></td>
                                         <td id="HVSR_FSamp_1"></td>
                                         <td id="HVSR_DateTime_1"></td>
@@ -556,6 +561,7 @@
                                     <tr onclick="TabelsRowClick(1)" value="">
                                         <td><b>H2</b></td>
                                         <td>N/A</td>
+                                        <td id="HVSR_Unit_2"></td>
                                         <td id="HVSR_ChannelNum_2"></td>
                                         <td id="HVSR_FSamp_2"></td>
                                         <td id="HVSR_DateTime_2"></td>
@@ -565,6 +571,7 @@
                                     <tr onclick="TabelsRowClick(2)" value="">
                                         <td><b>V</b></td>
                                         <td>N/A</td>
+                                        <td id="HVSR_Unit_3"></td>
                                         <td id="HVSR_ChannelNum_3"></td>
                                         <td id="HVSR_FSamp_3"></td>
                                         <td id="HVSR_DateTime_3"></td>
@@ -619,7 +626,63 @@
 
                         <!-- Drift Parameters -->
                         <div class="Parameters" id="Parameters_Drift">
+                            <table class="table-sm Parameters2-Table" id="Drift_Parameters_Table">
+                                <colgroup>
+                                    <col style="width:  0%">
+                                    <col style="width: 50%">
+                                    <col style="width:  0%">
+                                    <col style="width:  0%">
+                                    <col style="width:  0%">
+                                    <col style="width:  0%">
+                                    <col style="width:  0%">
+                                </colgroup>
 
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>File Name</th>
+                                        <th>Unit</th>
+                                        <th>ChNum</th>
+                                        <th>FSamp</th>
+                                        <th>Date&Time</th>
+                                        <th>Azimuth</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody class="table-group-divider overflow-y-scroll">
+                                    
+                                    <tr onclick="TabelsRowClick(0)" value="">
+                                        <td><b>C1</b></td>
+                                        <td>N/A</td>
+                                        <td id="Drift_Unit_1"></td>
+                                        <td id="Drift_ChannelNum_1"></td>
+                                        <td id="Drift_FSamp_1"></td>
+                                        <td id="Drift_DateTime_1"></td>
+                                        <td id="Drift_Azimuth_1"></td>
+                                    </tr>
+
+                                    <tr onclick="TabelsRowClick(1)" value="">
+                                        <td><b>C2</b></td>
+                                        <td>N/A</td>
+                                        <td id="Drift_Unit_2"></td>
+                                        <td id="Drift_ChannelNum_2"></td>
+                                        <td id="Drift_FSamp_2"></td>
+                                        <td id="Drift_DateTime_2"></td>
+                                        <td id="Drift_Azimuth_2"></td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                            <br>
+                            <table class="table-sm Parameters-Table" id="Drift_Parameters2_Table">
+                                <tbody class="table-group-divider overflow-y-scroll">
+                                    <tr>
+                                        <td>Overlapped Duration, s</td>
+                                        <td id="Drift_OverlappedDuration"></td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
                         </div>
 
                         <!-- SETTINGS -->
@@ -651,7 +714,7 @@
                                 </tbody>
                             </table>
                         </div>
-
+                    
                     </div>
                     
                     <div class="resize-handle" id="resizeHandle">

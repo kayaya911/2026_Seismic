@@ -53,6 +53,7 @@ class Channel {
             ResSpec: [],
             Spectrum: [],
             SM_Parameters: [],
+            Drift: [],
             HVSR: [],
             P_Wave: [],
         };
@@ -65,6 +66,8 @@ class Channel {
             this.Results.ResSpec = [];
             this.Results.Spectrum = [];
             this.Results.SM_Parameters = [];
+            this.Results.HVSR = [];
+            this.Results.Drift = [];
             this.Results.P_Wave = [];
         }
 
@@ -2890,7 +2893,11 @@ async function DonwloadExcel_LoadDataPage() {
     FileName = "SDA_Results.xlsx";
   
     // Retrun if no file is uploaded
-    if (ChannelList.length == 0) { return; }
+    if (ChannelList.length == 0) { 
+        ProgressBar_Update('Please upload data files for processing !', 'red');
+        DisableButtons(false);  
+        return; 
+    }
 
     // Disable Download Button during processing (if applicable)
     // Prevents user from triggering multiple simultaneous download operations
@@ -4262,18 +4269,20 @@ async function DonwloadExcel_LoadDataPage() {
             // Skip this channel if HVSR Results are nor ready
             if (!ChannelList[i].Results.HVSR.IsAnalysisCompleted) { continue; }
 
-            FileName = "SDA_Results_Spectrum.xlsx";
+            FileName = "SDA_Results_HVSR.xlsx";
+
+            let HVSR_Status = HVSR_Table_Check();   
 
             // Populate Time, Horizontal-1, Horizontal-2, Vertical to WorkSheet
             header = [  "Time (s)",
-                        "Horizontal-1 (" + ChannelList[i].UnitString + ")",
-                        "Horizontal-2 (" + ChannelList[i].UnitString + ")",
-                        "Vertical (" + ChannelList[i].UnitString + ")",
+                        "Horizontal-1 (" + HVSR_Status.Unit_String[0] + ")",
+                        "Horizontal-2 (" + HVSR_Status.Unit_String[0] + ")",
+                        "Vertical ("     + HVSR_Status.Unit_String[0] + ")",
                     ];
-            data =  [   ChannelList[i].time,  
-                        Multiply(ChannelList[i].Results.HVSR.Data[0], ChannelList[i].ScaleFactor),
-                        Multiply(ChannelList[i].Results.HVSR.Data[1], ChannelList[i].ScaleFactor),
-                        Multiply(ChannelList[i].Results.HVSR.Data[2], ChannelList[i].ScaleFactor),
+            data =  [   ChannelList[i].Results.HVSR.Data[0].map((vv,ii) => ii / ChannelList[i].FSamp),
+                        ChannelList[i].Results.HVSR.Data[0],
+                        ChannelList[i].Results.HVSR.Data[1],
+                        ChannelList[i].Results.HVSR.Data[2],
                     ];
             AddDataToWorkSheet(WorkSheet, [header], "A1", Transpose(data), "A2");
 

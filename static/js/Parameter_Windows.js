@@ -1200,14 +1200,17 @@ function HVSR_Parameters() {
 function HVSR_Table_Check() {
     
     let tbody, i, OverlappedSegment_Length, OverlappedSegment_Sample;
-    let ChNum      = new Array(3).fill(0);
-    let FSamp      = new Array(3).fill(0);
-    let DT_Start   = new Array(3).fill(0);
-    let DT_End     = new Array(3).fill(0);
-    let Trim_Start = new Array(3).fill(0);
-    let Trim_End   = new Array(3).fill(0);
-    let Azimuth    = new Array(3).fill(0);
-    let FileName   = new Array(3).fill(0);
+    let ChNum       = new Array(3).fill();
+    let FSamp       = new Array(3).fill();
+    let DT_Start    = new Array(3).fill();
+    let DT_End      = new Array(3).fill();
+    let Trim_Start  = new Array(3).fill();
+    let Trim_End    = new Array(3).fill();
+    let Azimuth     = new Array(3).fill();
+    let FileName    = new Array(3).fill();
+    let Unit        = new Array(3).fill();
+    let Unit_String = new Array(3).fill();
+    let Type        = new Array(3).fill();
 
     let Result     = {
             IsValid                     : false, 
@@ -1218,6 +1221,9 @@ function HVSR_Table_Check() {
             earliest                    : undefined,
             ChNum                       : undefined,
             Azimuth                     : undefined,
+            Unit                        : undefined,
+            Unit_String                 : undefined,
+            Type                        : undefined,
         }
 
     // Get the Table Body
@@ -1231,16 +1237,19 @@ function HVSR_Table_Check() {
             ProgressBar_Update( 'Select 3 channels for H/V computation!', 'red');
             return Result;
         }
-
+        
         // Get channel number 
-        ChNum[i] = ChannelList_UniqueID(tbody.rows[i].value); 
+        ChNum[i] = ChannelList_UniqueID( tbody.rows[i].value );
 
         // Get FSamp, Start Date&Time, End Date&Time
-        FSamp[i]     = ChannelList[ChNum[i] ].FSamp;
-        DT_Start[i]  = ChannelList[ChNum[i] ].DateTime;
-        DT_End[i]    = ChannelList[ChNum[i] ].DateTime_End;
-        Azimuth[i]   = ChannelList[ChNum[i] ].Orientation;
-        FileName[i]  = ChannelList[ChNum[i] ].FileName;
+        FSamp[i]       = ChannelList[ChNum[i] ].FSamp;
+        Unit[i]        = ChannelList[ChNum[i] ].Unit;
+        Unit_String[i] = ChannelList[ChNum[i] ].UnitString;
+        Type[i]        = ChannelList[ChNum[i] ].Type;
+        DT_Start[i]    = ChannelList[ChNum[i] ].DateTime;
+        DT_End[i]      = ChannelList[ChNum[i] ].DateTime_End;
+        Azimuth[i]     = ChannelList[ChNum[i] ].Orientation;
+        FileName[i]    = ChannelList[ChNum[i] ].FileName;
     }
 
     // FSamp must be the same value across all channels
@@ -1249,6 +1258,12 @@ function HVSR_Table_Check() {
         return Result;
     }
     
+    // Measurment type must be the same across all channels
+    if ([...new Set(Type)].length > 1) { 
+        ProgressBar_Update( 'Measurment type must be the same across all channels!', 'red');
+        return Result;
+    }
+
     // Find the latest Date&Time in DT_Start 
     const latest = Fmt(new Date(Math.max(...DT_Start.map(dt => new Date(dt)))));
 
@@ -1286,11 +1301,14 @@ function HVSR_Table_Check() {
             OverlappedSegment_Length    : OverlappedSegment_Length, // Length of the overlapped segment (3 waveforms) in seconds 
             OverlappedSegment_Sample    : OverlappedSegment_Sample, // Number of samples in the overlapped segment
             FSamp                       : FSamp[0],
+            Unit                        : Unit,
+            Unit_String                 : Unit_String,
             earliest                    : earliest,
             latest                      : latest,
             ChNum                       : ChNum,
             Azimuth                     : Azimuth,
             FileName                    : FileName,
+            Type                        : Type,
         }
     }
 
@@ -1353,5 +1371,138 @@ function HVSR_Bandwidth_Coefficient_Change() {
         document.getElementById('HVSR_Bandwidth_Coefficient').defaultValue = String(Number(x.value));
         ProgressBar_Update('', 'black');
     }
+}
+//-----------------------------------------------------------------------------------------------
+function Drift_Table_Check() {
+
+    let i, tbody, OverlappedSegment_Length, OverlappedSegment_Sample;
+    
+    let ChNum       = new Array(2).fill();  // undefined 
+    let FSamp       = new Array(2).fill();  // undefined     
+    let Unit        = new Array(2).fill();  // undefined
+    let Unit_String = new Array(2).fill();  // undefined 
+    let Type        = new Array(2).fill();  // undefined 
+    let DT_Start    = new Array(2).fill();  // undefined 
+    let DT_End      = new Array(2).fill();  // undefined 
+    let Trim_Start  = new Array(2).fill();  // undefined 
+    let Trim_End    = new Array(2).fill();  // undefined 
+    let Azimuth     = new Array(2).fill();  // undefined 
+    let FileName    = new Array(2).fill();  // undefined 
+
+    let Result     = {
+            IsValid                     : false, 
+            Trim_Start                  : undefined,
+            OverlappedSegment_Length    : '',
+            OverlappedSegment_Sample    : undefined,
+            FSamp                       : undefined,
+            Unit                        : undefined,
+            Unit_String                 : undefined,
+            latest                      : undefined,
+            earliest                    : undefined,
+            ChNum                       : undefined,
+            Azimuth                     : undefined,
+            FileName                    : undefined,
+            Type                        : undefined,
+        }
+
+    // Reset the backgroundColor of each row of each table to WHITE
+    tbody = document.querySelector("#Drift_Parameters_Table tbody");
+
+    // Loop over each row 
+    for (i=0; i < tbody.rows.length; i++) { 
+
+        // Return if the row is empty
+        if ((tbody.rows[i].value == '') || (tbody.rows[i].value == undefined)) { 
+            ProgressBar_Update( 'Select 2 channels for Drift computation!', 'red');
+            return Result;
+        }
+        
+        // Get channel number 
+        ChNum[i] = ChannelList_UniqueID( tbody.rows[i].value ); 
+
+        // Get FSamp, Start Date&Time, End Date&Time
+        FSamp[i]       = ChannelList[ChNum[i] ].FSamp;
+        Unit[i]        = ChannelList[ChNum[i] ].Unit;
+        Unit_String[i] = ChannelList[ChNum[i] ].UnitString;
+        Type[i]        = ChannelList[ChNum[i] ].Type;
+        DT_Start[i]    = ChannelList[ChNum[i] ].DateTime;
+        DT_End[i]      = ChannelList[ChNum[i] ].DateTime_End;
+        Azimuth[i]     = ChannelList[ChNum[i] ].Orientation;
+        FileName[i]    = ChannelList[ChNum[i] ].FileName;
+    }
+
+    // FSamp must be the same value across all channels
+    if ([...new Set(FSamp)].length > 1) { 
+        ProgressBar_Update( 'Drift - FSamp must be the same value across all channels!', 'red');
+        return Result;
+    }
+
+    // Measurment type must be the same across all channels
+    if ([...new Set(Type)].length > 1) { 
+        ProgressBar_Update( 'Drift - Measurment type must be the same across all channels!', 'red');
+        return Result;
+    }
+    
+    // Find the latest Date&Time in DT_Start 
+    const latest = Fmt(new Date(Math.max(...DT_Start.map(dt => new Date(dt)))));
+
+    // Find the earliest Date&Time in DT_End
+    const earliest = Fmt(new Date(Math.min(...DT_End.map(dt => new Date(dt)))));
+
+    // Length of the overlpped segment in seconds
+    OverlappedSegment_Length = DiffInSeconds(latest, earliest);  // In seconds 
+    OverlappedSegment_Sample = Math.floor(FSamp[0] * OverlappedSegment_Length);
+    
+    if (!isFinite(OverlappedSegment_Length)) {
+        ProgressBar_Update( 'Drift - Check Date&Time values !', 'red');
+        return Result;
+    }
+
+    // Return if waveforms do not overlap
+    if (new Date(earliest.replace(" ", "T")) <= new Date(latest.replace(" ", "T"))) {
+        ProgressBar_Update( 'Drif - Waveforms do not overlap!', 'red');
+        return Result;
+    } else {
+        // Waveforms overlaps, so compute the number of samples to trim for synchronization
+
+        // Loop over each waveform
+        for (i=0; i < 2; i++) {
+
+            // Compute the number of samples to trim for synchronization
+            Trim_Start[i] = Math.floor( DiffInSeconds(DT_Start[i], latest) * FSamp[i] ); // Number of samples to trim from the begining of the record 
+            
+        }
+        // No Issues found 
+        ProgressBar_Update( '', 'black');
+        return {
+            IsValid                     : true, 
+            Trim_Start                  : Trim_Start,                 // Number of samples to trim from the begining of the record 
+            OverlappedSegment_Length    : OverlappedSegment_Length,   // Length of the overlapped segment (3 waveforms) in seconds 
+            OverlappedSegment_Sample    : OverlappedSegment_Sample,   // Number of samples in the overlapped segment
+            FSamp                       : FSamp[0],
+            Unit                        : Unit,
+            Unit_String                 : Unit_String,
+            earliest                    : earliest,
+            latest                      : latest,
+            ChNum                       : ChNum,
+            Azimuth                     : Azimuth,
+            FileName                    : FileName,
+        }
+    }
+
+
+    // Helper function 
+    function Fmt(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ` +
+                `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}:` +
+                `${String(date.getSeconds()).padStart(2, "0")}.${String(date.getMilliseconds()).padStart(3, "0")}`;
+    }
+
+    function DiffInSeconds(dateTime1, dateTime2) {
+        const d1 = new Date(dateTime1);
+        const d2 = new Date(dateTime2);
+        return (d2 - d1) / 1000;
+    }
+
 }
 //-----------------------------------------------------------------------------------------------

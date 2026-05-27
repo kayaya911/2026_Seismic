@@ -213,6 +213,32 @@
     min-width: 1.2rem; 
 }
 
+
+.AddMain {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    font-size: 0.8rem;
+}
+
+.AddTable {
+    margin-right: 2.0rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.RemoveTable {
+    margin-right: 0.0rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.SideBar_Button_Svg {
+    width: var(--sidebar-height-svg);
+    height: var(--sidebar-height-svg);
+}
+
+
 .FileListTree_Channel_li {
     display: flex;
     align-items: center;

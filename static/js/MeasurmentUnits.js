@@ -709,10 +709,10 @@ function Convert_Data_To_Graph_Unit_ResSpec(Data, ChNum) {
 //-------------------------------------------------------------------------------------------------------------
 function Convert_Data_To_Graph_Unit_SM_Par(Data, ChNum) {
     
-    let Or_Data, LU, Ind, Indx, temp, ss, arr, leg, T_duration;
+    let Or_Data, LU, Ind, Indx, temp, ss, arr, leg, T_duration, Type_String;
 
-    // SDOF-data using Measurment-index
-    Or_Data = TypeAndUnit(ChannelList[ChNum].Results.SM_Parameters.TypeAndUnits); 
+    // Data using Measurment-index
+    Or_Data = TypeAndUnit(ChannelList[ChNum].Results.SM_Parameters.TypeAndUnits);
 
     // List of Units of the SDOF-data using Type-Number
     LU = List_Units(Or_Data.Type, false);
@@ -721,30 +721,20 @@ function Convert_Data_To_Graph_Unit_SM_Par(Data, ChNum) {
     Ind = document.getElementById("Unit_Plot_ID_" + ChannelList[ChNum].Unique_ID).selectedIndex;
 
     // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
-    temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+    temp      = Convert_Units_Data([1],   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+    temp.Data = Data;
 
-    if      (ChannelList[ChNum].Results.SM_Parameters.DisplayData == 'AI'  )   { Or_Data.Type_String = 'Arias Intensity';  leg = 'Significant Duration, s';  T_duration = ChannelList[ChNum].Results.SM_Parameters.Ts.toFixed(2); }
-    else if (ChannelList[ChNum].Results.SM_Parameters.DisplayData == 'CAV' )   { Or_Data.Type_String = 'CAV';              leg = 'Bracketed Duration, s';    T_duration = ChannelList[ChNum].Results.SM_Parameters.Td.toFixed(2); }
+    if      (ChannelList[ChNum].Results.SM_Parameters.DisplayData == 'AI'  )   { Type_String = 'Arias Intensity';  leg = 'Significant Duration, s';  T_duration = ChannelList[ChNum].Results.SM_Parameters.Ts.toFixed(2); }
+    else if (ChannelList[ChNum].Results.SM_Parameters.DisplayData == 'CAV' )   { Type_String = 'CAV';              leg = 'Bracketed Duration, s';    T_duration = ChannelList[ChNum].Results.SM_Parameters.Td.toFixed(2); }
 
-    // Original statistical values are already scaled by Scale Factor of the channel 
-    // Therefore, we just need to conver the units.
-    if (ChannelList[ChNum].Results.SM_Parameters.IsAnalysisCompleted) {
-        ss    = Statistics(temp.Data);
-    } else {
-        ss = { Peak:'', Mean:'', RMS:'' };
-    }
+    Or_Data = TypeAndUnit(ChannelList[ChNum].TypeAndUnits);
 
     //  temp
-    temp.yTitle      = '<b>' + Or_Data.Type_String + '  [' + temp.Unit  + ']<b>';
+    temp.yTitle      = '<b>' + Type_String + '  [' + Or_Data.IntegrationUnits.FirstIntegral.Unit_String  + ']<b>';
     temp.leg         = leg;
     temp.T_duration  = T_duration;
-    temp.yTitle_FFT  = '<b>Magnitude<b>';
-    temp.y2Title     = '<b>Phase<b>';
+    temp.y2Title     = '<b>' + ChannelList[ChNum].TypeString + '  [' + ChannelList[ChNum].UnitString  + ']<b>';
 
-    temp.Peak        = ss.Peak;
-    temp.Mean        = ss.Mean;
-    temp.RMS         = ss.RMS;
-    
     return temp;
 
 }

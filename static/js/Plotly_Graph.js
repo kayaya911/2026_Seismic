@@ -815,10 +815,10 @@ async function Plotly_Graph_Update(ChNum) {
             DisplayData = ChannelList[ChNum].Results.SM_Parameters.DisplayData;
             timeData    = ChannelList[ChNum].time;
 
-            if      (DisplayData == "AI"   ) { res  = Convert_Data_To_Graph_Unit_SM_Par(ChannelList[ChNum].Results.SM_Parameters.AI,    ChNum );   }
-            else if (DisplayData == "CAV"  ) { res  = Convert_Data_To_Graph_Unit_SM_Par(ChannelList[ChNum].Results.SM_Parameters.CAV,   ChNum );   }
+            if      (DisplayData == "AI"   ) { res  = Convert_Data_To_Graph_Unit_SM_Par(ChannelList[ChNum].Results.SM_Parameters.AI,  ChNum );   }
+            else if (DisplayData == "CAV"  ) { res  = Convert_Data_To_Graph_Unit_SM_Par(ChannelList[ChNum].Results.SM_Parameters.CAV, ChNum );   }
             
-            //
+            // SM Parameter
             traces[0].x           = timeData;
             traces[0].y           = res.Data;
             traces[0].mode        = 'lines',
@@ -826,9 +826,21 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].yaxis       = "y1",
             traces[0].visible     = true;
             traces[0].opacity     = 1.00;
-            traces[0].line        = {color: 'blue', width: 1.00, dash: 'solid' };
+            traces[0].line        = {color: 'blue', width: 2.00, dash: 'solid' };
             traces[0].name        = '<b>'+ res.leg +'<b>';   // legend title
             traces[0].showlegend  = false;                   // Show legend
+
+            // Raw data 
+            traces[1].x           = timeData;
+            traces[1].y           = Detrend(Multiply(ChannelList[ChNum].data, ChannelList[ChNum].ScaleFactor), 0);   // SM parameters are calculated using baseline corrcted data
+            traces[1].mode        = 'lines',
+            traces[1].marker      = { color: 'grey', size: 5, symbol: 'circle' },
+            traces[1].yaxis       = "y2",
+            traces[1].visible     = true;
+            traces[1].opacity     = 0.80;
+            traces[1].line        = {color: 'grey', width: 0.80, dash: 'solid' };
+            traces[1].name        = '<b>'+ res.leg +'<b>';   // legend title
+            traces[1].showlegend  = false;                   // Show legend
 
             
             if (DisplayData == "AI"   ) {
@@ -848,9 +860,20 @@ async function Plotly_Graph_Update(ChNum) {
                 layout_update.shapes[1].y1 = 1;
             }
 
+            let RD_Min = Min(traces[1].y).val;
+            RD_Min -= (0.05 * RD_Min);
+
             layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
-            layout_update.yaxis2.showticklabels = false;
-            layout_update.yaxis2.title.text     = "";
+            layout_update.yaxis2.showticklabels = true;
+            layout_update.yaxis2.title.text     = res.y2Title;
+
+            layout_update.yaxis.autorange       = false;
+            layout_update.yaxis.range           = [0, 1.05 * Max(traces[0].y).val];
+
+            layout_update.yaxis2.autorange      = false;
+            layout_update.yaxis2.matches        = null;
+            layout_update.yaxis2.range          = [RD_Min,  1.05 * Max(traces[1].y).val];
+
 
             // Show Baseline-Row in InforBar
             document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.SM_Parameters.FiltPar.BaselineCorrection_String;
@@ -866,6 +889,25 @@ async function Plotly_Graph_Update(ChNum) {
             Table = document.getElementById('Plotly_Stat_Table_' + ChannelList[ChNum].Unique_ID);
             Table.rows[3].cells[0].innerHTML = res.leg;
             Table.rows[3].cells[1].innerHTML = res.T_duration;
+
+        }
+
+    }
+    else if (PageNo == 7) {
+        // Drift 
+
+        if (ChannelList[ChNum].Results.Drift.IsAnalysisCompleted) {
+
+            traces[0].x           = ChannelList[ChNum].Results.Drift.time;
+            traces[0].y           = ChannelList[ChNum].Results.Drift.Drift;
+            traces[0].mode        = 'lines',
+            traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
+            traces[0].yaxis       = "y1",
+            traces[0].visible     = true;
+            traces[0].opacity     = 1.00;
+            traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
+            traces[0].name        = '<b><b>';   // legend title
+            traces[0].showlegend  = false;      // Show legend
 
         }
 
@@ -936,6 +978,10 @@ async function Plotly_Graph_Update(ChNum) {
             FilterInfo += " " + ChannelList[ChNum].Results.HVSR.FiltPar.FilterBand;
             FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.HVSR.FiltPar.ZeroPhase;
             document.getElementById(FilterType_ID).innerHTML = FilterInfo;
+
+            // Infor Table - first two lines
+            
+
 
         }
 
@@ -1471,6 +1517,8 @@ function Plotly_Clear_Graph(ChNum) {
     layout_update.yaxis.rangemode  = 'normal';
     layout_update.yaxis2.rangemode = 'normal';
 
+    layout_update.yaxis2.matches   = 'y';
+
     layout_update.xaxis.title.text = '';
 
 
@@ -1624,7 +1672,7 @@ function Plotly_Clear_Graph(ChNum) {
 
     }
     else if (PageNo == 6) {
-        // ResSpectrum page 
+        // SM Parameters page 
         Table.rows[0].style.display  = "none";       // Peak
         Table.rows[1].style.display  = "none";       // Mean
         Table.rows[2].style.display  = "none";       // RMS
@@ -1634,9 +1682,29 @@ function Plotly_Clear_Graph(ChNum) {
         Table.rows[6].style.display  = "none";       // ResSpec Display
         Table.rows[7].style.display  = "none";       // Spectrum Display
         Table.rows[8].style.display  = "table-row";  // SM_Par Display
-        Table.rows[9].style.display  = "table-row";  // Graph Unit
+        Table.rows[9].style.display  = "none";       // Graph Unit
         Table.rows[10].style.display = "table-row";  // Baseline 
         Table.rows[11].style.display = "table-row";  // Filter 
+        
+        // Two toggels on the Info Summary table for FFT and Filter 
+        document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        document.getElementById('Filter_Div_ID2_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
+        
+    }
+    else if (PageNo == 7) {
+        // Drift page 
+        Table.rows[0].style.display  = "table-row";     // Peak
+        Table.rows[1].style.display  = "table-row";     // Mean
+        Table.rows[2].style.display  = "table-row";     // RMS
+        Table.rows[3].style.display  = "table-row";     // Residual
+        Table.rows[4].style.display  = "none";          // Analysis Method
+        Table.rows[5].style.display  = "none";          // SDOF Display
+        Table.rows[6].style.display  = "none";          // ResSpec Display
+        Table.rows[7].style.display  = "none";          // Spectrum Display
+        Table.rows[8].style.display  = "none";          // SM_Par Display
+        Table.rows[9].style.display  = "table-row";     // Graph Unit
+        Table.rows[10].style.display = "table-row";     // Baseline 
+        Table.rows[11].style.display = "table-row";     // Filter 
         
         // Two toggels on the Info Summary table for FFT and Filter 
         document.getElementById('Filter_Div_ID1_'+ChannelList[ChNum].Unique_ID).style.display = 'none';
