@@ -1213,15 +1213,15 @@ async function Channel_Integral() {
 
         // STEP 8: Statistics of velocity and sisplacement 
         Temp                 = Statistics(FiltPar.Vel);
-        FiltPar.Peak_Vel     =  Temp.Peak;
-        FiltPar.Mean_Vel     =  Temp.Mean;
-        FiltPar.RMS_Vel      =  Temp.RMS;
+        FiltPar.Peak_Vel     = Temp.Peak;
+        FiltPar.Mean_Vel     = Temp.Mean;
+        FiltPar.RMS_Vel      = Temp.RMS;
         FiltPar.Residual_Vel = FiltPar.Vel.at(-1);
 
         Temp                   = Statistics(FiltPar.Disp);
-        FiltPar.Peak_Disp      =  Temp.Peak;
-        FiltPar.Mean_Disp      =  Temp.Mean;
-        FiltPar.RMS_Disp       =  Temp.RMS
+        FiltPar.Peak_Disp      = Temp.Peak;
+        FiltPar.Mean_Disp      = Temp.Mean;
+        FiltPar.RMS_Disp       = Temp.RMS
         FiltPar.Residual_Disp  = FiltPar.Disp.at(-1);
 
         // STEP 9: Flag Successfully Completion
@@ -2117,52 +2117,73 @@ async function Channel_Drif() {
         // Sub-STEP 2: Check filter stability - Verify filter poles are inside unit circle (stable filter)
         FiltPar = Filter_Is_Stable(ChannelList[ChNum[i]], FiltPar);
         
-        // Sub-STEP 3: Skip this Channel if filter is unstable
+        // Sub-STEP 3: Terminate the function if Filter is not stable 
         if (FiltPar.ErrorMessage != undefined) { 
             let Msg = '';
             if (i ==0) { Msg = "C1";} else if (i==1) { Msg = "C2"; }
             ProgressBar_Update( 'Drift - Unstable filter for '+ Msg + '.', 'red'); 
+            return; 
         }
 
         // Sub-STEP 4: Get the waveform 
-        Ug = ChannelList[ChNum[i]].data;
+        Ug = Multiply(ChannelList[ChNum[i]].data,   ChannelList[ChNum[i]].ScaleFactor);
 
-        // Sub-STEP 5: Trim the begining and the end of the waveform if applicable for synchronization
+        // Sub-STEP 5: Baseline Correction And Filtering
+        Ug = BaselineAndFilter(Ug, FiltPar);
+
+        // Sub-STEP 6: First Intagration 
+        Ug = Filter([0.5/ChannelList[i].FSamp,   0.5/ChannelList[i].FSamp], [1, -1],  Ug).y;
+
+        // Sub-STEP 7
+        // If the channel is Acceleration (Type=0), then double integration yeld displacement 
+        // If the channel is Velocity (Type=1), then single intagration yiled displacement
+        if (Drift_Status.Type[i] == 0) {
+
+            // Second integration (Performed only if the channel is acceleration)
+            Ug = BaselineAndFilter(Ug, FiltPar);
+            Ug = Filter([0.5/ChannelList[i].FSamp,   0.5/ChannelList[i].FSamp], [1, -1],  Ug).y;
+        }
+
+        // Sub-STEP 8: Trim the begining and the end of the waveform if applicable for synchronization
         if(Drift_Status.Trim_Start[i] != 0)  { Ug = Truncate(Ug,  Ug.length - Drift_Status.Trim_Start[i],  false ) };  // Truncates elements from the begining of the waveform
 
-        // Truncate the Ug array to get the fist sampels up to Drift_Status.OverlappedSegment_Sample
-        Ug = Truncate(Ug, Drift_Status.OverlappedSegment_Sample,  true);  
+        // Sub-STEP 9: Truncate the Ug array to get the fist sampels up to Drift_Status.OverlappedSegment_Sample
+        Data[i] = Truncate(Ug, Drift_Status.OverlappedSegment_Sample,  true);  
 
-        // Sub-STEP 6: Apply the scale factor
-        Ug = Multiply(Ug,   ChannelList[ChNum[i]].ScaleFactor);
-
-        // Sub-STEP 7: Apply Baseline correction and filtering 
-        Data[i] = BaselineAndFilter(Ug, FiltPar);
-        
     }
 
-    // STEP 8: Check the Units of C1 and C2
+    // STEP 7: Check the Units of C1 and C2
     // If the unit across C1 and C2 are different, convert units to a common unit
     if (Drift_Status.Unit[0] != Drift_Status.Unit[1]) { 
         temp = Convert_Units_Data(Data[1], Drift_Status.Unit[1], Drift_Status.Unit[0], false);  
         Data[1] = temp.Data; 
     }
 
-    // Compute the Drift between two channels 
+    // STEP 8: Compute the Drift between two channels 
     Drift = Subtract(Data[0], Data[1]);
 
-    // STEP 11: Collect computed HVSR
+    // STEP 9: Statistics of velocity and sisplacement 
+    temp               = Statistics(Drift);
+    Drift_Par.Peak     = temp.Peak;
+    Drift_Par.Mean     = temp.Mean;
+    Drift_Par.RMS      = temp.RMS;
+    Drift_Par.Residual = Drift.at(-1);
+
+    // STEP 10: Collect computed HVSR
     Drift_Par.Drift   = Drift;
     Drift_Par.time    = Drift.map((v,ii) =>  ii / Drift_Status.FSamp);  // FSamp is the same across C1 and C2
 
-    // STEP 12: Store Filter Parameters
+    // STEP 11: Store Filter Parameters
     Drift_Par.FiltPar = FiltPar;
 
-    // STEP 13: Flag Successfully Completion
+    // STEP 12: Flag Successfully Completion
     Drift_Par.IsAnalysisCompleted = true;
 
-    // STEP 14: Store Results on the fist channel
+    // STEP 13: Store Results on the fist channel
     ChannelList[0].Results.Drift = Drift_Par;
+
+    // STEP 14: Adjsut Units
+    Update_Units_infoTable_Drift(0);
 
     // STEP 15: Update Visualization - Refresh Plotly graph to show Integrated waveforms
     await Plotly_Graph_Update(0);
@@ -2350,7 +2371,7 @@ async function Channel_HVSR() {
         // Sub-STEP 2: Check filter stability - Verify filter poles are inside unit circle (stable filter)
         FiltPar = Filter_Is_Stable(ChannelList[ChNum[i]], FiltPar);
         
-        // Sub-STEP 3: Skip this Channel if filter is unstable
+        // Sub-STEP 3: Terminate the function if Filter is not stable 
         if (FiltPar.ErrorMessage != undefined) { 
             let Msg = '';
             if (i ==0) { Msg = "H1";} else if (i==1) { Msg = "H2"; } else if (i==2) {Msg}

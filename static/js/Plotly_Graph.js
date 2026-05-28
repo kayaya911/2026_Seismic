@@ -898,8 +898,11 @@ async function Plotly_Graph_Update(ChNum) {
 
         if (ChannelList[ChNum].Results.Drift.IsAnalysisCompleted) {
 
+            // 
+            res = Convert_Data_To_Graph_Unit_Drift(ChannelList[ChNum].Results.Drift.Drift, ChNum);
+
             traces[0].x           = ChannelList[ChNum].Results.Drift.time;
-            traces[0].y           = ChannelList[ChNum].Results.Drift.Drift;
+            traces[0].y           = res.Data;
             traces[0].mode        = 'lines',
             traces[0].marker      = { color: 'blue', size: 5, symbol: 'circle' },
             traces[0].yaxis       = "y1",
@@ -908,6 +911,26 @@ async function Plotly_Graph_Update(ChNum) {
             traces[0].line        = {color: 'blue', width: 1.50, dash: 'solid' };
             traces[0].name        = '<b><b>';   // legend title
             traces[0].showlegend  = false;      // Show legend
+
+            // Show Baseline-Row in InforBar
+            document.getElementById(BaseLine_ID).innerHTML = ChannelList[ChNum].Results.Drift.FiltPar.BaselineCorrection_String;
+
+            // Show Filter_ID-Row in InfoBar
+            FilterInfo  = ChannelList[ChNum].Results.Drift.FiltPar.FilterName_String;
+            FilterInfo += "<br>" + ChannelList[ChNum].Results.Drift.FiltPar.FilterType_String;
+            FilterInfo += " " + ChannelList[ChNum].Results.Drift.FiltPar.FilterBand;
+            FilterInfo += "<br> Zero Phase: " + ChannelList[ChNum].Results.Drift.FiltPar.ZeroPhase;
+            document.getElementById(FilterType_ID).innerHTML = FilterInfo;
+
+            // Update the Statistics of (RawData, Velocity, Displacement) in table - scaled to user-specified unit
+            document.getElementById( Statictics_Peak_ID     ).innerHTML = res.Peak.toPrecision(4);
+            document.getElementById( Statictics_Mean_ID     ).innerHTML = res.Mean.toPrecision(4);
+            document.getElementById( Statictics_RMS_ID      ).innerHTML = res.RMS.toPrecision(4);
+            document.getElementById( Statictics_Residual_ID ).innerHTML = res.Residual.toPrecision(4);
+
+            layout_update.yaxis.title.text      = res.yTitle;   // This is the unit that user wants to see on the graph.
+            layout_update.yaxis2.showticklabels = false;
+            layout_update.yaxis2.title.text     = '';
 
         }
 

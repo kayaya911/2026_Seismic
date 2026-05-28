@@ -739,6 +739,43 @@ function Convert_Data_To_Graph_Unit_SM_Par(Data, ChNum) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
+function Convert_Data_To_Graph_Unit_Drift(Data, ChNum) {
+    
+    let Or_Data, LU, Ind, Indx, temp, ss, arr, U;
+
+    Or_Data = TypeAndUnit(ChannelList[ChNum].Results.Drift.TypeAndUnits); 
+
+    // List of Units of the SDOF-data using Type-Number
+    LU = List_Units(Or_Data.Type, false);
+
+    // Indexnumber of User-sepecified Unit on the Plotly Graph
+    Ind = document.getElementById("Unit_Plot_ID_" + ChannelList[ChNum].Unique_ID).selectedIndex;
+
+    // Convert Data to user-specified unit on Plotly Graph  ---  Using Unit-Number
+    temp = Convert_Units_Data(Data,   Or_Data.Unit,   LU.UnitNum[Ind],   false);
+    
+    // Original statistical values are already scaled by Scale Factor of the channel 
+    // Therefore, we just need to conver the units.
+    if (ChannelList[ChNum].Results.Drift.IsAnalysisCompleted) {
+        ss    = Statistics(temp.Data);
+    } else {
+        ss = { Peak:'', Mean:'', RMS:'', Residual:'' };
+    }
+
+    //  temp
+    temp.yTitle      = '<b> Displacement [' + temp.Unit + ']<b>';
+    temp.yTitle_FFT  = '<b>Magnitude<b>';
+    temp.y2Title     = '<b>Phase<b>';
+
+    temp.Peak        = ss.Peak;
+    temp.Mean        = ss.Mean;
+    temp.RMS         = ss.RMS;
+    temp.Residual    = temp.Data.at(-1);
+    
+    return temp;
+
+}
+//-------------------------------------------------------------------------------------------------------------
 function Convert_Data_To_Graph_Unit_Spectrum(Data, ChNum) {
     
     let Or_Data, LU, Ind, Indx, temp, ss, arr, leg, T_duration, aaa;
@@ -1052,6 +1089,63 @@ function Update_Units_infoTable_SM_Par(i) {
 
 }
 //-------------------------------------------------------------------------------------------------------------
+function Update_Units_infoTable_Drift(i) {
+
+    // retrun if no graph to plot
+    if (!ChannelList[i].PlotGraph) { return; }
+
+    // Declaration of varibalers 
+    let AM, II, Units_SelectElement, Ind, Type, DisplayData;
+    let ResSpec_Plot_ID, Unit_Cell_ID;
+
+    // Defaults
+    Units_SelectElement = Select_Element(List_Units(8).Units);                    
+    Type                = 2;  
+
+    // ResSpec_ID
+    ResSpec_Plot_ID = "ResSpec_Plot_ID_"  + ChannelList[i].Unique_ID;
+    Unit_Cell_ID    = "Unit_Cell_ID_"     + ChannelList[i].Unique_ID;
+
+    // Assign select-element to cell-element in table
+    document.getElementById(Unit_Cell_ID).innerHTML = "";
+    document.getElementById(Unit_Cell_ID).appendChild(Units_SelectElement);
+
+    // Index number of the Unit on the Data-Page (PageNo=0)
+    Ind = document.getElementById("Unit_ID_" + ChannelList[i].Unique_ID).selectedIndex;
+
+    // Measurment-Index of the user-selected Display-and-Unit on InfoTable
+    ChannelList[i].Results.Drift.TypeAndUnits = TypeAndUnit(List_Units(Type, false).UnitNum[Ind], false).TypeAndUnit;
+
+    // Update Graph
+    Plotly_Graph_Update(i);
+
+    // Creates new Select-Element for Plotly Info-table (Graph-Unit List)
+    function Select_Element(Unit_List) {
+        
+        // Decleration of variables
+        let j, opt, select, ID;
+
+        ID = 'Unit_Plot_ID_' + ChannelList[i].Unique_ID;
+
+        // Create select element and populate it 
+        select = document.createElement('select');
+        select.setAttribute('id', ID);
+        select.setAttribute('class', 'form-select form-select-sm');
+        select.setAttribute('onchange', 'Plotly_Graph_Update(' + ChannelList_UniqueID(ChannelList[i].Unique_ID) + ')');
+        
+        // Options for the select element 
+        for (j = 0; j < Unit_List.length; j++) {
+            opt = document.createElement("option");
+            opt.value = Unit_List[j];
+            opt.text = Unit_List[j];
+            select.add(opt, null);
+        }
+        select.selectedIndex = document.getElementById(ID).selectedIndex;
+        return select;
+    }
+
+}
+//-------------------------------------------------------------------------------------------------------------
 function Update_Units_infoTable_Spectrum(i) {
 
     // retrun if no graph to plot
@@ -1120,3 +1214,6 @@ function Update_Units_infoTable_Spectrum(i) {
     }
 
 }
+//-------------------------------------------------------------------------------------------------------------
+
+

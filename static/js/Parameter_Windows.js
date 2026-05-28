@@ -1482,6 +1482,7 @@ function Drift_Table_Check() {
             FSamp                       : FSamp[0],
             Unit                        : Unit,
             Unit_String                 : Unit_String,
+            Type                        : Type,
             earliest                    : earliest,
             latest                      : latest,
             ChNum                       : ChNum,
